@@ -204,7 +204,7 @@ export const BingoBoard: React.FC = () => {
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => {
                                     if (editMode) return;
-                                    if (isLocked) return;
+                                    // if (isLocked) return; // Allow marking even when locked
                                     if (item.isFreeSpace) return;
 
                                     if (item.isCompleted) {
@@ -230,10 +230,10 @@ export const BingoBoard: React.FC = () => {
                                     "bg-bg-card/90 border-white/20 shadow-md hover:border-white/40 hover:bg-bg-card/95 transition-all duration-200",
                                     item.isCompleted && !item.isFreeSpace && "bg-gradient-to-br from-accent-primary/30 to-accent-secondary/30 border-accent-primary/50 shadow-[0_0_15px_rgba(139,92,246,0.15)]",
                                     item.isFreeSpace && "bg-gradient-to-br from-accent-gold/20 to-accent-secondary/20 border-accent-gold/50",
-                                    editMode && "border-dashed border-slate-500",
-                                    isLocked && !editMode && "cursor-default"
-                                )}
-                            >
+                                    editMode && "border-dashed border-slate-500"
+                                    // isLocked && !editMode && "cursor-default" // Always allow cursor pointer for playability
+                                )
+                                }>
                                 <div className="w-full h-full flex items-center justify-center text-center relative z-10">
                                     <div
                                         className="w-full h-full flex items-center justify-center p-1"

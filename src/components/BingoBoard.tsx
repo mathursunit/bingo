@@ -758,40 +758,41 @@ export const BingoBoard: React.FC = () => {
                 </AnimatePresence>
 
                 {/* Print Layout */}
-                <div className="only-print hidden bg-white text-black p-8 w-full h-full absolute top-0 left-0 z-[99999]">
-                    <div className="flex justify-between items-center mb-8 border-b-2 border-black pb-4">
-                        <div className="flex items-center gap-4">
-                            <img src="/logo.png" className="h-16 w-auto" alt="Logo" />
-                            <h1 className="text-3xl font-bold">2026 Edition</h1>
+                {/* Print Layout */}
+                <div className="only-print hidden">
+                    <div className="flex justify-between items-end mb-4 border-b-2 border-black pb-2">
+                        <div className="flex items-center gap-3">
+                            <img src="/logo.png" className="h-12 w-auto" alt="Logo" />
+                            <h1 className="text-2xl font-bold">2026 Edition</h1>
                         </div>
                         <div className="text-right">
-                            <p className="text-sm uppercase tracking-widest mb-1">Status Report</p>
-                            <p className="text-2xl font-bold">{bingoCount} / 12 Bingos</p>
+                            <p className="text-xs uppercase tracking-widest mb-0.5">Status Report</p>
+                            <p className="text-xl font-bold">{bingoCount} / 12 Bingos</p>
                         </div>
                     </div>
 
                     <div className="grid grid-cols-5 gap-0 border-2 border-black">
-                        {items.map((item) => (
-                            <div key={item.id} className="aspect-square border border-black p-2 flex flex-col justify-between relative overflow-hidden">
-                                <div className="text-xs font-bold leading-tight z-10">{item.text}</div>
+                        {items.slice(0, 25).map((item) => (
+                            <div key={item.id} className="aspect-square border border-black p-1.5 flex flex-col justify-between relative overflow-hidden min-h-[100px]">
+                                <div className="text-[11px] font-bold leading-tight z-10">{item.text}</div>
                                 {item.isCompleted && !item.isFreeSpace && (
-                                    <div className="mt-1 relative z-10">
-                                        <div className="text-[8px] uppercase font-bold text-slate-600">Completed by:</div>
-                                        <div className="text-[10px] font-mono font-bold leading-none">{item.completedBy || 'User'}</div>
-                                        <div className="text-[8px] text-slate-500 mt-0.5">{formatDate(item.completedAt)}</div>
+                                    <div className="mt-0.5 relative z-10">
+                                        <div className="text-[7px] uppercase font-bold text-slate-700">Completed by:</div>
+                                        <div className="text-[9px] font-mono font-bold leading-none">{item.completedBy || 'User'}</div>
+                                        <div className="text-[7px] text-slate-600 mt-0.5">{formatDate(item.completedAt)}</div>
                                     </div>
                                 )}
                                 {item.isCompleted && (
-                                    <div className="absolute bottom-1 right-1 text-4xl font-bold text-slate-200 opacity-50 pointer-events-none z-0">
+                                    <div className="absolute bottom-1 right-1 text-3xl font-bold text-slate-200 opacity-60 pointer-events-none z-0">
                                         ✓
                                     </div>
                                 )}
-                                {item.isFreeSpace && <div className="absolute inset-0 flex items-center justify-center font-bold text-2xl rotate-[-45deg] opacity-20">FREE</div>}
+                                {item.isFreeSpace && <div className="absolute inset-0 flex items-center justify-center font-bold text-xl rotate-[-45deg] opacity-20">FREE</div>}
                             </div>
                         ))}
                     </div>
 
-                    <div className="mt-8 text-[10px] text-center border-t border-black pt-4 hidden">
+                    <div className="mt-4 text-[9px] text-center border-t border-black pt-2 flex justify-between text-slate-500">
                         <span>Generated on {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}</span>
                         <span>bingo.mysunsar.com</span>
                     </div>

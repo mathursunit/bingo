@@ -1,22 +1,27 @@
-# Sara & Sunit's 2026 Bingo
+# SunSar Bingo 2026
 
-A personal, interactive Bingo board to track adventures and goals for 2026.
+A shared PWA for Sara & Sunit's 2026 Yearly Bingo.
 
 ## Features
-- **Interactive Board**: Click to mark off achievements.
-- **Progress Tracking**: Real-time progress bar.
-- **Confetti Celebration**: fun animations when you select items and win.
-- **Persistent Storage**: Remembers your progress even if you close the browser.
-- **Responsive Design**: Looks great on mobile and desktop.
+- **Real-time Sync**: Updates instantly across devices using Firebase Firestore.
+- **PWA**: Installable on iOS/Android.
+- **Confetti**: Celebrates wins!
+- **Edit Mode**: Customize the board goals.
 
-## Customization
-Edit `bingo-data.js` to change the Bingo items. You need 24 items (the center is a free space).
+## Development
 
-## Hosting
-This is a static site ready for GitHub Pages.
-1. Push to GitHub.
-2. Go to Settings > Pages.
-3. Select `main` branch (or `master`) and `/root` folder.
-4. Save.
+```bash
+npm install
+npm run dev
+```
 
-Built with ❤️ for 2026.
+## Deployment
+This project is configured for Firebase Hosting / GitHub Pages.
+
+**Firebase:**
+1. `npm run build`
+2. `firebase deploy`
+
+**GitHub Pages:**
+The project includes a CNAME in `public/` for `bingo.sunitmathur.com`.
+You can configure a GitHub Action to build and deploy to the `gh-pages` branch.

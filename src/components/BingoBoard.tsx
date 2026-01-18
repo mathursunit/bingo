@@ -466,9 +466,9 @@ export const BingoBoard: React.FC = () => {
                                     </button>
                                     <button
                                         onClick={handleSaveEdit}
-                                        className="flex-1 py-3 rounded-xl font-bold bg-gradient-to-r from-accent-primary to-accent-secondary text-white shadow-lg hover:shadow-accent-primary/20 transition-all active:scale-95"
+                                        className="flex-1 py-3 px-4 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-xl font-bold text-white shadow-lg hover:shadow-violet-500/25 active:scale-95 transition-all"
                                     >
-                                        Save Changes
+                                        Ok
                                     </button>
                                 </div>
                             </motion.div>

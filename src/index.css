@@ -83,17 +83,23 @@
 }
 
 @media print {
+  @page {
+    margin: 0;
+  }
+
+  body {
+    margin: 1cm !important;
+    background: white !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact;
+  }
+
   .no-print {
     display: none !important;
   }
 
   .only-print {
     display: block !important;
-  }
-
-  body {
-    background: white !important;
-    color: black !important;
   }
 
   /* Reset some resets */

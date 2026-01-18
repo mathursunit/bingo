@@ -365,7 +365,7 @@ export const BingoBoard: React.FC = () => {
                     {items.map((item) => (
                         <div key={item.id} className="aspect-square border border-black p-2 flex flex-col justify-between relative overflow-hidden">
                             <div className="text-xs font-bold leading-tight z-10">{item.text}</div>
-                            {item.isCompleted && (
+                            {item.isCompleted && !item.isFreeSpace && (
                                 <div className="mt-1 relative z-10">
                                     <div className="text-[8px] uppercase font-bold text-slate-600">Completed by:</div>
                                     <div className="text-[10px] font-mono font-bold leading-none">{item.completedBy || 'User'}</div>
@@ -382,7 +382,7 @@ export const BingoBoard: React.FC = () => {
                     ))}
                 </div>
 
-                <div className="mt-8 text-[10px] text-center border-t border-black pt-4 flex justify-between">
+                <div className="mt-8 text-[10px] text-center border-t border-black pt-4 hidden">
                     <span>Generated on {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}</span>
                     <span>bingo.mysunsar.com</span>
                 </div>

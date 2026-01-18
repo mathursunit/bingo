@@ -114,28 +114,30 @@ export const BingoBoard: React.FC = () => {
                 <div className="background-animation opacity-100 data-[theme=light]:opacity-0 transition-opacity duration-500" />
 
                 {/* Header - Compact Single Row */}
-                <header className="w-full max-w-[500px] flex justify-between items-center mb-4 pt-2 px-2">
-                    <div className="flex items-center gap-2">
-                        <motion.img
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            src="/logo.png"
-                            alt="SunSar Bingo"
-                            className="h-14 sm:h-16 w-auto object-contain cursor-pointer active:scale-95 transition-transform drop-shadow-lg"
-                            onClick={handleLogoTap}
-                        />
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="text-[9px] font-bold text-accent-gold uppercase tracking-wider bg-accent-gold/10 px-2 py-0.5 rounded-full border border-accent-gold/20 backdrop-blur-sm"
-                        >
-                            2026
-                        </motion.div>
+                <header className="w-full max-w-[500px] flex justify-between items-center mb-4 pt-2 px-3">
+                    <div className="flex items-center gap-3 cursor-pointer select-none active:scale-95 transition-transform" onClick={handleLogoTap}>
+                        {/* CSS Logo */}
+                        <div className="relative w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center bg-gray-900/5 dark:bg-white/5 rounded-xl border border-accent-gold/20 shadow-sm overflow-hidden group">
+                            <Sun className="absolute w-14 h-14 text-accent-gold/20 -top-2 -right-2 animate-[spin_10s_linear_infinite]" />
+                            <div className="grid grid-cols-2 gap-0.5 relative z-10 w-5 h-5 rotate-12 group-hover:rotate-0 transition-transform duration-500">
+                                <div className="bg-accent-gold rounded-[2px] shadow-sm"></div><div className="bg-accent-secondary rounded-[2px] shadow-sm"></div>
+                                <div className="bg-accent-secondary rounded-[2px] shadow-sm"></div><div className="bg-accent-gold rounded-[2px] shadow-sm"></div>
+                            </div>
+                        </div>
+                        <div className="flex flex-col h-full justify-center">
+                            <div className="flex items-baseline gap-1 leading-none">
+                                <span className="font-hand font-bold text-2xl sm:text-3xl tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-accent-gold to-orange-500 drop-shadow-sm filter">SunSar</span>
+                                <span className="font-hand font-bold text-2xl sm:text-3xl text-accent-secondary drop-shadow-sm">Bingo</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">2026 Edition</span>
+                            </div>
+                        </div>
                     </div>
                     <div className="flex items-center gap-3">
                         <button
                             onClick={toggleTheme}
-                            className="text-text-secondary hover:text-accent-gold transition-colors p-2 hover:bg-glass-bg rounded-full"
+                            className="text-slate-600 dark:text-slate-300 hover:text-accent-gold transition-colors p-2 hover:bg-black/5 dark:hover:bg-white/10 rounded-full"
                             title={theme === 'dark' ? "Switch to Light Mode" : "Switch to Dark Mode"}
                         >
                             {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
@@ -148,13 +150,13 @@ export const BingoBoard: React.FC = () => {
                             <img
                                 src={user?.photoURL || ''}
                                 alt="User"
-                                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-glass-border group-hover:border-accent-primary transition-colors"
+                                className="w-10 h-10 sm:w-11 sm:h-11 rounded-full border-2 border-white/20 dark:border-white/10 shadow-md group-hover:border-accent-primary transition-colors object-cover"
                             />
-                            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-bg-dark"></div>
+                            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-bg-dark"></div>
                         </motion.div>
                         <button
                             onClick={logout}
-                            className="text-text-secondary hover:text-red-400 transition-colors p-2 hover:bg-glass-bg rounded-full"
+                            className="text-slate-600 dark:text-slate-300 hover:text-red-400 transition-colors p-2 hover:bg-black/5 dark:hover:bg-white/10 rounded-full"
                             title="Logout"
                         >
                             <LogOut size={20} />
@@ -183,17 +185,21 @@ export const BingoBoard: React.FC = () => {
                                     "relative rounded-lg flex items-center justify-center p-1 cursor-pointer select-none border backdrop-blur-sm overflow-hidden",
                                     // Text styling
                                     "font-hand text-[15px] sm:text-xl font-medium leading-tight select-none",
-                                    item.isCompleted ? "text-white scale-110 font-semibold" : "text-slate-300",
+                                    item.isCompleted
+                                        ? "text-white scale-110 font-semibold shadow-black/10 drop-shadow-sm"
+                                        : "text-slate-700 dark:text-slate-300",
                                     // Base styles
-                                    "bg-bg-card/80 border-white/5 shadow-sm",
+                                    "bg-white/60 dark:bg-white/5 border-white/40 dark:border-white/5 shadow-sm transition-all duration-300 backdrop-blur-sm",
                                     // Active State
-                                    item.isCompleted && !item.isFreeSpace && "bg-gradient-to-br from-accent-primary/30 to-accent-secondary/30 border-accent-primary/50 shadow-[0_0_15px_rgba(139,92,246,0.15)]",
+                                    !item.isCompleted && !item.isFreeSpace && !isLocked && "hover:border-accent-primary/50 hover:bg-white/80 dark:hover:bg-accent-primary/10",
+                                    // Completed State
+                                    item.isCompleted && "bg-gradient-to-br from-green-500 to-emerald-600 border-green-400/50 shadow-lg shadow-green-900/20 dark:shadow-green-900/30",
                                     // Free Space
                                     item.isFreeSpace && "bg-gradient-to-br from-accent-gold/20 to-accent-secondary/20 border-accent-gold/50",
                                     // Edit Mode
-                                    editMode && "border-dashed border-slate-500",
+                                    editMode && "border-dashed border-slate-400/50 dark:border-slate-500/50",
                                     // Locked state
-                                    isLocked && !editMode && "cursor-default"
+                                    isLocked && !editMode && "cursor-default opacity-90"
                                 )}
                             >
                                 {/* Content */}
@@ -218,7 +224,7 @@ export const BingoBoard: React.FC = () => {
                                         >
                                             <span className={cn(
                                                 "leading-tight break-words w-full",
-                                                item.isFreeSpace ? "text-lg font-bold text-accent-gold" : "text-sm sm:text-base font-hand font-semibold text-slate-100 line-clamp-3 sm:line-clamp-4",
+                                                item.isFreeSpace ? "text-lg font-bold text-accent-gold" : "text-sm sm:text-base font-hand font-semibold text-slate-700 dark:text-slate-100 line-clamp-3 sm:line-clamp-4",
                                                 item.isCompleted && !item.isFreeSpace && "text-white"
                                             )}>
                                                 {item.text}
@@ -405,7 +411,7 @@ export const BingoBoard: React.FC = () => {
 
                 <div className="mt-8 text-[10px] text-center border-t border-black pt-4 flex justify-between">
                     <span>Generated on {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}</span>
-                    <span>bingo.sunitmathur.com</span>
+                    <span>bingo.mysunsar.com</span>
                 </div>
             </div>
         </>

@@ -639,7 +639,7 @@ export const BingoBoard: React.FC = () => {
                                     }}
                                     className="mt-4 w-full py-2 text-sm text-red-400 hover:text-red-300 transition-colors"
                                 >
-                                    Unmark as Complete
+                                    Mark as In Progress
                                 </button>
                             </motion.div>
                         </motion.div>

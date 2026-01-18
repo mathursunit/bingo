@@ -21,12 +21,13 @@ export const BingoBoard: React.FC = () => {
     };
 
     // Reset dismissal if board changes from won to not won
+    // Reset dismissal if board changes from won to not won, but only after initial load
     React.useEffect(() => {
-        if (!hasWon) {
+        if (!loading && !hasWon) {
             setCelebrationDismissed(false);
             localStorage.removeItem('celebrationDismissed');
         }
-    }, [hasWon]);
+    }, [hasWon, loading]);
 
     const handleEditStart = (index: number, currentText: string) => {
         setEditingIndex(index);

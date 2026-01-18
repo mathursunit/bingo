@@ -7,11 +7,12 @@ import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const BingoBoard: React.FC = () => {
-    const { items, loading, toggleItem, updateItemText, hasWon, bingoCount, isLocked, lockBoard, unlockBoard } = useBingo();
+    const { items, loading, toggleItem, updateItemText, updateItemStyle, hasWon, bingoCount, isLocked, lockBoard, unlockBoard } = useBingo();
     const { logout, user } = useAuth();
     const [editMode, setEditMode] = useState(false);
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
     const [tempText, setTempText] = useState("");
+    const [tempStyle, setTempStyle] = useState<{ color?: string; bold?: boolean; italic?: boolean; fontSize?: 'sm' | 'base' | 'lg' | 'xl' }>({});
     const [celebrationDismissed, setCelebrationDismissed] = useState(() => {
         return localStorage.getItem('celebrationDismissed') === 'true';
     });
@@ -66,13 +67,15 @@ export const BingoBoard: React.FC = () => {
         }
     }, [hasWon, loading]);
 
-    const handleEditStart = (index: number, currentText: string) => {
+    const handleEditStart = (index: number, currentText: string, currentStyle: any) => {
         setEditingIndex(index);
         setTempText(currentText);
+        setTempStyle(currentStyle || { color: '#ffffff', fontSize: 'base' });
     };
 
     const handleEditSave = (index: number) => {
         updateItemText(index, tempText);
+        updateItemStyle(index, tempStyle);
         setEditingIndex(null);
     };
 
@@ -178,28 +181,96 @@ export const BingoBoard: React.FC = () => {
                                 {/* Content */}
                                 <div className="w-full h-full flex items-center justify-center text-center relative z-10">
                                     {editMode && editingIndex === index ? (
-                                        <textarea
-                                            autoFocus
-                                            className="w-full h-full bg-bg-dark/90 text-[10px] rounded p-1 text-white border border-accent-gold outline-none resize-none leading-tight"
-                                            value={tempText}
-                                            onChange={(e) => setTempText(e.target.value)}
-                                            onBlur={() => handleEditSave(index)}
-                                        />
+                                        <div className="absolute inset-0 z-50 flex flex-col bg-bg-dark rounded-lg border border-accent-gold shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+                                            {/* Mini Toolbar */}
+                                            <div className="flex items-center gap-1 p-1 bg-black/40 border-b border-white/10 shrink-0 overflow-x-auto no-scrollbar" onMouseDown={e => e.preventDefault()}>
+                                                {/* Colors */}
+                                                {['#ffffff', '#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#ec4899', '#a855f7'].map(color => (
+                                                    <button
+                                                        key={color}
+                                                        className={cn("w-4 h-4 rounded-full border border-white/10 hover:scale-110 transition-transform flex-shrink-0", tempStyle.color === color && "ring-1 ring-white")}
+                                                        style={{ backgroundColor: color }}
+                                                        onClick={() => setTempStyle(prev => ({ ...prev, color }))}
+                                                        title={color}
+                                                    />
+                                                ))}
+                                                <div className="w-px h-3 bg-white/20 mx-1 flex-shrink-0"></div>
+                                                {/* Styles */}
+                                                <button
+                                                    onClick={() => setTempStyle(prev => ({ ...prev, bold: !prev.bold }))}
+                                                    className={cn("p-1 rounded hover:bg-white/10 text-[10px] font-bold text-white flex-shrink-0", tempStyle.bold && "bg-accent-primary/50")}
+                                                    title="Bold"
+                                                >
+                                                    B
+                                                </button>
+                                                <button
+                                                    onClick={() => setTempStyle(prev => ({ ...prev, italic: !prev.italic }))}
+                                                    className={cn("p-1 rounded hover:bg-white/10 text-[10px] italic text-white flex-shrink-0", tempStyle.italic && "bg-accent-primary/50")}
+                                                    title="Italic"
+                                                >
+                                                    I
+                                                </button>
+                                                {/* Size */}
+                                                <select
+                                                    className="bg-black/20 text-[10px] text-white border border-white/20 rounded px-0.5 py-0 outline-none flex-shrink-0"
+                                                    value={tempStyle.fontSize || 'base'}
+                                                    onChange={(e) => setTempStyle(prev => ({ ...prev, fontSize: e.target.value as any }))}
+                                                >
+                                                    <option value="sm">S</option>
+                                                    <option value="base">M</option>
+                                                    <option value="lg">L</option>
+                                                    <option value="xl">XL</option>
+                                                </select>
+                                                {/* Save Button for mobile usability */}
+                                                <button
+                                                    onClick={() => handleEditSave(index)}
+                                                    className="ml-auto p-1 rounded hover:bg-green-500/20 text-green-400"
+                                                    title="Save"
+                                                >
+                                                    <Check size={12} />
+                                                </button>
+                                            </div>
+
+                                            <textarea
+                                                autoFocus
+                                                className="w-full h-full bg-transparent text-[10px] p-2 text-white outline-none resize-none leading-tight"
+                                                style={{
+                                                    color: tempStyle.color || '#ffffff',
+                                                    fontWeight: tempStyle.bold ? 'bold' : 'normal',
+                                                    fontStyle: tempStyle.italic ? 'italic' : 'normal',
+                                                    fontSize: tempStyle.fontSize === 'sm' ? '12px' : tempStyle.fontSize === 'lg' ? '18px' : tempStyle.fontSize === 'xl' ? '22px' : '14px'
+                                                }}
+                                                value={tempText}
+                                                onChange={(e) => setTempText(e.target.value)}
+                                                onBlur={(e) => {
+                                                    if (!e.relatedTarget || !e.currentTarget.parentElement?.contains(e.relatedTarget as Node)) {
+                                                        handleEditSave(index);
+                                                    }
+                                                }}
+                                            />
+                                        </div>
                                     ) : (
                                         <div
-                                            className="w-full h-full flex items-center justify-center"
+                                            className="w-full h-full flex items-center justify-center p-0.5"
                                             onClick={(e) => {
                                                 if (editMode) {
                                                     e.stopPropagation();
-                                                    handleEditStart(index, item.text);
+                                                    handleEditStart(index, item.text, item.style);
                                                 }
                                             }}
                                         >
                                             <span className={cn(
                                                 "leading-tight break-words w-full",
-                                                item.isFreeSpace ? "text-lg font-bold text-accent-gold" : "text-sm sm:text-base font-hand font-semibold text-slate-100 line-clamp-3 sm:line-clamp-4",
+                                                item.isFreeSpace ? "text-lg font-bold text-accent-gold" : "font-hand font-semibold line-clamp-3 sm:line-clamp-4",
                                                 item.isCompleted && !item.isFreeSpace && "text-white"
-                                            )}>
+                                            )}
+                                                style={!item.isFreeSpace && !item.isCompleted ? {
+                                                    color: item.style?.color || '#f1f5f9', // Assuming dark theme default for text-slate-100
+                                                    fontWeight: item.style?.bold ? 'bold' : '600',
+                                                    fontStyle: item.style?.italic ? 'italic' : 'normal',
+                                                    fontSize: item.style?.fontSize === 'sm' ? '12px' : item.style?.fontSize === 'lg' ? '18px' : item.style?.fontSize === 'xl' ? '22px' : undefined
+                                                } : undefined}
+                                            >
                                                 {item.text}
                                             </span>
                                         </div>

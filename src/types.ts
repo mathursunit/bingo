@@ -7,6 +7,12 @@ export interface BingoItem {
     completedBy?: string; // email or name
     completedAt?: Timestamp;
     isFreeSpace?: boolean;
+    style?: {
+        color?: string;
+        bold?: boolean;
+        italic?: boolean;
+        fontSize?: 'sm' | 'base' | 'lg' | 'xl';
+    };
 }
 
 export interface BingoYear {

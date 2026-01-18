@@ -130,6 +130,22 @@ export const useBingo = () => {
         }
     };
 
+    const updateItemStyle = async (index: number, newStyle: BingoItem['style']) => {
+        const newItems = items.map(item => ({ ...item })); // Deep copy
+        newItems[index] = { ...newItems[index], style: newStyle };
+        setItems(newItems);
+
+        try {
+            const docRef = doc(db, 'years', YEAR_DOC_ID);
+            await updateDoc(docRef, {
+                items: newItems,
+                lastUpdated: Timestamp.now()
+            });
+        } catch (error) {
+            console.error("Error updating style:", error);
+        }
+    };
+
     const checkWin = (currentItems: BingoItem[]) => {
         const wins = [
             [0, 1, 2, 3, 4], [5, 6, 7, 8, 9], [10, 11, 12, 13, 14], [15, 16, 17, 18, 19], [20, 21, 22, 23, 24], // Rows
@@ -187,5 +203,5 @@ export const useBingo = () => {
         await setDoc(doc(db, 'years', '2026'), { isLocked: false }, { merge: true });
     };
 
-    return { items, loading, toggleItem, updateItemText, hasWon, bingoCount, isLocked, lockBoard, unlockBoard };
+    return { items, loading, toggleItem, updateItemText, updateItemStyle, hasWon, bingoCount, isLocked, lockBoard, unlockBoard };
 };

@@ -81,7 +81,8 @@ export const useBingo = () => {
     const toggleItem = async (index: number) => {
         if (!items.length) return;
 
-        const newItems = [...items];
+        // Create a deep copy to avoid mutating state directly
+        const newItems = items.map(item => ({ ...item }));
         const item = newItems[index];
 
         // Toggle
@@ -89,10 +90,11 @@ export const useBingo = () => {
         if (item.isCompleted) {
             item.completedBy = user?.displayName || user?.email || 'Unknown';
             item.completedAt = Timestamp.now();
-            triggerConfetti(0.5); // Small confetti on check
+            triggerConfetti(0.5);
         } else {
-            item.completedBy = undefined;
-            item.completedAt = undefined;
+            // Use null instead of undefined for Firestore
+            item.completedBy = null as any;
+            item.completedAt = null as any;
         }
 
         // Optimistic update
@@ -100,23 +102,32 @@ export const useBingo = () => {
         checkWin(newItems);
 
         // Save to DB
-        const docRef = doc(db, 'years', YEAR_DOC_ID);
-        await updateDoc(docRef, {
-            items: newItems,
-            lastUpdated: Timestamp.now()
-        });
+        try {
+            const docRef = doc(db, 'years', YEAR_DOC_ID);
+            await updateDoc(docRef, {
+                items: newItems,
+                lastUpdated: Timestamp.now()
+            });
+        } catch (error) {
+            console.error("Error updating bingo board:", error);
+            // Revert state if sync fails? Optionally could reload from DB
+        }
     };
 
     const updateItemText = async (index: number, newText: string) => {
-        const newItems = [...items];
+        const newItems = items.map(item => ({ ...item })); // Deep copy
         newItems[index].text = newText;
         setItems(newItems);
 
-        const docRef = doc(db, 'years', YEAR_DOC_ID);
-        await updateDoc(docRef, {
-            items: newItems,
-            lastUpdated: Timestamp.now()
-        });
+        try {
+            const docRef = doc(db, 'years', YEAR_DOC_ID);
+            await updateDoc(docRef, {
+                items: newItems,
+                lastUpdated: Timestamp.now()
+            });
+        } catch (error) {
+            console.error("Error updating text:", error);
+        }
     };
 
     const checkWin = (currentItems: BingoItem[]) => {
@@ -136,10 +147,12 @@ export const useBingo = () => {
             }
         }
 
-        if (isBingo && !hasWon) {
-            setHasWon(true);
-            triggerConfetti(2); // BIG confetti
-        } else if (!isBingo) {
+        if (isBingo) {
+            if (!hasWon) {
+                setHasWon(true);
+                triggerConfetti(2);
+            }
+        } else {
             setHasWon(false);
         }
     };

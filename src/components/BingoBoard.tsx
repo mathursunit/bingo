@@ -11,12 +11,20 @@ export const BingoBoard: React.FC = () => {
     const [editMode, setEditMode] = useState(false);
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
     const [tempText, setTempText] = useState("");
-    const [celebrationDismissed, setCelebrationDismissed] = useState(false);
+    const [celebrationDismissed, setCelebrationDismissed] = useState(() => {
+        return localStorage.getItem('celebrationDismissed') === 'true';
+    });
+
+    const handleDismiss = () => {
+        setCelebrationDismissed(true);
+        localStorage.setItem('celebrationDismissed', 'true');
+    };
 
     // Reset dismissal if board changes from won to not won
     React.useEffect(() => {
         if (!hasWon) {
             setCelebrationDismissed(false);
+            localStorage.removeItem('celebrationDismissed');
         }
     }, [hasWon]);
 
@@ -228,7 +236,7 @@ export const BingoBoard: React.FC = () => {
                             <p className="text-slate-300 mb-8 leading-relaxed">2026 is off to an amazing start!</p>
 
                             <button
-                                onClick={() => setCelebrationDismissed(true)}
+                                onClick={handleDismiss}
                                 className="w-full py-3 bg-gradient-to-r from-accent-primary to-accent-secondary rounded-xl font-bold text-white shadow-lg hover:shadow-[0_0_20px_rgba(139,92,246,0.4)] transition-all transform hover:scale-105"
                             >
                                 Keep Playing

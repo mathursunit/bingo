@@ -162,6 +162,9 @@ export const BingoBoard: React.FC = () => {
                                 }}
                                 className={cn(
                                     "relative rounded-lg flex items-center justify-center p-1 cursor-pointer select-none border backdrop-blur-sm overflow-hidden",
+                                    // Text styling
+                                    "font-hand text-[15px] sm:text-xl font-medium leading-tight select-none",
+                                    item.isCompleted ? "text-white scale-110 font-semibold" : "text-slate-300",
                                     // Base styles
                                     "bg-bg-card/80 border-white/5 shadow-sm",
                                     // Active State

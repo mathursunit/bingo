@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useBingo } from '../hooks/useBingo';
 import { useAuth } from '../contexts/AuthContext';
 import { cn } from '../lib/utils';
-import { Edit2, Check, Award, Printer, LogOut, Lock } from 'lucide-react';
+import { Edit2, Check, Award, Printer, LogOut, Lock, Sun, Moon } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -15,6 +15,17 @@ export const BingoBoard: React.FC = () => {
     const [celebrationDismissed, setCelebrationDismissed] = useState(() => {
         return localStorage.getItem('celebrationDismissed') === 'true';
     });
+
+    // Theme State
+    const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+        return (localStorage.getItem('theme') as 'dark' | 'light') || 'dark';
+    });
+
+    const toggleTheme = () => {
+        const newTheme = theme === 'dark' ? 'light' : 'dark';
+        setTheme(newTheme);
+        localStorage.setItem('theme', newTheme);
+    };
 
     // Lock state managed by useBingo - removed local logic
     const [logoTapCount, setLogoTapCount] = useState(0);
@@ -96,8 +107,11 @@ export const BingoBoard: React.FC = () => {
 
     return (
         <>
-            <div className="min-h-screen flex flex-col items-center p-3 pb-24 relative overflow-x-hidden no-print">
-                <div className="background-animation" />
+            <div
+                className="min-h-screen flex flex-col items-center p-3 pb-24 relative overflow-x-hidden no-print transition-colors duration-500"
+                data-theme={theme}
+            >
+                <div className="background-animation opacity-100 data-[theme=light]:opacity-0 transition-opacity duration-500" />
 
                 {/* Header - Compact Single Row */}
                 <header className="w-full max-w-[500px] flex justify-between items-center mb-4 pt-2 px-2">
@@ -107,18 +121,25 @@ export const BingoBoard: React.FC = () => {
                             animate={{ opacity: 1, x: 0 }}
                             src="/logo.png"
                             alt="SunSar Bingo"
-                            className="h-14 sm:h-16 w-auto object-contain cursor-pointer active:scale-95 transition-transform"
+                            className="h-14 sm:h-16 w-auto object-contain cursor-pointer active:scale-95 transition-transform drop-shadow-lg"
                             onClick={handleLogoTap}
                         />
                         <motion.div
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className="text-[9px] font-bold text-accent-gold uppercase tracking-wider bg-accent-gold/10 px-2 py-0.5 rounded-full border border-accent-gold/20"
+                            className="text-[9px] font-bold text-accent-gold uppercase tracking-wider bg-accent-gold/10 px-2 py-0.5 rounded-full border border-accent-gold/20 backdrop-blur-sm"
                         >
                             2026
                         </motion.div>
                     </div>
                     <div className="flex items-center gap-3">
+                        <button
+                            onClick={toggleTheme}
+                            className="text-text-secondary hover:text-accent-gold transition-colors p-2 hover:bg-glass-bg rounded-full"
+                            title={theme === 'dark' ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                        >
+                            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+                        </button>
                         <motion.div
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
@@ -133,7 +154,7 @@ export const BingoBoard: React.FC = () => {
                         </motion.div>
                         <button
                             onClick={logout}
-                            className="text-slate-400 hover:text-red-400 transition-colors p-2 hover:bg-white/5 rounded-full"
+                            className="text-text-secondary hover:text-red-400 transition-colors p-2 hover:bg-glass-bg rounded-full"
                             title="Logout"
                         >
                             <LogOut size={20} />

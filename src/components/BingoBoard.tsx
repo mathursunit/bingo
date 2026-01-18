@@ -5,34 +5,39 @@ import { cn } from '../lib/utils';
 import { Edit2, Check, Award, Printer, LogOut, Shuffle } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
+import type { BingoItem } from '../types';
 
 export const BingoBoard: React.FC = () => {
-    const { items, loading, toggleItem, updateItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock } = useBingo();
+    const { items, loading, toggleItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard } = useBingo();
     const { logout, user } = useAuth();
     const [editMode, setEditMode] = useState(false);
+
+    // Draft State
+    const [draftItems, setDraftItems] = useState<BingoItem[]>([]);
+
     // Modal State
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null);
     const [editFormText, setEditFormText] = useState("");
     const [editFormStyle, setEditFormStyle] = useState<{ color?: string; bold?: boolean; italic?: boolean; fontSize?: 'sm' | 'base' | 'lg' | 'xl' }>({});
+
     const [celebrationDismissed, setCelebrationDismissed] = useState(() => {
         return localStorage.getItem('celebrationDismissed') === 'true';
     });
 
-    // Lock state managed by useBingo - removed local logic
+    // Lock state logic
     const [logoTapCount, setLogoTapCount] = useState(0);
 
     // Backdoor unlock logic
     useEffect(() => {
         if (logoTapCount === 5) {
-            // Unlock global board
             unlockBoard();
             setLogoTapCount(0);
             confetti({
                 particleCount: 100,
                 spread: 70,
                 origin: { y: 0.6 },
-                colors: ['#fbbf24', '#ec4899', '#ffffff'] // Gold, Pink, White
+                colors: ['#fbbf24', '#ec4899', '#ffffff']
             });
         }
 
@@ -41,7 +46,7 @@ export const BingoBoard: React.FC = () => {
             timer = setTimeout(() => setLogoTapCount(0), 1000);
         }
         return () => clearTimeout(timer);
-    }, [logoTapCount, unlockBoard]); // Depends on unlockBoard but stable
+    }, [logoTapCount, unlockBoard]);
 
     const handleLogoTap = () => {
         if (!isLocked) return;
@@ -60,8 +65,6 @@ export const BingoBoard: React.FC = () => {
         localStorage.setItem('celebrationDismissed', 'true');
     };
 
-    // Reset dismissal if board changes from won to not won
-    // Reset dismissal if board changes from won to not won, but only after initial load
     React.useEffect(() => {
         if (!loading && !hasWon) {
             setCelebrationDismissed(false);
@@ -71,19 +74,25 @@ export const BingoBoard: React.FC = () => {
 
     // Open Modal
     const openEditModal = (index: number) => {
+        const currentList = editMode ? draftItems : items;
         setEditingItemIndex(index);
-        setEditFormText(items[index].text);
-        setEditFormStyle(items[index].style || { color: '#ffffff', fontSize: 'base', bold: false, italic: false });
+        setEditFormText(currentList[index].text);
+        setEditFormStyle(currentList[index].style || { color: '#ffffff', fontSize: 'base', bold: false, italic: false });
         setIsEditModalOpen(true);
     };
 
-    // Save Modal
+    // Modal OK Action (Update Draft Only)
     const handleSaveEdit = () => {
         if (editingItemIndex === null) return;
-        updateItem(editingItemIndex, {
+
+        const newDrafts = [...draftItems];
+        newDrafts[editingItemIndex] = {
+            ...newDrafts[editingItemIndex],
             text: editFormText,
             style: editFormStyle
-        });
+        };
+        setDraftItems(newDrafts);
+
         setIsEditModalOpen(false);
         setEditingItemIndex(null);
     };
@@ -106,12 +115,15 @@ export const BingoBoard: React.FC = () => {
         return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
 
+    // Determine which items to display
+    const displayItems = editMode ? draftItems : items;
+
     return (
         <>
             <div className="min-h-screen flex flex-col items-center p-3 pb-24 relative overflow-x-hidden no-print">
                 <div className="background-animation" />
 
-                {/* Header - Compact Single Row */}
+                {/* Header */}
                 <header className="w-full max-w-[500px] flex justify-between items-center mb-4 pt-2 px-2">
                     <div className="flex items-center gap-2">
                         <motion.img
@@ -156,7 +168,7 @@ export const BingoBoard: React.FC = () => {
                 {/* The Grid */}
                 <div className="w-full max-w-[500px] aspect-square relative mb-6">
                     <div className="grid grid-cols-5 gap-1.5 sm:gap-2 w-full h-full">
-                        {items.map((item, index) => (
+                        {displayItems.map((item, index) => (
                             <motion.div
                                 key={item.id}
                                 title={item.isCompleted ? `Completed by ${item.completedBy || 'Someone'} on ${formatDate(item.completedAt)}` : undefined}
@@ -166,28 +178,22 @@ export const BingoBoard: React.FC = () => {
                                 transition={{ delay: index * 0.02 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => {
-                                    if (editMode || isLocked) return;
+                                    if (editMode) return; // Grid clicks disabled in edit mode (handled by inner click)
+                                    if (isLocked) return;
                                     if (item.isFreeSpace) return;
                                     toggleItem(index);
                                 }}
                                 className={cn(
                                     "relative rounded-lg flex items-center justify-center p-1 cursor-pointer select-none border backdrop-blur-sm overflow-hidden",
-                                    // Text styling
                                     "font-hand text-[15px] sm:text-xl font-medium leading-tight select-none",
                                     item.isCompleted ? "text-white scale-110 font-semibold" : "text-slate-300",
-                                    // Base styles
                                     "bg-bg-card/80 border-white/5 shadow-sm",
-                                    // Active State
                                     item.isCompleted && !item.isFreeSpace && "bg-gradient-to-br from-accent-primary/30 to-accent-secondary/30 border-accent-primary/50 shadow-[0_0_15px_rgba(139,92,246,0.15)]",
-                                    // Free Space
                                     item.isFreeSpace && "bg-gradient-to-br from-accent-gold/20 to-accent-secondary/20 border-accent-gold/50",
-                                    // Edit Mode
                                     editMode && "border-dashed border-slate-500",
-                                    // Locked state
                                     isLocked && !editMode && "cursor-default"
                                 )}
                             >
-                                {/* Content */}
                                 <div className="w-full h-full flex items-center justify-center text-center relative z-10">
                                     <div
                                         className="w-full h-full flex items-center justify-center p-1"
@@ -204,7 +210,7 @@ export const BingoBoard: React.FC = () => {
                                             item.isCompleted && !item.isFreeSpace && "text-white"
                                         )}
                                             style={!item.isFreeSpace && !item.isCompleted ? {
-                                                color: item.style?.color || '#cbd5e1', // Default text-slate-300
+                                                color: item.style?.color || '#cbd5e1',
                                                 fontWeight: item.style?.bold ? 'bold' : '600',
                                                 fontStyle: item.style?.italic ? 'italic' : 'normal',
                                                 fontSize: item.style?.fontSize === 'sm' ? '12px' : item.style?.fontSize === 'lg' ? '18px' : item.style?.fontSize === 'xl' ? '22px' : undefined
@@ -215,35 +221,29 @@ export const BingoBoard: React.FC = () => {
                                     </div>
                                 </div>
 
-                                {/* Completed Overlay Checkmark */}
                                 {item.isCompleted && !item.isFreeSpace && !editMode && (
-                                    <motion.div
-                                        initial={{ scale: 0 }}
-                                        animate={{ scale: 1 }}
-                                        className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20"
-                                    >
-                                        <Check className="w-12 h-12 text-white" />
-                                    </motion.div>
+                                    <>
+                                        <motion.div
+                                            initial={{ scale: 0 }}
+                                            animate={{ scale: 1 }}
+                                            className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20"
+                                        >
+                                            <Check className="w-12 h-12 text-white" />
+                                        </motion.div>
+                                        <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-accent-primary rounded-full shadow-[0_0_5px_rgba(139,92,246,0.8)]"></div>
+                                    </>
                                 )}
-
-                                {/* Mini check for clarity */}
-                                {item.isCompleted && !item.isFreeSpace && !editMode && (
-                                    <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-accent-primary rounded-full shadow-[0_0_5px_rgba(139,92,246,0.8)]"></div>
-                                )}
-
-
                             </motion.div>
                         ))}
                     </div>
                 </div>
 
-                {/* Controls Bar (Moved Below) */}
+                {/* Controls Bar */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="w-full max-w-[500px] glass-panel p-4 flex flex-col gap-4"
                 >
-                    {/* Progress */}
                     <div className="w-full">
                         <div className="flex justify-between text-xs text-slate-300 mb-1.5 px-1">
                             <span className="font-semibold">Progress</span>
@@ -264,7 +264,6 @@ export const BingoBoard: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Edit Actions */}
                     <div className="flex justify-center gap-2">
                         {editMode ? (
                             <>
@@ -276,7 +275,10 @@ export const BingoBoard: React.FC = () => {
                                         Cancel
                                     </button>
                                     <button
-                                        onClick={() => setEditMode(false)}
+                                        onClick={() => {
+                                            saveBoard(draftItems);
+                                            setEditMode(false);
+                                        }}
                                         className="flex-1 py-2.5 px-4 rounded-xl text-sm font-semibold bg-green-500/20 text-green-200 border border-green-500/50 hover:bg-green-500/30 transition-all flex items-center justify-center gap-2"
                                     >
                                         <Check size={16} />
@@ -289,7 +291,10 @@ export const BingoBoard: React.FC = () => {
                                 {!isLocked && (
                                     <>
                                         <button
-                                            onClick={() => setEditMode(true)}
+                                            onClick={() => {
+                                                setDraftItems([...items]); // Init drafts
+                                                setEditMode(true);
+                                            }}
                                             className="flex-1 py-2 px-4 text-xs font-medium text-slate-400 hover:text-white transition-colors flex items-center justify-center gap-2 min-w-[100px]"
                                         >
                                             <Edit2 size={12} />
@@ -402,7 +407,6 @@ export const BingoBoard: React.FC = () => {
 
                                 {/* Styling Controls */}
                                 <div className="mb-6 space-y-3">
-                                    {/* Colors */}
                                     <div>
                                         <label className="text-xs text-slate-400 mb-1 block">Color</label>
                                         <div className="flex gap-2 flex-wrap">
@@ -417,7 +421,6 @@ export const BingoBoard: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    {/* Typography Row */}
                                     <div className="flex gap-4">
                                         <div className="flex-1">
                                             <label className="text-xs text-slate-400 mb-1 block">Size</label>
@@ -468,7 +471,7 @@ export const BingoBoard: React.FC = () => {
                                         onClick={handleSaveEdit}
                                         className="flex-1 py-3 px-4 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-xl font-bold text-white shadow-lg hover:shadow-violet-500/25 active:scale-95 transition-all"
                                     >
-                                        Save Changes
+                                        Ok
                                     </button>
                                 </div>
                             </motion.div>
@@ -476,49 +479,44 @@ export const BingoBoard: React.FC = () => {
                     )}
                 </AnimatePresence>
 
-                {/* Version Badge */}
-                <div className="mt-8 text-[10px] text-center border-t border-black pt-4 hidden">
-                    <span>Generated on {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}</span>
-                    <span>bingo.mysunsar.com</span>
-                </div>
-            </div>
-            {/* Print Layout */}
-            <div className="only-print hidden bg-white text-black p-8 w-full h-full absolute top-0 left-0 z-[99999]">
-                <div className="flex justify-between items-center mb-8 border-b-2 border-black pb-4">
-                    <div className="flex items-center gap-4">
-                        <img src="/logo.png" className="h-16 w-auto" alt="Logo" />
-                        <h1 className="text-3xl font-bold">2026 Edition</h1>
-                    </div>
-                    <div className="text-right">
-                        <p className="text-sm uppercase tracking-widest mb-1">Status Report</p>
-                        <p className="text-2xl font-bold">{bingoCount} / 12 Bingos</p>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-5 gap-0 border-2 border-black">
-                    {items.map((item) => (
-                        <div key={item.id} className="aspect-square border border-black p-2 flex flex-col justify-between relative overflow-hidden">
-                            <div className="text-xs font-bold leading-tight z-10">{item.text}</div>
-                            {item.isCompleted && !item.isFreeSpace && (
-                                <div className="mt-1 relative z-10">
-                                    <div className="text-[8px] uppercase font-bold text-slate-600">Completed by:</div>
-                                    <div className="text-[10px] font-mono font-bold leading-none">{item.completedBy || 'User'}</div>
-                                    <div className="text-[8px] text-slate-500 mt-0.5">{formatDate(item.completedAt)}</div>
-                                </div>
-                            )}
-                            {item.isCompleted && (
-                                <div className="absolute bottom-1 right-1 text-4xl font-bold text-slate-200 opacity-50 pointer-events-none z-0">
-                                    ✓
-                                </div>
-                            )}
-                            {item.isFreeSpace && <div className="absolute inset-0 flex items-center justify-center font-bold text-2xl rotate-[-45deg] opacity-20">FREE</div>}
+                {/* Print Layout */}
+                <div className="only-print hidden bg-white text-black p-8 w-full h-full absolute top-0 left-0 z-[99999]">
+                    <div className="flex justify-between items-center mb-8 border-b-2 border-black pb-4">
+                        <div className="flex items-center gap-4">
+                            <img src="/logo.png" className="h-16 w-auto" alt="Logo" />
+                            <h1 className="text-3xl font-bold">2026 Edition</h1>
                         </div>
-                    ))}
-                </div>
+                        <div className="text-right">
+                            <p className="text-sm uppercase tracking-widest mb-1">Status Report</p>
+                            <p className="text-2xl font-bold">{bingoCount} / 12 Bingos</p>
+                        </div>
+                    </div>
 
-                <div className="mt-8 text-[10px] text-center border-t border-black pt-4 hidden">
-                    <span>Generated on {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}</span>
-                    <span>bingo.mysunsar.com</span>
+                    <div className="grid grid-cols-5 gap-0 border-2 border-black">
+                        {items.map((item) => (
+                            <div key={item.id} className="aspect-square border border-black p-2 flex flex-col justify-between relative overflow-hidden">
+                                <div className="text-xs font-bold leading-tight z-10">{item.text}</div>
+                                {item.isCompleted && !item.isFreeSpace && (
+                                    <div className="mt-1 relative z-10">
+                                        <div className="text-[8px] uppercase font-bold text-slate-600">Completed by:</div>
+                                        <div className="text-[10px] font-mono font-bold leading-none">{item.completedBy || 'User'}</div>
+                                        <div className="text-[8px] text-slate-500 mt-0.5">{formatDate(item.completedAt)}</div>
+                                    </div>
+                                )}
+                                {item.isCompleted && (
+                                    <div className="absolute bottom-1 right-1 text-4xl font-bold text-slate-200 opacity-50 pointer-events-none z-0">
+                                        ✓
+                                    </div>
+                                )}
+                                {item.isFreeSpace && <div className="absolute inset-0 flex items-center justify-center font-bold text-2xl rotate-[-45deg] opacity-20">FREE</div>}
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="mt-8 text-[10px] text-center border-t border-black pt-4 hidden">
+                        <span>Generated on {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}</span>
+                        <span>bingo.mysunsar.com</span>
+                    </div>
                 </div>
             </div>
         </>

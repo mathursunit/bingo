@@ -219,5 +219,17 @@ export const useBingo = () => {
         return wins.reduce((acc, line) => line.every(i => completedPositions.has(i)) ? acc + 1 : acc, 0);
     }, [items]);
 
-    return { items, loading, toggleItem, updateItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock };
+    const saveBoard = async (newItems: BingoItem[]) => {
+        setItems(newItems);
+        try {
+            await updateDoc(doc(db, 'years', YEAR_DOC_ID), {
+                items: newItems,
+                lastUpdated: Timestamp.now()
+            });
+        } catch (error) {
+            console.error("Error saving board:", error);
+        }
+    };
+
+    return { items, loading, toggleItem, updateItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard };
 };

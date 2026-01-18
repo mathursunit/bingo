@@ -61,11 +61,17 @@ export const BingoBoard: React.FC = () => {
                     <motion.div
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-[10px] font-bold text-accent-gold uppercase tracking-widest bg-accent-gold/10 px-3 py-1 rounded-full border border-accent-gold/20 inline-block mb-1"
+                        className="text-[10px] font-bold text-accent-gold uppercase tracking-widest bg-accent-gold/10 px-3 py-1 rounded-full border border-accent-gold/20 inline-block mb-2"
                     >
                         2026 Edition
                     </motion.div>
-                    <h1 className="text-2xl sm:text-3xl font-heading font-bold text-gradient">SunSar Bingo</h1>
+                    <motion.img
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        src="/logo.png"
+                        alt="SunSar Bingo"
+                        className="h-12 w-auto object-contain"
+                    />
                 </div>
                 <div className="flex items-center gap-3">
                     <button

@@ -10,7 +10,9 @@ export interface BingoItem {
 }
 
 export interface BingoYear {
-    year: number;
+    id: string;
+    isActive: boolean;
+    isLocked?: boolean;
     items: BingoItem[];
     lastUpdated?: Timestamp;
 }

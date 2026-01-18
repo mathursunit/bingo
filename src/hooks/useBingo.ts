@@ -167,5 +167,25 @@ export const useBingo = () => {
         return wins.reduce((acc, line) => line.every(i => completedIndices.has(i)) ? acc + 1 : acc, 0);
     }, [items]);
 
-    return { items, loading, toggleItem, updateItemText, hasWon, bingoCount };
+    // Lock State Logic
+    const [isLocked, setIsLocked] = useState(false);
+
+    useEffect(() => {
+        const unsub = onSnapshot(doc(db, 'years', '2026'), (doc) => {
+            if (doc.exists()) {
+                setIsLocked(doc.data().isLocked || false);
+            }
+        });
+        return () => unsub();
+    }, []);
+
+    const lockBoard = async () => {
+        await setDoc(doc(db, 'years', '2026'), { isLocked: true }, { merge: true });
+    };
+
+    const unlockBoard = async () => {
+        await setDoc(doc(db, 'years', '2026'), { isLocked: false }, { merge: true });
+    };
+
+    return { items, loading, toggleItem, updateItemText, hasWon, bingoCount, isLocked, lockBoard, unlockBoard };
 };

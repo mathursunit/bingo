@@ -7,7 +7,7 @@ import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const BingoBoard: React.FC = () => {
-    const { items, loading, toggleItem, updateItemText, hasWon, bingoCount } = useBingo();
+    const { items, loading, toggleItem, updateItemText, hasWon, bingoCount, isLocked, lockBoard, unlockBoard } = useBingo();
     const { logout, user } = useAuth();
     const [editMode, setEditMode] = useState(false);
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -16,15 +16,14 @@ export const BingoBoard: React.FC = () => {
         return localStorage.getItem('celebrationDismissed') === 'true';
     });
 
-    // Lock state
-    const [isLocked, setIsLocked] = useState(() => localStorage.getItem('boardLocked') === 'true');
+    // Lock state managed by useBingo - removed local logic
     const [logoTapCount, setLogoTapCount] = useState(0);
 
     // Backdoor unlock logic
     useEffect(() => {
         if (logoTapCount === 5) {
-            setIsLocked(false);
-            localStorage.removeItem('boardLocked');
+            // Unlock global board
+            unlockBoard();
             setLogoTapCount(0);
             confetti({
                 particleCount: 100,
@@ -39,7 +38,7 @@ export const BingoBoard: React.FC = () => {
             timer = setTimeout(() => setLogoTapCount(0), 1000);
         }
         return () => clearTimeout(timer);
-    }, [logoTapCount]);
+    }, [logoTapCount, unlockBoard]); // Depends on unlockBoard but stable
 
     const handleLogoTap = () => {
         if (!isLocked) return;
@@ -47,10 +46,9 @@ export const BingoBoard: React.FC = () => {
     };
 
     const handleFinalize = () => {
-        if (window.confirm("Finalize Current Board?\n\nThis will lock the board editing features so you can focus on playing. (You can print the status at any time).")) {
-            setIsLocked(true);
+        if (window.confirm("Finalize Board for EVERYONE?\n\nThis will lock the board editing features for all users. (You can unlock it via the secret logo tap).")) {
+            lockBoard();
             setEditMode(false);
-            localStorage.setItem('boardLocked', 'true');
         }
     };
 

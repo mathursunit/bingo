@@ -81,3 +81,28 @@
     opacity: 1;
   }
 }
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .only-print {
+    display: block !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Reset some resets */
+  * {
+    text-shadow: none !important;
+    box-shadow: none !important;
+  }
+}
+
+.only-print {
+  display: none;
+}

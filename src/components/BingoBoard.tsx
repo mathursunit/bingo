@@ -70,7 +70,7 @@ export const BingoBoard: React.FC = () => {
                         animate={{ opacity: 1, x: 0 }}
                         src="/logo.png"
                         alt="SunSar Bingo"
-                        className="h-16 w-auto object-contain"
+                        className="h-24 sm:h-28 w-auto object-contain -ml-2"
                     />
                 </div>
                 <div className="flex items-center gap-3">

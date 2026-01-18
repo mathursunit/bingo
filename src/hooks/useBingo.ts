@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { doc, onSnapshot, setDoc, updateDoc, Timestamp } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc, updateDoc, Timestamp, getDoc, deleteField } from 'firebase/firestore';
 import { db } from '../firebase';
 import { type BingoYear, type BingoItem } from '../types';
 import { useAuth } from '../contexts/AuthContext';
@@ -196,12 +196,66 @@ export const useBingo = () => {
     }, []);
 
     const lockBoard = async () => {
+        // Just lock without jumbling (if needed, but main flow is jumble)
         await setDoc(doc(db, 'years', '2026'), { isLocked: true }, { merge: true });
     };
 
-    const unlockBoard = async () => {
-        await setDoc(doc(db, 'years', '2026'), { isLocked: false }, { merge: true });
+    const jumbleAndLock = async () => {
+        // Backup current order
+        const currentItems = [...items];
+
+        // Shuffle everything except center (index 12)
+        // Extract center
+        const center = currentItems[12];
+        const others = [...currentItems.slice(0, 12), ...currentItems.slice(13)];
+
+        // Fisher-Yates shuffle
+        for (let i = others.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [others[i], others[j]] = [others[j], others[i]];
+        }
+
+        // Reconstruct: 0-11, Center, 12-23
+        const newItems = [
+            ...others.slice(0, 12),
+            center,
+            ...others.slice(12)
+        ];
+
+        await setDoc(doc(db, 'years', '2026'), {
+            isLocked: true,
+            items: newItems,
+            itemsBackup: currentItems, // Save backup
+            lastUpdated: Timestamp.now()
+        }, { merge: true });
     };
 
-    return { items, loading, toggleItem, updateItemText, updateItemStyle, hasWon, bingoCount, isLocked, lockBoard, unlockBoard };
+    const unlockBoard = async () => {
+        // Restore from backup if exists
+        try {
+            const docRef = doc(db, 'years', '2026');
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                if (data.itemsBackup) {
+                    // Restore backup and delete the field
+                    await updateDoc(docRef, {
+                        items: data.itemsBackup,
+                        itemsBackup: deleteField(),
+                        isLocked: false,
+                        lastUpdated: Timestamp.now()
+                    });
+                } else {
+                    // Normal unlock
+                    await updateDoc(docRef, { isLocked: false, lastUpdated: Timestamp.now() });
+                }
+            }
+        } catch (error) {
+            console.error("Error unlocking board:", error);
+        }
+    };
+
+    return { items, loading, toggleItem, updateItemText, updateItemStyle, hasWon, bingoCount, isLocked, lockBoard, jumbleAndLock, unlockBoard };
 };
+

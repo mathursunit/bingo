@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useBingo } from '../hooks/useBingo';
 import { useAuth } from '../contexts/AuthContext';
 import { cn } from '../lib/utils';
-import { Edit2, Check, Award, Printer, LogOut, Lock } from 'lucide-react';
+import { Edit2, Check, Award, Printer, LogOut, Shuffle } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const BingoBoard: React.FC = () => {
-    const { items, loading, toggleItem, updateItemText, updateItemStyle, hasWon, bingoCount, isLocked, lockBoard, unlockBoard } = useBingo();
+    const { items, loading, toggleItem, updateItemText, updateItemStyle, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock } = useBingo();
     const { logout, user } = useAuth();
     const [editMode, setEditMode] = useState(false);
     // Modal State
@@ -49,8 +49,8 @@ export const BingoBoard: React.FC = () => {
     };
 
     const handleFinalize = () => {
-        if (window.confirm("Finalize Board for EVERYONE?\n\nThis will lock the board editing features for all users. (You can unlock it via the secret logo tap).")) {
-            lockBoard();
+        if (window.confirm("Jumble & Finalize Board?\n\nThis will randomly shuffle all tiles (except the center) and LOCK the board. \n\n(Tap the logo 5 times to Undo/Unlock).")) {
+            jumbleAndLock();
             setEditMode(false);
         }
     };
@@ -297,8 +297,8 @@ export const BingoBoard: React.FC = () => {
                                             onClick={handleFinalize}
                                             className="flex-1 py-2 px-4 text-xs font-medium text-red-400 hover:text-red-300 transition-colors flex items-center justify-center gap-2 min-w-[100px]"
                                         >
-                                            <Lock size={12} />
-                                            Finalize
+                                            <Shuffle size={12} />
+                                            Jumble & Finalize
                                         </button>
                                     </>
                                 )}

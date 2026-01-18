@@ -229,12 +229,7 @@ export const BingoBoard: React.FC = () => {
                                     <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-accent-primary rounded-full shadow-[0_0_5px_rgba(139,92,246,0.8)]"></div>
                                 )}
 
-                                {/* Edit Indicator Overlay */}
-                                {editMode && (
-                                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 pointer-events-none">
-                                        <Edit2 className="text-white/50 w-6 h-6" />
-                                    </div>
-                                )}
+
                             </motion.div>
                         ))}
                     </div>

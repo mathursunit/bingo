@@ -2,10 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useBingo } from '../hooks/useBingo';
 import { useAuth } from '../contexts/AuthContext';
 import { cn } from '../lib/utils';
-import { Edit2, Check, Award, Printer, LogOut, Shuffle, Camera, X, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { Edit2, Check, Award, LogOut, Shuffle, Camera, X, ChevronLeft, ChevronRight, Plus, BookOpen, Printer } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { BingoItem } from '../types';
+import { MemoriesAlbum } from './MemoriesAlbum';
 
 export const BingoBoard: React.FC = () => {
     const { items, loading, toggleItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile } = useBingo();
@@ -34,6 +35,9 @@ export const BingoBoard: React.FC = () => {
     const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
     const [isAddingPhoto, setIsAddingPhoto] = useState(false);
     const addPhotoInputRef = useRef<HTMLInputElement>(null);
+
+    // Memories Album State
+    const [isMemoriesOpen, setIsMemoriesOpen] = useState(false);
 
     const [celebrationDismissed, setCelebrationDismissed] = useState(() => {
         return localStorage.getItem('celebrationDismissed') === 'true';
@@ -157,6 +161,13 @@ export const BingoBoard: React.FC = () => {
                         </motion.div>
                     </div>
                     <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setIsMemoriesOpen(true)}
+                            className="text-slate-400 hover:text-accent-gold transition-colors p-2 hover:bg-white/5 rounded-full"
+                            title="View Memories"
+                        >
+                            <BookOpen size={20} />
+                        </button>
                         <motion.div
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
@@ -697,14 +708,16 @@ export const BingoBoard: React.FC = () => {
                                                 className="hidden"
                                                 onChange={async (e) => {
                                                     const file = e.target.files?.[0];
-                                                    if (file && viewingItemIndex !== null) {
+                                                    if (file && viewingItemIndex !== null && viewingItem) {
                                                         setIsAddingPhoto(true);
                                                         try {
-                                                            await addPhotoToTile(viewingItemIndex, file);
-                                                            // Update viewing item with new photo
-                                                            const updatedItem = items[viewingItemIndex];
-                                                            setViewingItem(updatedItem);
-                                                            setCurrentPhotoIndex(updatedItem.proofPhotos?.length ? updatedItem.proofPhotos.length - 1 : 0);
+                                                            const newPhotoUrl = await addPhotoToTile(viewingItemIndex, file);
+                                                            // Optimistically update viewingItem with new photo
+                                                            if (newPhotoUrl) {
+                                                                const updatedPhotos = [...(viewingItem.proofPhotos || []), newPhotoUrl];
+                                                                setViewingItem({ ...viewingItem, proofPhotos: updatedPhotos });
+                                                                setCurrentPhotoIndex(updatedPhotos.length - 1);
+                                                            }
                                                         } catch (err) {
                                                             alert('Failed to add photo. Max 5 photos allowed.');
                                                         } finally {
@@ -784,6 +797,13 @@ export const BingoBoard: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Memories Album */}
+            <MemoriesAlbum
+                items={items}
+                isOpen={isMemoriesOpen}
+                onClose={() => setIsMemoriesOpen(false)}
+            />
         </>
     );
 };

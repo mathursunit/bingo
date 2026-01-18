@@ -70,7 +70,7 @@ export const BingoBoard: React.FC = () => {
                         animate={{ opacity: 1, x: 0 }}
                         src="/logo.png"
                         alt="SunSar Bingo"
-                        className="h-12 w-auto object-contain"
+                        className="h-16 w-auto object-contain"
                     />
                 </div>
                 <div className="flex items-center gap-3">
@@ -221,10 +221,10 @@ export const BingoBoard: React.FC = () => {
                     ) : (
                         <button
                             onClick={() => setEditMode(true)}
-                            className="w-full py-2.5 px-4 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 border bg-white/5 text-slate-300 border-white/10 hover:bg-white/10"
+                            className="mx-auto text-xs font-medium text-slate-500 hover:text-slate-300 transition-colors flex items-center gap-2 py-2 px-4 opacity-50 hover:opacity-100"
                         >
-                            <Edit2 size={16} />
-                            Edit Board Items
+                            <Edit2 size={12} />
+                            Edit Board
                         </button>
                     )}
                 </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { doc, onSnapshot, setDoc, updateDoc, getDoc, Timestamp } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import { type BingoYear, type BingoItem } from '../types';
 import { useAuth } from '../contexts/AuthContext';

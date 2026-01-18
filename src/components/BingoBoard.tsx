@@ -279,14 +279,14 @@ export const BingoBoard: React.FC = () => {
                                     <>
                                         <button
                                             onClick={() => setEditMode(true)}
-                                            className="flex-1 py-2 px-4 text-xs font-medium text-slate-500 hover:text-slate-300 transition-colors flex items-center justify-center gap-2 opacity-50 hover:opacity-100 min-w-[100px]"
+                                            className="flex-1 py-2 px-4 text-xs font-medium text-slate-400 hover:text-white transition-colors flex items-center justify-center gap-2 min-w-[100px]"
                                         >
                                             <Edit2 size={12} />
                                             Edit Board
                                         </button>
                                         <button
                                             onClick={handleFinalize}
-                                            className="flex-1 py-2 px-4 text-xs font-medium text-red-500/70 hover:text-red-400 transition-colors flex items-center justify-center gap-2 opacity-50 hover:opacity-100 min-w-[100px]"
+                                            className="flex-1 py-2 px-4 text-xs font-medium text-red-400 hover:text-red-300 transition-colors flex items-center justify-center gap-2 min-w-[100px]"
                                         >
                                             <Lock size={12} />
                                             Finalize
@@ -295,7 +295,7 @@ export const BingoBoard: React.FC = () => {
                                 )}
                                 <button
                                     onClick={() => window.print()}
-                                    className="flex-1 py-2 px-4 text-xs font-medium text-slate-500 hover:text-slate-300 transition-colors flex items-center justify-center gap-2 opacity-50 hover:opacity-100 min-w-[100px]"
+                                    className="flex-1 py-2 px-4 text-xs font-medium text-slate-400 hover:text-white transition-colors flex items-center justify-center gap-2 min-w-[100px]"
                                 >
                                     <Printer size={12} />
                                     Print Status

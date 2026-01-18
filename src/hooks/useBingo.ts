@@ -21,6 +21,7 @@ export const useBingo = () => {
     const [items, setItems] = useState<BingoItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [hasWon, setHasWon] = useState(false);
+    const [isLocked, setIsLocked] = useState(false);
 
     useEffect(() => {
         if (!user) return;
@@ -30,12 +31,13 @@ export const useBingo = () => {
         const unsubscribe = onSnapshot(docRef, (docSnap) => {
             if (docSnap.exists()) {
                 const data = docSnap.data() as BingoYear;
-                // Sort items by ID just in case
-                setItems(data.items.sort((a, b) => a.id - b.id));
-                // Check win condition locally for UI
+                // Important: Do NOT sort by ID. Firestore stores the array in order.
+                // Sorting by ID would undo any 'Jumble' operation visually.
+                setItems(data.items);
+
                 checkWin(data.items);
+                setIsLocked(data.isLocked || false);
             } else {
-                // Initialize if not exists
                 initializeBoard();
             }
             setLoading(false);
@@ -44,10 +46,36 @@ export const useBingo = () => {
         return () => unsubscribe();
     }, [user]);
 
-    const initializeBoard = async () => {
-        // Shuffle the initial items to be random
-        const shuffled = [...INITIAL_ITEMS].sort(() => 0.5 - Math.random());
+    const checkWin = (currentItems: BingoItem[]) => {
+        const wins = [
+            [0, 1, 2, 3, 4], [5, 6, 7, 8, 9], [10, 11, 12, 13, 14], [15, 16, 17, 18, 19], [20, 21, 22, 23, 24], // Rows
+            [0, 5, 10, 15, 20], [1, 6, 11, 16, 21], [2, 7, 12, 17, 22], [3, 8, 13, 18, 23], [4, 9, 14, 19, 24], // Cols
+            [0, 6, 12, 18, 24], [4, 8, 12, 16, 20] // Diagonals
+        ];
 
+        // Check using Indices (Position), not IDs.
+        const completedPositions = new Set(currentItems.map((item, index) => item.isCompleted ? index : -1));
+
+        let isBingo = false;
+        for (let combination of wins) {
+            if (combination.every(idx => completedPositions.has(idx))) {
+                isBingo = true;
+                break;
+            }
+        }
+
+        if (isBingo) {
+            if (!hasWon) {
+                setHasWon(true);
+                triggerConfetti(2);
+            }
+        } else {
+            setHasWon(false);
+        }
+    };
+
+    const initializeBoard = async () => {
+        const shuffled = [...INITIAL_ITEMS].sort(() => 0.5 - Math.random());
         const newItems: BingoItem[] = [];
         let itemIndex = 0;
 
@@ -80,96 +108,103 @@ export const useBingo = () => {
 
     const toggleItem = async (index: number) => {
         if (!items.length) return;
-
-        // Create a deep copy to avoid mutating state directly
         const newItems = items.map(item => ({ ...item }));
         const item = newItems[index];
 
-        // Toggle
+        if (item.isFreeSpace) return;
+
         item.isCompleted = !item.isCompleted;
         if (item.isCompleted) {
             item.completedBy = user?.displayName || user?.email || 'Unknown';
             item.completedAt = Timestamp.now();
             triggerConfetti(0.5);
         } else {
-            // Use null instead of undefined for Firestore
             item.completedBy = null as any;
             item.completedAt = null as any;
         }
 
-        // Optimistic update
         setItems(newItems);
         checkWin(newItems);
 
-        // Save to DB
         try {
-            const docRef = doc(db, 'years', YEAR_DOC_ID);
-            await updateDoc(docRef, {
+            await updateDoc(doc(db, 'years', YEAR_DOC_ID), {
                 items: newItems,
                 lastUpdated: Timestamp.now()
             });
         } catch (error) {
             console.error("Error updating bingo board:", error);
-            // Revert state if sync fails? Optionally could reload from DB
         }
     };
 
-    const updateItemText = async (index: number, newText: string) => {
-        const newItems = items.map(item => ({ ...item })); // Deep copy
-        newItems[index].text = newText;
+    const updateItem = async (index: number, updates: { text?: string, style?: BingoItem['style'] }) => {
+        const newItems = items.map(item => ({ ...item }));
+        // We use the 'items' from closure. Optimistic update.
+        // NOTE: If multiple rapid updates happen, this might need functional state set, 
+        // but for a text editor it's okay (last save wins).
+
+        if (updates.text !== undefined) newItems[index].text = updates.text;
+        if (updates.style !== undefined) newItems[index].style = updates.style;
         setItems(newItems);
 
         try {
-            const docRef = doc(db, 'years', YEAR_DOC_ID);
-            await updateDoc(docRef, {
+            await updateDoc(doc(db, 'years', YEAR_DOC_ID), {
                 items: newItems,
                 lastUpdated: Timestamp.now()
             });
         } catch (error) {
-            console.error("Error updating text:", error);
+            console.error("Error updating item:", error);
         }
     };
 
-    const updateItemStyle = async (index: number, newStyle: BingoItem['style']) => {
-        const newItems = items.map(item => ({ ...item })); // Deep copy
-        newItems[index] = { ...newItems[index], style: newStyle };
-        setItems(newItems);
+    const jumbleAndLock = async () => {
+        const currentItems = [...items];
 
-        try {
-            const docRef = doc(db, 'years', YEAR_DOC_ID);
-            await updateDoc(docRef, {
-                items: newItems,
-                lastUpdated: Timestamp.now()
-            });
-        } catch (error) {
-            console.error("Error updating style:", error);
+        const center = currentItems[12];
+        const others = [...currentItems.slice(0, 12), ...currentItems.slice(13)];
+
+        for (let i = others.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [others[i], others[j]] = [others[j], others[i]];
         }
-    };
 
-    const checkWin = (currentItems: BingoItem[]) => {
-        const wins = [
-            [0, 1, 2, 3, 4], [5, 6, 7, 8, 9], [10, 11, 12, 13, 14], [15, 16, 17, 18, 19], [20, 21, 22, 23, 24], // Rows
-            [0, 5, 10, 15, 20], [1, 6, 11, 16, 21], [2, 7, 12, 17, 22], [3, 8, 13, 18, 23], [4, 9, 14, 19, 24], // Cols
-            [0, 6, 12, 18, 24], [4, 8, 12, 16, 20] // Diagonals
+        const newItems = [
+            ...others.slice(0, 12),
+            center,
+            ...others.slice(12)
         ];
 
-        const completedIndices = new Set(currentItems.filter(i => i.isCompleted).map(i => i.id));
-        let isBingo = false;
+        // Optimistic
+        setItems(newItems);
+        setIsLocked(true);
 
-        for (let combination of wins) {
-            if (combination.every(idx => completedIndices.has(idx))) {
-                isBingo = true;
-                break;
-            }
-        }
+        await setDoc(doc(db, 'years', '2026'), {
+            isLocked: true,
+            items: newItems,
+            itemsBackup: currentItems,
+            lastUpdated: Timestamp.now()
+        }, { merge: true });
+    };
 
-        if (isBingo) {
-            if (!hasWon) {
-                setHasWon(true);
-                triggerConfetti(2);
+    const unlockBoard = async () => {
+        try {
+            const docRef = doc(db, 'years', '2026');
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                if (data.itemsBackup) {
+                    await updateDoc(docRef, {
+                        items: data.itemsBackup,
+                        itemsBackup: deleteField(),
+                        isLocked: false,
+                        lastUpdated: Timestamp.now()
+                    });
+                } else {
+                    await updateDoc(docRef, { isLocked: false, lastUpdated: Timestamp.now() });
+                }
             }
-        } else {
-            setHasWon(false);
+        } catch (error) {
+            console.error("Error unlocking board:", error);
         }
     };
 
@@ -179,83 +214,10 @@ export const useBingo = () => {
             [0, 5, 10, 15, 20], [1, 6, 11, 16, 21], [2, 7, 12, 17, 22], [3, 8, 13, 18, 23], [4, 9, 14, 19, 24],
             [0, 6, 12, 18, 24], [4, 8, 12, 16, 20]
         ];
-        const completedIndices = new Set(items.filter(i => i.isCompleted).map(i => i.id));
-        return wins.reduce((acc, line) => line.every(i => completedIndices.has(i)) ? acc + 1 : acc, 0);
+        // Check positions
+        const completedPositions = new Set(items.map((item, index) => item.isCompleted ? index : -1));
+        return wins.reduce((acc, line) => line.every(i => completedPositions.has(i)) ? acc + 1 : acc, 0);
     }, [items]);
 
-    // Lock State Logic
-    const [isLocked, setIsLocked] = useState(false);
-
-    useEffect(() => {
-        const unsub = onSnapshot(doc(db, 'years', '2026'), (doc) => {
-            if (doc.exists()) {
-                setIsLocked(doc.data().isLocked || false);
-            }
-        });
-        return () => unsub();
-    }, []);
-
-    const lockBoard = async () => {
-        // Just lock without jumbling (if needed, but main flow is jumble)
-        await setDoc(doc(db, 'years', '2026'), { isLocked: true }, { merge: true });
-    };
-
-    const jumbleAndLock = async () => {
-        // Backup current order
-        const currentItems = [...items];
-
-        // Shuffle everything except center (index 12)
-        // Extract center
-        const center = currentItems[12];
-        const others = [...currentItems.slice(0, 12), ...currentItems.slice(13)];
-
-        // Fisher-Yates shuffle
-        for (let i = others.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [others[i], others[j]] = [others[j], others[i]];
-        }
-
-        // Reconstruct: 0-11, Center, 12-23
-        const newItems = [
-            ...others.slice(0, 12),
-            center,
-            ...others.slice(12)
-        ];
-
-        await setDoc(doc(db, 'years', '2026'), {
-            isLocked: true,
-            items: newItems,
-            itemsBackup: currentItems, // Save backup
-            lastUpdated: Timestamp.now()
-        }, { merge: true });
-    };
-
-    const unlockBoard = async () => {
-        // Restore from backup if exists
-        try {
-            const docRef = doc(db, 'years', '2026');
-            const docSnap = await getDoc(docRef);
-
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                if (data.itemsBackup) {
-                    // Restore backup and delete the field
-                    await updateDoc(docRef, {
-                        items: data.itemsBackup,
-                        itemsBackup: deleteField(),
-                        isLocked: false,
-                        lastUpdated: Timestamp.now()
-                    });
-                } else {
-                    // Normal unlock
-                    await updateDoc(docRef, { isLocked: false, lastUpdated: Timestamp.now() });
-                }
-            }
-        } catch (error) {
-            console.error("Error unlocking board:", error);
-        }
-    };
-
-    return { items, loading, toggleItem, updateItemText, updateItemStyle, hasWon, bingoCount, isLocked, lockBoard, jumbleAndLock, unlockBoard };
+    return { items, loading, toggleItem, updateItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock };
 };
-

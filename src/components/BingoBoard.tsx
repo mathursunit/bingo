@@ -7,7 +7,7 @@ import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const BingoBoard: React.FC = () => {
-    const { items, loading, toggleItem, updateItemText, updateItemStyle, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock } = useBingo();
+    const { items, loading, toggleItem, updateItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock } = useBingo();
     const { logout, user } = useAuth();
     const [editMode, setEditMode] = useState(false);
     // Modal State
@@ -80,8 +80,10 @@ export const BingoBoard: React.FC = () => {
     // Save Modal
     const handleSaveEdit = () => {
         if (editingItemIndex === null) return;
-        updateItemText(editingItemIndex, editFormText);
-        updateItemStyle(editingItemIndex, editFormStyle);
+        updateItem(editingItemIndex, {
+            text: editFormText,
+            style: editFormStyle
+        });
         setIsEditModalOpen(false);
         setEditingItemIndex(null);
     };

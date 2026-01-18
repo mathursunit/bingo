@@ -10,9 +10,11 @@ export const BingoBoard: React.FC = () => {
     const { items, loading, toggleItem, updateItemText, updateItemStyle, hasWon, bingoCount, isLocked, lockBoard, unlockBoard } = useBingo();
     const { logout, user } = useAuth();
     const [editMode, setEditMode] = useState(false);
-    const [editingIndex, setEditingIndex] = useState<number | null>(null);
-    const [tempText, setTempText] = useState("");
-    const [tempStyle, setTempStyle] = useState<{ color?: string; bold?: boolean; italic?: boolean; fontSize?: 'sm' | 'base' | 'lg' | 'xl' }>({});
+    // Modal State
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null);
+    const [editFormText, setEditFormText] = useState("");
+    const [editFormStyle, setEditFormStyle] = useState<{ color?: string; bold?: boolean; italic?: boolean; fontSize?: 'sm' | 'base' | 'lg' | 'xl' }>({});
     const [celebrationDismissed, setCelebrationDismissed] = useState(() => {
         return localStorage.getItem('celebrationDismissed') === 'true';
     });
@@ -67,16 +69,21 @@ export const BingoBoard: React.FC = () => {
         }
     }, [hasWon, loading]);
 
-    const handleEditStart = (index: number, currentText: string, currentStyle: any) => {
-        setEditingIndex(index);
-        setTempText(currentText);
-        setTempStyle(currentStyle || { color: '#ffffff', fontSize: 'base' });
+    // Open Modal
+    const openEditModal = (index: number) => {
+        setEditingItemIndex(index);
+        setEditFormText(items[index].text);
+        setEditFormStyle(items[index].style || { color: '#ffffff', fontSize: 'base', bold: false, italic: false });
+        setIsEditModalOpen(true);
     };
 
-    const handleEditSave = (index: number) => {
-        updateItemText(index, tempText);
-        updateItemStyle(index, tempStyle);
-        setEditingIndex(null);
+    // Save Modal
+    const handleSaveEdit = () => {
+        if (editingItemIndex === null) return;
+        updateItemText(editingItemIndex, editFormText);
+        updateItemStyle(editingItemIndex, editFormStyle);
+        setIsEditModalOpen(false);
+        setEditingItemIndex(null);
     };
 
     if (loading) return (
@@ -180,101 +187,30 @@ export const BingoBoard: React.FC = () => {
                             >
                                 {/* Content */}
                                 <div className="w-full h-full flex items-center justify-center text-center relative z-10">
-                                    {editMode && editingIndex === index ? (
-                                        <div className="absolute inset-0 z-50 flex flex-col bg-bg-dark rounded-lg border border-accent-gold shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
-                                            {/* Mini Toolbar */}
-                                            <div className="flex items-center gap-1 p-1 bg-black/40 border-b border-white/10 shrink-0 overflow-x-auto no-scrollbar" onMouseDown={e => e.preventDefault()}>
-                                                {/* Colors */}
-                                                {['#ffffff', '#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#ec4899', '#a855f7'].map(color => (
-                                                    <button
-                                                        key={color}
-                                                        className={cn("w-4 h-4 rounded-full border border-white/10 hover:scale-110 transition-transform flex-shrink-0", tempStyle.color === color && "ring-1 ring-white")}
-                                                        style={{ backgroundColor: color }}
-                                                        onClick={() => setTempStyle(prev => ({ ...prev, color }))}
-                                                        title={color}
-                                                    />
-                                                ))}
-                                                <div className="w-px h-3 bg-white/20 mx-1 flex-shrink-0"></div>
-                                                {/* Styles */}
-                                                <button
-                                                    onClick={() => setTempStyle(prev => ({ ...prev, bold: !prev.bold }))}
-                                                    className={cn("p-1 rounded hover:bg-white/10 text-[10px] font-bold text-white flex-shrink-0", tempStyle.bold && "bg-accent-primary/50")}
-                                                    title="Bold"
-                                                >
-                                                    B
-                                                </button>
-                                                <button
-                                                    onClick={() => setTempStyle(prev => ({ ...prev, italic: !prev.italic }))}
-                                                    className={cn("p-1 rounded hover:bg-white/10 text-[10px] italic text-white flex-shrink-0", tempStyle.italic && "bg-accent-primary/50")}
-                                                    title="Italic"
-                                                >
-                                                    I
-                                                </button>
-                                                {/* Size */}
-                                                <select
-                                                    className="bg-black/20 text-[10px] text-white border border-white/20 rounded px-0.5 py-0 outline-none flex-shrink-0"
-                                                    value={tempStyle.fontSize || 'base'}
-                                                    onChange={(e) => setTempStyle(prev => ({ ...prev, fontSize: e.target.value as any }))}
-                                                >
-                                                    <option value="sm">S</option>
-                                                    <option value="base">M</option>
-                                                    <option value="lg">L</option>
-                                                    <option value="xl">XL</option>
-                                                </select>
-                                                {/* Save Button for mobile usability */}
-                                                <button
-                                                    onClick={() => handleEditSave(index)}
-                                                    className="ml-auto p-1 rounded hover:bg-green-500/20 text-green-400"
-                                                    title="Save"
-                                                >
-                                                    <Check size={12} />
-                                                </button>
-                                            </div>
-
-                                            <textarea
-                                                autoFocus
-                                                className="w-full h-full bg-transparent text-[10px] p-2 text-white outline-none resize-none leading-tight"
-                                                style={{
-                                                    color: tempStyle.color || '#ffffff',
-                                                    fontWeight: tempStyle.bold ? 'bold' : 'normal',
-                                                    fontStyle: tempStyle.italic ? 'italic' : 'normal',
-                                                    fontSize: tempStyle.fontSize === 'sm' ? '12px' : tempStyle.fontSize === 'lg' ? '18px' : tempStyle.fontSize === 'xl' ? '22px' : '14px'
-                                                }}
-                                                value={tempText}
-                                                onChange={(e) => setTempText(e.target.value)}
-                                                onBlur={(e) => {
-                                                    if (!e.relatedTarget || !e.currentTarget.parentElement?.contains(e.relatedTarget as Node)) {
-                                                        handleEditSave(index);
-                                                    }
-                                                }}
-                                            />
-                                        </div>
-                                    ) : (
-                                        <div
-                                            className="w-full h-full flex items-center justify-center p-0.5"
-                                            onClick={(e) => {
-                                                if (editMode) {
-                                                    e.stopPropagation();
-                                                    handleEditStart(index, item.text, item.style);
-                                                }
-                                            }}
+                                    <div
+                                        className="w-full h-full flex items-center justify-center p-1"
+                                        onClick={(e) => {
+                                            if (editMode) {
+                                                e.stopPropagation();
+                                                openEditModal(index);
+                                            }
+                                        }}
+                                    >
+                                        <span className={cn(
+                                            "leading-tight break-words w-full",
+                                            item.isFreeSpace ? "text-lg font-bold text-accent-gold" : "font-hand font-semibold line-clamp-3 sm:line-clamp-4",
+                                            item.isCompleted && !item.isFreeSpace && "text-white"
+                                        )}
+                                            style={!item.isFreeSpace && !item.isCompleted ? {
+                                                color: item.style?.color || '#cbd5e1', // Default text-slate-300
+                                                fontWeight: item.style?.bold ? 'bold' : '600',
+                                                fontStyle: item.style?.italic ? 'italic' : 'normal',
+                                                fontSize: item.style?.fontSize === 'sm' ? '12px' : item.style?.fontSize === 'lg' ? '18px' : item.style?.fontSize === 'xl' ? '22px' : undefined
+                                            } : undefined}
                                         >
-                                            <span className={cn(
-                                                "leading-tight break-words w-full",
-                                                item.isFreeSpace ? "text-lg font-bold text-accent-gold" : "font-hand font-semibold line-clamp-3 sm:line-clamp-4",
-                                                item.isCompleted && !item.isFreeSpace && "text-white"
-                                            )}
-                                                style={!item.isFreeSpace && !item.isCompleted ? {
-                                                    color: item.style?.color || '#f1f5f9', // Assuming dark theme default for text-slate-100
-                                                    fontWeight: item.style?.bold ? 'bold' : '600',
-                                                    fontStyle: item.style?.italic ? 'italic' : 'normal',
-                                                    fontSize: item.style?.fontSize === 'sm' ? '12px' : item.style?.fontSize === 'lg' ? '18px' : item.style?.fontSize === 'xl' ? '22px' : undefined
-                                                } : undefined}
-                                            >
-                                                {item.text}
-                                            </span>
-                                        </div>
-                                    )}
+                                            {item.text}
+                                        </span>
+                                    </div>
                                 </div>
 
                                 {/* Completed Overlay Checkmark */}
@@ -291,6 +227,13 @@ export const BingoBoard: React.FC = () => {
                                 {/* Mini check for clarity */}
                                 {item.isCompleted && !item.isFreeSpace && !editMode && (
                                     <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-accent-primary rounded-full shadow-[0_0_5px_rgba(139,92,246,0.8)]"></div>
+                                )}
+
+                                {/* Edit Indicator Overlay */}
+                                {editMode && (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 pointer-events-none">
+                                        <Edit2 className="text-white/50 w-6 h-6" />
+                                    </div>
                                 )}
                             </motion.div>
                         ))}
@@ -414,9 +357,132 @@ export const BingoBoard: React.FC = () => {
                     )}
                 </AnimatePresence>
 
+                {/* Edit Modal */}
+                <AnimatePresence>
+                    {isEditModalOpen && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                            onClick={() => setIsEditModalOpen(false)}
+                        >
+                            <motion.div
+                                initial={{ scale: 0.9, y: 20 }}
+                                animate={{ scale: 1, y: 0 }}
+                                exit={{ scale: 0.9, y: 20 }}
+                                className="bg-bg-dark border border-accent-gold/30 p-6 rounded-2xl w-full max-w-sm shadow-2xl relative overflow-hidden"
+                                onClick={e => e.stopPropagation()}
+                            >
+                                <h3 className="text-xl font-bold text-white mb-4">Edit Tile</h3>
+
+                                {/* Preview */}
+                                <div className="mb-4 flex justify-center">
+                                    <div className="w-32 h-32 rounded-lg bg-bg-card/80 border border-white/10 flex items-center justify-center p-2 text-center overflow-hidden">
+                                        <span className={cn("font-hand font-semibold leading-tight break-words")}
+                                            style={{
+                                                color: editFormStyle.color || '#ffffff',
+                                                fontWeight: editFormStyle.bold ? 'bold' : '600',
+                                                fontStyle: editFormStyle.italic ? 'italic' : 'normal',
+                                                fontSize: editFormStyle.fontSize === 'sm' ? '12px' : editFormStyle.fontSize === 'lg' ? '18px' : editFormStyle.fontSize === 'xl' ? '22px' : '16px'
+                                            }}
+                                        >
+                                            {editFormText || "Preview Text"}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Text Input */}
+                                <div className="mb-4">
+                                    <label className="text-xs text-slate-400 mb-1 block">Text Content</label>
+                                    <textarea
+                                        className="w-full bg-black/20 text-white rounded-lg p-3 border border-white/10 focus:border-accent-primary outline-none min-h-[80px]"
+                                        value={editFormText}
+                                        onChange={(e) => setEditFormText(e.target.value)}
+                                        placeholder="Enter bingo task..."
+                                    />
+                                </div>
+
+                                {/* Styling Controls */}
+                                <div className="mb-6 space-y-3">
+                                    {/* Colors */}
+                                    <div>
+                                        <label className="text-xs text-slate-400 mb-1 block">Color</label>
+                                        <div className="flex gap-2 flex-wrap">
+                                            {['#ffffff', '#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#ec4899', '#a855f7'].map(color => (
+                                                <button
+                                                    key={color}
+                                                    className={cn("w-6 h-6 rounded-full border border-white/10 transition-transform active:scale-90", editFormStyle.color === color && "ring-2 ring-white scale-110")}
+                                                    style={{ backgroundColor: color }}
+                                                    onClick={() => setEditFormStyle(prev => ({ ...prev, color }))}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Typography Row */}
+                                    <div className="flex gap-4">
+                                        <div className="flex-1">
+                                            <label className="text-xs text-slate-400 mb-1 block">Size</label>
+                                            <div className="flex bg-black/20 rounded-lg p-1">
+                                                {['sm', 'base', 'lg', 'xl'].map((size) => (
+                                                    <button
+                                                        key={size}
+                                                        onClick={() => setEditFormStyle(prev => ({ ...prev, fontSize: size as any }))}
+                                                        className={cn(
+                                                            "flex-1 py-1 text-[10px] font-bold rounded transition-colors uppercase",
+                                                            (editFormStyle.fontSize || 'base') === size ? "bg-accent-primary text-white" : "text-slate-400 hover:text-white"
+                                                        )}
+                                                    >
+                                                        {size === 'base' ? 'M' : size}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-slate-400 mb-1 block">Style</label>
+                                            <div className="flex gap-1 bg-black/20 rounded-lg p-1">
+                                                <button
+                                                    onClick={() => setEditFormStyle(prev => ({ ...prev, bold: !prev.bold }))}
+                                                    className={cn("w-8 h-full rounded flex items-center justify-center font-bold transition-colors", editFormStyle.bold ? "bg-white text-black" : "text-slate-400 hover:text-white")}
+                                                >
+                                                    B
+                                                </button>
+                                                <button
+                                                    onClick={() => setEditFormStyle(prev => ({ ...prev, italic: !prev.italic }))}
+                                                    className={cn("w-8 h-full rounded flex items-center justify-center italic transition-colors font-serif", editFormStyle.italic ? "bg-white text-black" : "text-slate-400 hover:text-white")}
+                                                >
+                                                    I
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Actions */}
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => setIsEditModalOpen(false)}
+                                        className="flex-1 py-3 rounded-xl font-semibold bg-white/5 text-slate-300 hover:bg-white/10 transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleSaveEdit}
+                                        className="flex-1 py-3 rounded-xl font-bold bg-gradient-to-r from-accent-primary to-accent-secondary text-white shadow-lg hover:shadow-accent-primary/20 transition-all active:scale-95"
+                                    >
+                                        Save Changes
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
                 {/* Version Badge */}
-                <div className="mt-8 text-[10px] text-slate-600 font-mono opacity-50">
-                    v{__APP_VERSION__}
+                <div className="mt-8 text-[10px] text-center border-t border-black pt-4 hidden">
+                    <span>Generated on {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}</span>
+                    <span>bingo.mysunsar.com</span>
                 </div>
             </div>
             {/* Print Layout */}

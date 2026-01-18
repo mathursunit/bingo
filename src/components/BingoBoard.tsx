@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useBingo } from '../hooks/useBingo';
 import { useAuth } from '../contexts/AuthContext';
 import { cn } from '../lib/utils';
-import { Edit2, Check, Award, Printer } from 'lucide-react';
+import { Edit2, Check, Award, Printer, LogOut, Lock } from 'lucide-react';
+import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const BingoBoard: React.FC = () => {
@@ -14,6 +15,44 @@ export const BingoBoard: React.FC = () => {
     const [celebrationDismissed, setCelebrationDismissed] = useState(() => {
         return localStorage.getItem('celebrationDismissed') === 'true';
     });
+
+    // Lock state
+    const [isLocked, setIsLocked] = useState(() => localStorage.getItem('boardLocked') === 'true');
+    const [logoTapCount, setLogoTapCount] = useState(0);
+
+    // Backdoor unlock logic
+    useEffect(() => {
+        if (logoTapCount === 5) {
+            setIsLocked(false);
+            localStorage.removeItem('boardLocked');
+            setLogoTapCount(0);
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#fbbf24', '#ec4899', '#ffffff'] // Gold, Pink, White
+            });
+        }
+
+        let timer: any;
+        if (logoTapCount > 0) {
+            timer = setTimeout(() => setLogoTapCount(0), 1000);
+        }
+        return () => clearTimeout(timer);
+    }, [logoTapCount]);
+
+    const handleLogoTap = () => {
+        if (!isLocked) return;
+        setLogoTapCount(prev => prev + 1);
+    };
+
+    const handleFinalize = () => {
+        if (window.confirm("Finalize Current Board?\n\nThis will lock the board editing features so you can focus on playing. (You can print the status at any time).")) {
+            setIsLocked(true);
+            setEditMode(false);
+            localStorage.setItem('boardLocked', 'true');
+        }
+    };
 
     const handleDismiss = () => {
         setCelebrationDismissed(true);
@@ -77,16 +116,11 @@ export const BingoBoard: React.FC = () => {
                             animate={{ opacity: 1, x: 0 }}
                             src="/logo.png"
                             alt="SunSar Bingo"
-                            className="h-24 sm:h-28 w-auto object-contain -ml-2"
+                            className="h-24 sm:h-28 w-auto object-contain -ml-2 cursor-pointer active:scale-95 transition-transform"
+                            onClick={handleLogoTap}
                         />
                     </div>
                     <div className="flex items-center gap-3">
-                        <button
-                            onClick={logout}
-                            className="text-xs text-slate-400 hover:text-red-400 transition-colors uppercase tracking-wider font-semibold"
-                        >
-                            Logout
-                        </button>
                         <motion.div
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
@@ -99,6 +133,13 @@ export const BingoBoard: React.FC = () => {
                             />
                             <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-bg-dark"></div>
                         </motion.div>
+                        <button
+                            onClick={logout}
+                            className="text-slate-400 hover:text-red-400 transition-colors p-2 hover:bg-white/5 rounded-full"
+                            title="Logout"
+                        >
+                            <LogOut size={20} />
+                        </button>
                     </div>
                 </header>
 
@@ -115,7 +156,7 @@ export const BingoBoard: React.FC = () => {
                                 transition={{ delay: index * 0.02 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => {
-                                    if (editMode) return;
+                                    if (editMode || isLocked) return;
                                     if (item.isFreeSpace) return;
                                     toggleItem(index);
                                 }}
@@ -128,7 +169,9 @@ export const BingoBoard: React.FC = () => {
                                     // Free Space
                                     item.isFreeSpace && "bg-gradient-to-br from-accent-gold/20 to-accent-secondary/20 border-accent-gold/50",
                                     // Edit Mode
-                                    editMode && "border-dashed border-slate-500"
+                                    editMode && "border-dashed border-slate-500",
+                                    // Locked state
+                                    isLocked && !editMode && "cursor-default"
                                 )}
                             >
                                 {/* Content */}
@@ -230,17 +273,28 @@ export const BingoBoard: React.FC = () => {
                                 </div>
                             </>
                         ) : (
-                            <div className="flex gap-2 justify-center w-full">
-                                <button
-                                    onClick={() => setEditMode(true)}
-                                    className="flex-1 py-2 px-4 text-xs font-medium text-slate-500 hover:text-slate-300 transition-colors flex items-center justify-center gap-2 opacity-50 hover:opacity-100"
-                                >
-                                    <Edit2 size={12} />
-                                    Edit Board
-                                </button>
+                            <div className="flex gap-2 justify-center w-full flex-wrap">
+                                {!isLocked && (
+                                    <>
+                                        <button
+                                            onClick={() => setEditMode(true)}
+                                            className="flex-1 py-2 px-4 text-xs font-medium text-slate-500 hover:text-slate-300 transition-colors flex items-center justify-center gap-2 opacity-50 hover:opacity-100 min-w-[100px]"
+                                        >
+                                            <Edit2 size={12} />
+                                            Edit Board
+                                        </button>
+                                        <button
+                                            onClick={handleFinalize}
+                                            className="flex-1 py-2 px-4 text-xs font-medium text-red-500/70 hover:text-red-400 transition-colors flex items-center justify-center gap-2 opacity-50 hover:opacity-100 min-w-[100px]"
+                                        >
+                                            <Lock size={12} />
+                                            Finalize
+                                        </button>
+                                    </>
+                                )}
                                 <button
                                     onClick={() => window.print()}
-                                    className="flex-1 py-2 px-4 text-xs font-medium text-slate-500 hover:text-slate-300 transition-colors flex items-center justify-center gap-2 opacity-50 hover:opacity-100"
+                                    className="flex-1 py-2 px-4 text-xs font-medium text-slate-500 hover:text-slate-300 transition-colors flex items-center justify-center gap-2 opacity-50 hover:opacity-100 min-w-[100px]"
                                 >
                                     <Printer size={12} />
                                     Print Status

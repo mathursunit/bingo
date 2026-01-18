@@ -3,6 +3,7 @@ import { useBingo } from '../hooks/useBingo';
 import { useAuth } from '../contexts/AuthContext';
 import { cn } from '../lib/utils';
 import { Edit2, Check, LogOut, Award } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export const BingoBoard: React.FC = () => {
     const { items, loading, toggleItem, updateItemText, hasWon } = useBingo();
@@ -21,129 +22,216 @@ export const BingoBoard: React.FC = () => {
         setEditingIndex(null);
     };
 
-    if (loading) return <div className="flex h-screen items-center justify-center text-accent-primary">Loading Board...</div>;
+    if (loading) return (
+        <div className="flex h-screen items-center justify-center text-accent-primary animate-pulse">
+            <div className="text-center">
+                <div className="w-12 h-12 border-4 border-accent-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p>Loading Board...</p>
+            </div>
+        </div>
+    );
 
     const completedCount = items.filter(i => i.isCompleted).length;
     const progress = (completedCount / 25) * 100;
 
     return (
-        <div className="min-h-screen flex flex-col items-center p-4 pb-20 relative">
+        <div className="min-h-screen flex flex-col items-center p-3 pb-24 relative overflow-x-hidden">
             <div className="background-animation" />
 
             {/* Header */}
-            <header className="w-full max-w-2xl flex justify-between items-center mb-6 pt-4 animate-fade-in">
+            <header className="w-full max-w-[500px] flex justify-between items-center mb-4 pt-2">
                 <div>
-                    <span className="text-xs font-bold text-accent-gold uppercase tracking-widest bg-accent-gold/10 px-2 py-1 rounded-full border border-accent-gold/20">2026 Edition</span>
-                    <h1 className="text-2xl font-heading font-bold mt-1 text-white">SunSar Bingo</h1>
+                    <motion.div
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-[10px] font-bold text-accent-gold uppercase tracking-widest bg-accent-gold/10 px-3 py-1 rounded-full border border-accent-gold/20 inline-block mb-1"
+                    >
+                        2026 Edition
+                    </motion.div>
+                    <h1 className="text-2xl sm:text-3xl font-heading font-bold text-gradient">SunSar Bingo</h1>
                 </div>
-                <div className="flex items-center gap-3">
-                    <div className="hidden sm:block text-right">
-                        <p className="text-xs text-slate-400">Logged in as</p>
-                        <p className="text-sm font-semibold">{user?.displayName?.split(' ')[0]}</p>
-                    </div>
-                    <img src={user?.photoURL || ''} alt="User" className="w-10 h-10 rounded-full border-2 border-accent-primary/50" />
-                </div>
+                <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="relative cursor-pointer group"
+                >
+                    <img
+                        src={user?.photoURL || ''}
+                        alt="User"
+                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-glass-border group-hover:border-accent-primary transition-colors"
+                    />
+                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-bg-dark"></div>
+                </motion.div>
             </header>
 
-            {/* Controls */}
-            <div className="w-full max-w-2xl glass-panel p-4 mb-6 flex flex-col sm:flex-row gap-4 items-center justify-between animate-fade-in" style={{ animationDelay: '0.1s' }}>
-                <div className="w-full sm:w-1/2">
-                    <div className="flex justify-between text-xs text-slate-300 mb-1">
-                        <span>Progress</span>
-                        <span>{completedCount}/25</span>
+            {/* Controls Bar */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="w-full max-w-[500px] glass-panel p-3 mb-4 flex flex-col gap-3"
+            >
+                {/* Progress */}
+                <div className="w-full">
+                    <div className="flex justify-between text-xs text-slate-300 mb-1.5 px-1">
+                        <span className="font-semibold">Progress</span>
+                        <span className="font-mono text-accent-primary">{Math.round(progress)}%</span>
                     </div>
-                    <div className="h-2 bg-slate-700/50 rounded-full overflow-hidden">
-                        <div
-                            className="h-full bg-gradient-to-r from-accent-primary to-accent-secondary transition-all duration-1000 ease-out"
-                            style={{ width: `${progress}%` }}
-                        />
-                    </div>
-                </div>
-
-                <div className="flex gap-2">
-                    <button
-                        onClick={() => setEditMode(!editMode)}
-                        className={cn(
-                            "p-2 px-4 rounded-full text-sm font-semibold transition-all flex items-center gap-2",
-                            editMode ? "bg-accent-gold text-bg-dark" : "bg-white/10 hover:bg-white/20"
-                        )}
-                    >
-                        <Edit2 size={16} />
-                        {editMode ? "Done Editing" : "Edit Board"}
-                    </button>
-                    <button onClick={logout} className="p-2 rounded-full bg-white/5 hover:bg-red-500/20 hover:text-red-300 text-slate-400 transition-all">
-                        <LogOut size={18} />
-                    </button>
-                </div>
-            </div>
-
-            {/* Grid */}
-            <div className="grid grid-cols-5 gap-2 sm:gap-3 w-full max-w-2xl aspect-square glass-panel p-3 sm:p-5 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-                {items.map((item, index) => (
-                    <div
-                        key={item.id}
-                        onClick={() => !editMode && !item.isFreeSpace && toggleItem(index)}
-                        className={cn(
-                            "relative rounded-xl flex items-center justify-center text-center p-1 sm:p-2 text-[10px] sm:text-xs cursor-pointer transition-all duration-300 select-none border",
-                            // Base styles
-                            "bg-bg-card border-glass-border hover:-translate-y-1 hover:border-white/20 hover:shadow-lg",
-                            // Active State
-                            item.isCompleted && !item.isFreeSpace && "bg-accent-primary/20 border-accent-primary shadow-[0_0_15px_rgba(139,92,246,0.3)] font-semibold",
-                            // Free Space
-                            item.isFreeSpace && "bg-gradient-to-br from-accent-gold/20 to-accent-secondary/20 border-accent-gold text-accent-gold font-bold text-sm",
-                            // Edit Mode
-                            editMode && "border-dashed border-slate-500 hover:border-accent-gold cursor-text"
-                        )}
-                    >
-                        {/* Edit Input or Text */}
-                        {editMode && editingIndex === index ? (
-                            <textarea
-                                autoFocus
-                                className="w-full h-full bg-bg-dark rounded p-1 text-white border-none resize-none focus:ring-1 focus:ring-accent-gold outline-none"
-                                value={tempText}
-                                onChange={(e) => setTempText(e.target.value)}
-                                onBlur={() => handleEditSave(index)}
-                                onKeyDown={(e) => { if (e.key === 'Enter') { e.currentTarget.blur(); } }}
-                            />
-                        ) : (
-                            <span
-                                className="line-clamp-4"
-                                onClick={(e) => {
-                                    if (editMode) {
-                                        e.stopPropagation();
-                                        handleEditStart(index, item.text);
-                                    }
-                                }}
-                            >
-                                {item.isFreeSpace ? <span dangerouslySetInnerHTML={{ __html: item.text.replace('\n', '<br/>') }} /> : item.text}
-                            </span>
-                        )}
-
-                        {/* Checkmark Decoration */}
-                        {item.isCompleted && !item.isFreeSpace && !editMode && (
-                            <div className="absolute -top-1 -right-1 bg-accent-primary rounded-full p-0.5 animate-pop-in shadow-lg">
-                                <Check size={10} className="text-white" />
-                            </div>
-                        )}
-                    </div>
-                ))}
-            </div>
-
-            {hasWon && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-                    <div className="glass-panel p-8 text-center max-w-sm w-full mx-4 shadow-[0_0_50px_rgba(139,92,246,0.5)] animate-pop-in">
-                        <Award className="w-16 h-16 text-accent-gold mx-auto mb-4 animate-bounce" />
-                        <h2 className="text-3xl font-heading font-bold text-transparent bg-clip-text bg-gradient-to-r from-accent-gold to-accent-secondary mb-2">BINGO!</h2>
-                        <p className="text-slate-300 mb-6">Congratulations on hitting a milestone!</p>
-                        <button
-                            onClick={() => window.location.reload()} // Just a simple reset of the modal state in this version, ideally handled by state
-                            className="px-6 py-2 bg-accent-primary rounded-full font-bold hover:bg-accent-primary/80"
+                    <div className="h-2.5 bg-bg-dark/50 rounded-full overflow-hidden border border-white/5">
+                        <motion.div
+                            className="h-full bg-gradient-to-r from-accent-primary to-accent-secondary relative"
+                            initial={{ width: 0 }}
+                            animate={{ width: `${progress}%` }}
+                            transition={{ duration: 1, ease: "easeOut" }}
                         >
-                            Celebrate! 🎉
+                            <div className="absolute top-0 right-0 bottom-0 w-[1px] bg-white/50 shadow-[0_0_10px_white]"></div>
+                        </motion.div>
+                    </div>
+                </div>
+
+                {/* Buttons */}
+                <div className="flex gap-2 justify-between items-center">
+                    <p className="text-xs text-slate-500 line-clamp-1 flex-1 mr-2">
+                        {editMode ? "Tap text to edit" : "Tap square to toggle"}
+                    </p>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => setEditMode(!editMode)}
+                            className={cn(
+                                "py-1.5 px-4 rounded-full text-xs font-semibold transition-all flex items-center gap-2 border",
+                                editMode
+                                    ? "bg-accent-gold text-bg-dark border-accent-gold shadow-[0_0_10px_rgba(251,191,36,0.5)]"
+                                    : "bg-white/5 text-slate-300 border-white/10 hover:bg-white/10"
+                            )}
+                        >
+                            <Edit2 size={14} />
+                            {editMode ? "Done" : "Edit"}
+                        </button>
+                        <button
+                            onClick={logout}
+                            className="p-1.5 px-3 rounded-full bg-white/5 border border-white/10 hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-200 text-slate-400 transition-all flex items-center gap-1.5"
+                        >
+                            <LogOut size={14} />
                         </button>
                     </div>
                 </div>
-            )}
+            </motion.div>
+
+            {/* The Grid */}
+            <div className="w-full max-w-[500px] aspect-square relative">
+                <div className="grid grid-cols-5 gap-1.5 sm:gap-2 w-full h-full">
+                    {items.map((item, index) => (
+                        <motion.div
+                            key={item.id}
+                            layout
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: index * 0.02 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => {
+                                if (editMode) return;
+                                if (item.isFreeSpace) return;
+                                toggleItem(index);
+                            }}
+                            className={cn(
+                                "relative rounded-lg flex items-center justify-center p-1 cursor-pointer select-none border backdrop-blur-sm overflow-hidden",
+                                // Base styles
+                                "bg-bg-card/80 border-white/5 shadow-sm",
+                                // Active State
+                                item.isCompleted && !item.isFreeSpace && "bg-gradient-to-br from-accent-primary/30 to-accent-secondary/30 border-accent-primary/50 shadow-[0_0_15px_rgba(139,92,246,0.15)]",
+                                // Free Space
+                                item.isFreeSpace && "bg-gradient-to-br from-accent-gold/20 to-accent-secondary/20 border-accent-gold/50",
+                                // Edit Mode
+                                editMode && "border-dashed border-slate-500"
+                            )}
+                        >
+                            {/* Content */}
+                            <div className="w-full h-full flex items-center justify-center text-center relative z-10">
+                                {editMode && editingIndex === index ? (
+                                    <textarea
+                                        autoFocus
+                                        className="w-full h-full bg-bg-dark/90 text-[10px] rounded p-1 text-white border border-accent-gold outline-none resize-none leading-tight"
+                                        value={tempText}
+                                        onChange={(e) => setTempText(e.target.value)}
+                                        onBlur={() => handleEditSave(index)}
+                                    />
+                                ) : (
+                                    <div
+                                        className="w-full h-full flex items-center justify-center"
+                                        onClick={(e) => {
+                                            if (editMode) {
+                                                e.stopPropagation();
+                                                handleEditStart(index, item.text);
+                                            }
+                                        }}
+                                    >
+                                        <span className={cn(
+                                            "leading-tight break-words w-full",
+                                            item.isFreeSpace ? "text-lg font-bold text-accent-gold" : "text-[9px] sm:text-[11px] font-medium text-slate-200 line-clamp-3 sm:line-clamp-4",
+                                            item.isCompleted && !item.isFreeSpace && "text-white"
+                                        )}>
+                                            {item.text}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Completed Overlay Checkmark */}
+                            {item.isCompleted && !item.isFreeSpace && !editMode && (
+                                <motion.div
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20"
+                                >
+                                    <Check className="w-12 h-12 text-white" />
+                                </motion.div>
+                            )}
+
+                            {/* Mini check for clarity */}
+                            {item.isCompleted && !item.isFreeSpace && !editMode && (
+                                <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-accent-primary rounded-full shadow-[0_0_5px_rgba(139,92,246,0.8)]"></div>
+                            )}
+                        </motion.div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Celebration Modal */}
+            <AnimatePresence>
+                {hasWon && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.5, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="glass-panel p-8 text-center max-w-sm w-full relative overflow-hidden border-accent-gold/30"
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-t from-accent-gold/10 to-transparent pointer-events-none"></div>
+
+                            <motion.div
+                                animate={{ rotate: [0, 10, -10, 0] }}
+                                transition={{ repeat: Infinity, duration: 2 }}
+                                className="inline-block"
+                            >
+                                <Award className="w-20 h-20 text-accent-gold mx-auto mb-4 drop-shadow-[0_0_15px_rgba(251,191,36,0.5)]" />
+                            </motion.div>
+
+                            <h2 className="text-4xl font-heading font-bold text-transparent bg-clip-text bg-gradient-to-r from-accent-gold via-white to-accent-secondary mb-2">BINGO!</h2>
+                            <p className="text-slate-300 mb-8 leading-relaxed">2026 is off to an amazing start!</p>
+
+                            <button
+                                onClick={() => window.location.reload()}
+                                className="w-full py-3 bg-gradient-to-r from-accent-primary to-accent-secondary rounded-xl font-bold text-white shadow-lg hover:shadow-[0_0_20px_rgba(139,92,246,0.4)] transition-all transform hover:scale-105"
+                            >
+                                Keep Playing
+                            </button>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

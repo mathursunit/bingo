@@ -138,7 +138,7 @@ export const BingoBoard: React.FC = () => {
                                     >
                                         <span className={cn(
                                             "leading-tight break-words w-full",
-                                            item.isFreeSpace ? "text-lg font-bold text-accent-gold" : "text-[9px] sm:text-[11px] font-medium text-slate-200 line-clamp-3 sm:line-clamp-4",
+                                            item.isFreeSpace ? "text-lg font-bold text-accent-gold" : "text-sm sm:text-base font-hand font-semibold text-slate-100 line-clamp-3 sm:line-clamp-4",
                                             item.isCompleted && !item.isFreeSpace && "text-white"
                                         )}>
                                             {item.text}
@@ -191,20 +191,35 @@ export const BingoBoard: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Edit Button */}
-                <div className="flex justify-center">
-                    <button
-                        onClick={() => setEditMode(!editMode)}
-                        className={cn(
-                            "w-full py-2.5 px-4 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 border",
-                            editMode
-                                ? "bg-accent-gold text-bg-dark border-accent-gold shadow-[0_0_10px_rgba(251,191,36,0.5)]"
-                                : "bg-white/5 text-slate-300 border-white/10 hover:bg-white/10"
-                        )}
-                    >
-                        <Edit2 size={16} />
-                        {editMode ? "Stop Editing Board" : "Edit Board Items"}
-                    </button>
+                {/* Edit Actions */}
+                <div className="flex justify-center gap-2">
+                    {editMode ? (
+                        <>
+                            <div className="flex gap-2 w-full">
+                                <button
+                                    onClick={() => setEditMode(false)}
+                                    className="flex-1 py-2.5 px-4 rounded-xl text-sm font-semibold bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10 transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={() => setEditMode(false)}
+                                    className="flex-1 py-2.5 px-4 rounded-xl text-sm font-semibold bg-green-500/20 text-green-200 border border-green-500/50 hover:bg-green-500/30 transition-all flex items-center justify-center gap-2"
+                                >
+                                    <Check size={16} />
+                                    Save Changes
+                                </button>
+                            </div>
+                        </>
+                    ) : (
+                        <button
+                            onClick={() => setEditMode(true)}
+                            className="w-full py-2.5 px-4 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 border bg-white/5 text-slate-300 border-white/10 hover:bg-white/10"
+                        >
+                            <Edit2 size={16} />
+                            Edit Board Items
+                        </button>
+                    )}
                 </div>
             </motion.div>
 

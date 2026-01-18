@@ -122,7 +122,7 @@ export const useBingo = () => {
         } else {
             item.completedBy = null as any;
             item.completedAt = null as any;
-            item.proofPhotoUrl = null as any; // Clear photo when unmarking
+            item.proofPhotos = []; // Clear photos when unmarking
         }
 
         setItems(newItems);
@@ -154,7 +154,7 @@ export const useBingo = () => {
             item.isCompleted = true;
             item.completedBy = user?.displayName || user?.email || 'Unknown';
             item.completedAt = Timestamp.now();
-            item.proofPhotoUrl = photoUrl;
+            item.proofPhotos = [photoUrl]; // Start with first photo
 
             setItems(newItems);
             checkWin(newItems);
@@ -167,6 +167,40 @@ export const useBingo = () => {
         } catch (error) {
             console.error("Error completing with photo:", error);
             throw error; // Re-throw so UI can handle it
+        }
+    };
+
+    const addPhotoToTile = async (index: number, photoFile: File) => {
+        if (!items.length || !user) return;
+
+        const item = items[index];
+        if (!item.isCompleted) return; // Can only add to completed tiles
+
+        const currentPhotos = item.proofPhotos || [];
+        if (currentPhotos.length >= 5) {
+            throw new Error('Maximum 5 photos allowed per tile');
+        }
+
+        try {
+            // Upload photo to Cloudinary
+            const photoUrl = await uploadToCloudinary(photoFile);
+
+            // Update the item
+            const newItems = items.map(item => ({ ...item }));
+            newItems[index].proofPhotos = [...currentPhotos, photoUrl];
+
+            setItems(newItems);
+            triggerConfetti(0.3); // Small confetti for additional photo
+
+            await updateDoc(doc(db, 'years', YEAR_DOC_ID), {
+                items: newItems,
+                lastUpdated: Timestamp.now()
+            });
+
+            return photoUrl;
+        } catch (error) {
+            console.error("Error adding photo:", error);
+            throw error;
         }
     };
 
@@ -265,5 +299,5 @@ export const useBingo = () => {
         }
     };
 
-    return { items, loading, toggleItem, updateItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto };
+    return { items, loading, toggleItem, updateItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile };
 };

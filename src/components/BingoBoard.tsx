@@ -2,13 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useBingo } from '../hooks/useBingo';
 import { useAuth } from '../contexts/AuthContext';
 import { cn } from '../lib/utils';
-import { Edit2, Check, Award, Printer, LogOut, Shuffle, Camera, X } from 'lucide-react';
+import { Edit2, Check, Award, Printer, LogOut, Shuffle, Camera, X, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { BingoItem } from '../types';
 
 export const BingoBoard: React.FC = () => {
-    const { items, loading, toggleItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto } = useBingo();
+    const { items, loading, toggleItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile } = useBingo();
     const { logout, user } = useAuth();
     const [editMode, setEditMode] = useState(false);
 
@@ -30,6 +30,10 @@ export const BingoBoard: React.FC = () => {
     // Photo Viewer State
     const [isPhotoViewerOpen, setIsPhotoViewerOpen] = useState(false);
     const [viewingItem, setViewingItem] = useState<BingoItem | null>(null);
+    const [viewingItemIndex, setViewingItemIndex] = useState<number | null>(null);
+    const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+    const [isAddingPhoto, setIsAddingPhoto] = useState(false);
+    const addPhotoInputRef = useRef<HTMLInputElement>(null);
 
     const [celebrationDismissed, setCelebrationDismissed] = useState(() => {
         return localStorage.getItem('celebrationDismissed') === 'true';
@@ -193,9 +197,11 @@ export const BingoBoard: React.FC = () => {
                                     if (item.isFreeSpace) return;
 
                                     if (item.isCompleted) {
-                                        // View photo if exists, otherwise just toggle off
-                                        if (item.proofPhotoUrl) {
+                                        // View photos if exist, otherwise just toggle off
+                                        if (item.proofPhotos && item.proofPhotos.length > 0) {
                                             setViewingItem(item);
+                                            setViewingItemIndex(index);
+                                            setCurrentPhotoIndex(0);
                                             setIsPhotoViewerOpen(true);
                                         } else {
                                             toggleItem(index);
@@ -254,9 +260,12 @@ export const BingoBoard: React.FC = () => {
                                             <Check className="w-12 h-12 text-white" />
                                         </motion.div>
                                         <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-accent-primary rounded-full shadow-[0_0_5px_rgba(139,92,246,0.8)]"></div>
-                                        {item.proofPhotoUrl && (
-                                            <div className="absolute bottom-0.5 left-0.5 p-0.5 bg-accent-gold/80 rounded-sm">
+                                        {item.proofPhotos && item.proofPhotos.length > 0 && (
+                                            <div className="absolute bottom-0.5 left-0.5 p-0.5 bg-accent-gold/80 rounded-sm flex items-center gap-0.5">
                                                 <Camera className="w-2.5 h-2.5 text-black" />
+                                                {item.proofPhotos.length > 1 && (
+                                                    <span className="text-[8px] font-bold text-black">{item.proofPhotos.length}</span>
+                                                )}
                                             </div>
                                         )}
                                     </>
@@ -589,15 +598,15 @@ export const BingoBoard: React.FC = () => {
                     )}
                 </AnimatePresence>
 
-                {/* Photo Viewer Modal */}
+                {/* Photo Gallery Viewer Modal */}
                 <AnimatePresence>
-                    {isPhotoViewerOpen && viewingItem && (
+                    {isPhotoViewerOpen && viewingItem && viewingItem.proofPhotos && viewingItem.proofPhotos.length > 0 && (
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md"
-                            onClick={() => { setIsPhotoViewerOpen(false); setViewingItem(null); }}
+                            onClick={() => { setIsPhotoViewerOpen(false); setViewingItem(null); setViewingItemIndex(null); }}
                         >
                             <motion.div
                                 initial={{ scale: 0.9 }}
@@ -608,19 +617,65 @@ export const BingoBoard: React.FC = () => {
                             >
                                 {/* Close Button */}
                                 <button
-                                    onClick={() => { setIsPhotoViewerOpen(false); setViewingItem(null); }}
-                                    className="absolute -top-12 right-0 p-2 text-white/70 hover:text-white transition-colors"
+                                    onClick={() => { setIsPhotoViewerOpen(false); setViewingItem(null); setViewingItemIndex(null); }}
+                                    className="absolute -top-12 right-0 p-2 text-white/70 hover:text-white transition-colors z-10"
                                 >
                                     <X size={28} />
                                 </button>
 
-                                {/* Photo */}
+                                {/* Photo Gallery */}
                                 <div className="rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
-                                    <img
-                                        src={viewingItem.proofPhotoUrl}
-                                        alt="Proof photo"
-                                        className="w-full h-auto max-h-[60vh] object-contain bg-black"
-                                    />
+                                    {/* Photo with Navigation */}
+                                    <div className="relative bg-black">
+                                        <img
+                                            src={viewingItem.proofPhotos[currentPhotoIndex]}
+                                            alt={`Proof photo ${currentPhotoIndex + 1}`}
+                                            className="w-full h-auto max-h-[50vh] object-contain"
+                                        />
+
+                                        {/* Navigation Arrows */}
+                                        {viewingItem.proofPhotos.length > 1 && (
+                                            <>
+                                                <button
+                                                    onClick={() => setCurrentPhotoIndex(prev => prev > 0 ? prev - 1 : viewingItem.proofPhotos!.length - 1)}
+                                                    className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-black/50 rounded-full text-white/80 hover:text-white hover:bg-black/70 transition-all"
+                                                >
+                                                    <ChevronLeft size={24} />
+                                                </button>
+                                                <button
+                                                    onClick={() => setCurrentPhotoIndex(prev => prev < viewingItem.proofPhotos!.length - 1 ? prev + 1 : 0)}
+                                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-black/50 rounded-full text-white/80 hover:text-white hover:bg-black/70 transition-all"
+                                                >
+                                                    <ChevronRight size={24} />
+                                                </button>
+                                            </>
+                                        )}
+
+                                        {/* Photo Counter */}
+                                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 bg-black/60 rounded-full text-white text-xs font-medium">
+                                            {currentPhotoIndex + 1} / {viewingItem.proofPhotos.length}
+                                        </div>
+                                    </div>
+
+                                    {/* Thumbnail Strip */}
+                                    {viewingItem.proofPhotos.length > 1 && (
+                                        <div className="flex gap-1 p-2 bg-bg-dark/80 overflow-x-auto">
+                                            {viewingItem.proofPhotos.map((photo, idx) => (
+                                                <button
+                                                    key={idx}
+                                                    onClick={() => setCurrentPhotoIndex(idx)}
+                                                    className={cn(
+                                                        "w-12 h-12 rounded-md overflow-hidden border-2 flex-shrink-0 transition-all",
+                                                        currentPhotoIndex === idx ? "border-accent-primary" : "border-transparent opacity-60 hover:opacity-100"
+                                                    )}
+                                                >
+                                                    <img src={photo} alt="" className="w-full h-full object-cover" />
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Info */}
                                     <div className="p-4 bg-bg-dark/95">
                                         <p className="text-white font-semibold mb-1">{viewingItem.text}</p>
                                         <p className="text-slate-400 text-xs">
@@ -629,15 +684,58 @@ export const BingoBoard: React.FC = () => {
                                     </div>
                                 </div>
 
-                                {/* Unmark Button */}
+                                {/* Action Buttons */}
+                                <div className="mt-4 flex gap-2">
+                                    {/* Add More Photos Button */}
+                                    {viewingItem.proofPhotos.length < 5 && (
+                                        <>
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                capture="environment"
+                                                ref={addPhotoInputRef}
+                                                className="hidden"
+                                                onChange={async (e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (file && viewingItemIndex !== null) {
+                                                        setIsAddingPhoto(true);
+                                                        try {
+                                                            await addPhotoToTile(viewingItemIndex, file);
+                                                            // Update viewing item with new photo
+                                                            const updatedItem = items[viewingItemIndex];
+                                                            setViewingItem(updatedItem);
+                                                            setCurrentPhotoIndex(updatedItem.proofPhotos?.length ? updatedItem.proofPhotos.length - 1 : 0);
+                                                        } catch (err) {
+                                                            alert('Failed to add photo. Max 5 photos allowed.');
+                                                        } finally {
+                                                            setIsAddingPhoto(false);
+                                                            if (addPhotoInputRef.current) addPhotoInputRef.current.value = '';
+                                                        }
+                                                    }
+                                                }}
+                                            />
+                                            <button
+                                                onClick={() => addPhotoInputRef.current?.click()}
+                                                disabled={isAddingPhoto}
+                                                className="flex-1 py-2 px-4 bg-accent-gold/20 text-accent-gold rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-accent-gold/30 transition-colors disabled:opacity-50"
+                                            >
+                                                <Plus size={18} />
+                                                {isAddingPhoto ? 'Adding...' : `Add Photo (${viewingItem.proofPhotos.length}/5)`}
+                                            </button>
+                                        </>
+                                    )}
+                                </div>
+
+                                {/* Mark as In Progress Button */}
                                 <button
                                     onClick={() => {
                                         const idx = items.findIndex(i => i.id === viewingItem.id);
                                         if (idx !== -1) toggleItem(idx);
                                         setIsPhotoViewerOpen(false);
                                         setViewingItem(null);
+                                        setViewingItemIndex(null);
                                     }}
-                                    className="mt-4 w-full py-2 text-sm text-red-400 hover:text-red-300 transition-colors"
+                                    className="mt-2 w-full py-2 text-sm text-red-400 hover:text-red-300 transition-colors"
                                 >
                                     Mark as In Progress
                                 </button>

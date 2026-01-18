@@ -185,7 +185,7 @@ export const BingoBoard: React.FC = () => {
                                 }}
                                 className={cn(
                                     "relative rounded-lg flex items-center justify-center p-1 cursor-pointer select-none border backdrop-blur-sm overflow-hidden",
-                                    "font-hand text-[15px] sm:text-xl font-medium leading-tight select-none",
+                                    "font-hand text-[11px] sm:text-sm font-medium leading-tight select-none",
                                     item.isCompleted ? "text-white scale-110 font-semibold" : "text-slate-300",
                                     "bg-bg-card/90 border-white/20 shadow-md hover:border-white/40 hover:bg-bg-card/95 transition-all duration-200",
                                     item.isCompleted && !item.isFreeSpace && "bg-gradient-to-br from-accent-primary/30 to-accent-secondary/30 border-accent-primary/50 shadow-[0_0_15px_rgba(139,92,246,0.15)]",

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useBingo } from '../hooks/useBingo';
 import { useAuth } from '../contexts/AuthContext';
 import { cn } from '../lib/utils';
-import { Edit2, Check, LogOut, Award } from 'lucide-react';
+import { Edit2, Check, Award } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const BingoBoard: React.FC = () => {
@@ -47,7 +47,7 @@ export const BingoBoard: React.FC = () => {
             <div className="background-animation" />
 
             {/* Header */}
-            <header className="w-full max-w-[500px] flex justify-between items-center mb-4 pt-2">
+            <header className="w-full max-w-[500px] flex justify-between items-center mb-6 pt-2 px-2">
                 <div>
                     <motion.div
                         initial={{ opacity: 0, y: -20 }}
@@ -58,74 +58,30 @@ export const BingoBoard: React.FC = () => {
                     </motion.div>
                     <h1 className="text-2xl sm:text-3xl font-heading font-bold text-gradient">SunSar Bingo</h1>
                 </div>
-                <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="relative cursor-pointer group"
-                >
-                    <img
-                        src={user?.photoURL || ''}
-                        alt="User"
-                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-glass-border group-hover:border-accent-primary transition-colors"
-                    />
-                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-bg-dark"></div>
-                </motion.div>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={logout}
+                        className="text-xs text-slate-400 hover:text-red-400 transition-colors uppercase tracking-wider font-semibold"
+                    >
+                        Logout
+                    </button>
+                    <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="relative cursor-pointer group"
+                    >
+                        <img
+                            src={user?.photoURL || ''}
+                            alt="User"
+                            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-glass-border group-hover:border-accent-primary transition-colors"
+                        />
+                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-bg-dark"></div>
+                    </motion.div>
+                </div>
             </header>
 
-            {/* Controls Bar */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="w-full max-w-[500px] glass-panel p-3 mb-4 flex flex-col gap-3"
-            >
-                {/* Progress */}
-                <div className="w-full">
-                    <div className="flex justify-between text-xs text-slate-300 mb-1.5 px-1">
-                        <span className="font-semibold">Progress</span>
-                        <span className="font-mono text-accent-primary">{Math.round(progress)}%</span>
-                    </div>
-                    <div className="h-2.5 bg-bg-dark/50 rounded-full overflow-hidden border border-white/5">
-                        <motion.div
-                            className="h-full bg-gradient-to-r from-accent-primary to-accent-secondary relative"
-                            initial={{ width: 0 }}
-                            animate={{ width: `${progress}%` }}
-                            transition={{ duration: 1, ease: "easeOut" }}
-                        >
-                            <div className="absolute top-0 right-0 bottom-0 w-[1px] bg-white/50 shadow-[0_0_10px_white]"></div>
-                        </motion.div>
-                    </div>
-                </div>
-
-                {/* Buttons */}
-                <div className="flex gap-2 justify-between items-center">
-                    <p className="text-xs text-slate-500 line-clamp-1 flex-1 mr-2">
-                        {editMode ? "Tap text to edit" : "Tap square to toggle"}
-                    </p>
-                    <div className="flex gap-2">
-                        <button
-                            onClick={() => setEditMode(!editMode)}
-                            className={cn(
-                                "py-1.5 px-4 rounded-full text-xs font-semibold transition-all flex items-center gap-2 border",
-                                editMode
-                                    ? "bg-accent-gold text-bg-dark border-accent-gold shadow-[0_0_10px_rgba(251,191,36,0.5)]"
-                                    : "bg-white/5 text-slate-300 border-white/10 hover:bg-white/10"
-                            )}
-                        >
-                            <Edit2 size={14} />
-                            {editMode ? "Done" : "Edit"}
-                        </button>
-                        <button
-                            onClick={logout}
-                            className="p-1.5 px-3 rounded-full bg-white/5 border border-white/10 hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-200 text-slate-400 transition-all flex items-center gap-1.5"
-                        >
-                            <LogOut size={14} />
-                        </button>
-                    </div>
-                </div>
-            </motion.div>
-
             {/* The Grid */}
-            <div className="w-full max-w-[500px] aspect-square relative">
+            <div className="w-full max-w-[500px] aspect-square relative mb-6">
                 <div className="grid grid-cols-5 gap-1.5 sm:gap-2 w-full h-full">
                     {items.map((item, index) => (
                         <motion.div
@@ -203,6 +159,47 @@ export const BingoBoard: React.FC = () => {
                 </div>
             </div>
 
+            {/* Controls Bar (Moved Below) */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="w-full max-w-[500px] glass-panel p-4 flex flex-col gap-4"
+            >
+                {/* Progress */}
+                <div className="w-full">
+                    <div className="flex justify-between text-xs text-slate-300 mb-1.5 px-1">
+                        <span className="font-semibold">Progress</span>
+                        <span className="font-mono text-accent-primary">{Math.round(progress)}%</span>
+                    </div>
+                    <div className="h-3 bg-bg-dark/50 rounded-full overflow-hidden border border-white/5">
+                        <motion.div
+                            className="h-full bg-gradient-to-r from-accent-primary to-accent-secondary relative"
+                            initial={{ width: 0 }}
+                            animate={{ width: `${progress}%` }}
+                            transition={{ duration: 1, ease: "easeOut" }}
+                        >
+                            <div className="absolute top-0 right-0 bottom-0 w-[1px] bg-white/50 shadow-[0_0_10px_white]"></div>
+                        </motion.div>
+                    </div>
+                </div>
+
+                {/* Edit Button */}
+                <div className="flex justify-center">
+                    <button
+                        onClick={() => setEditMode(!editMode)}
+                        className={cn(
+                            "w-full py-2.5 px-4 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 border",
+                            editMode
+                                ? "bg-accent-gold text-bg-dark border-accent-gold shadow-[0_0_10px_rgba(251,191,36,0.5)]"
+                                : "bg-white/5 text-slate-300 border-white/10 hover:bg-white/10"
+                        )}
+                    >
+                        <Edit2 size={16} />
+                        {editMode ? "Stop Editing Board" : "Edit Board Items"}
+                    </button>
+                </div>
+            </motion.div>
+
             {/* Celebration Modal */}
             <AnimatePresence>
                 {hasWon && !celebrationDismissed && (
@@ -240,8 +237,9 @@ export const BingoBoard: React.FC = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
+
             {/* Version Badge */}
-            <div className="absolute bottom-4 right-4 text-[10px] text-slate-600 font-mono opacity-50 hover:opacity-100 transition-opacity">
+            <div className="mt-8 text-[10px] text-slate-600 font-mono opacity-50">
                 v{__APP_VERSION__}
             </div>
         </div>

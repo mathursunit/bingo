@@ -99,24 +99,24 @@ export const BingoBoard: React.FC = () => {
             <div className="min-h-screen flex flex-col items-center p-3 pb-24 relative overflow-x-hidden no-print">
                 <div className="background-animation" />
 
-                {/* Header */}
-                <header className="w-full max-w-[500px] flex justify-between items-center mb-6 pt-2 px-2">
-                    <div>
-                        <motion.div
-                            initial={{ opacity: 0, y: -20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="text-[10px] font-bold text-accent-gold uppercase tracking-widest bg-accent-gold/10 px-3 py-1 rounded-full border border-accent-gold/20 inline-block mb-2"
-                        >
-                            2026 Edition
-                        </motion.div>
+                {/* Header - Compact Single Row */}
+                <header className="w-full max-w-[500px] flex justify-between items-center mb-4 pt-2 px-2">
+                    <div className="flex items-center gap-2">
                         <motion.img
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             src="/logo.png"
                             alt="SunSar Bingo"
-                            className="h-24 sm:h-28 w-auto object-contain -ml-2 cursor-pointer active:scale-95 transition-transform"
+                            className="h-14 sm:h-16 w-auto object-contain cursor-pointer active:scale-95 transition-transform"
                             onClick={handleLogoTap}
                         />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="text-[9px] font-bold text-accent-gold uppercase tracking-wider bg-accent-gold/10 px-2 py-0.5 rounded-full border border-accent-gold/20"
+                        >
+                            2026
+                        </motion.div>
                     </div>
                     <div className="flex items-center gap-3">
                         <motion.div

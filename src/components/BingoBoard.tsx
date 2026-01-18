@@ -384,7 +384,7 @@ export const BingoBoard: React.FC = () => {
 
                 <div className="mt-8 text-[10px] text-center border-t border-black pt-4 flex justify-between">
                     <span>Generated on {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}</span>
-                    <span>bingo.sunitmathur.com</span>
+                    <span>bingo.mysunsar.com</span>
                 </div>
             </div>
         </>

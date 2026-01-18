@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { doc, onSnapshot, setDoc, updateDoc, Timestamp, getDoc, deleteField } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '../firebase';
+import { db } from '../firebase';
 import { type BingoYear, type BingoItem } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { triggerConfetti } from '../utils/confetti';
+import { uploadToCloudinary } from '../lib/cloudinary';
 
 const YEAR_DOC_ID = '2026';
 const TOTAL_CELLS = 25;
@@ -142,10 +142,8 @@ export const useBingo = () => {
         if (!items.length || !user) return;
 
         try {
-            // Upload photo to Firebase Storage
-            const photoRef = ref(storage, `proofs/${YEAR_DOC_ID}/${index}_${Date.now()}.jpg`);
-            await uploadBytes(photoRef, photoFile);
-            const photoUrl = await getDownloadURL(photoRef);
+            // Upload photo to Cloudinary
+            const photoUrl = await uploadToCloudinary(photoFile);
 
             // Update the item
             const newItems = items.map(item => ({ ...item }));

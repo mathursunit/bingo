@@ -240,6 +240,10 @@ export const BingoBoard: React.FC = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
+            {/* Version Badge */}
+            <div className="absolute bottom-4 right-4 text-[10px] text-slate-600 font-mono opacity-50 hover:opacity-100 transition-opacity">
+                v{__APP_VERSION__}
+            </div>
         </div>
     );
 };

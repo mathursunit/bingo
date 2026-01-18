@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { doc, onSnapshot, setDoc, updateDoc, Timestamp, getDoc, deleteField } from 'firebase/firestore';
-import { db } from '../firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from '../firebase';
 import { type BingoYear, type BingoItem } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { triggerConfetti } from '../utils/confetti';
@@ -121,6 +122,7 @@ export const useBingo = () => {
         } else {
             item.completedBy = null as any;
             item.completedAt = null as any;
+            item.proofPhotoUrl = null as any; // Clear photo when unmarking
         }
 
         setItems(newItems);
@@ -133,6 +135,40 @@ export const useBingo = () => {
             });
         } catch (error) {
             console.error("Error updating bingo board:", error);
+        }
+    };
+
+    const completeWithPhoto = async (index: number, photoFile: File) => {
+        if (!items.length || !user) return;
+
+        try {
+            // Upload photo to Firebase Storage
+            const photoRef = ref(storage, `proofs/${YEAR_DOC_ID}/${index}_${Date.now()}.jpg`);
+            await uploadBytes(photoRef, photoFile);
+            const photoUrl = await getDownloadURL(photoRef);
+
+            // Update the item
+            const newItems = items.map(item => ({ ...item }));
+            const item = newItems[index];
+
+            if (item.isFreeSpace) return;
+
+            item.isCompleted = true;
+            item.completedBy = user?.displayName || user?.email || 'Unknown';
+            item.completedAt = Timestamp.now();
+            item.proofPhotoUrl = photoUrl;
+
+            setItems(newItems);
+            checkWin(newItems);
+            triggerConfetti(1); // Bigger confetti for photo proof!
+
+            await updateDoc(doc(db, 'years', YEAR_DOC_ID), {
+                items: newItems,
+                lastUpdated: Timestamp.now()
+            });
+        } catch (error) {
+            console.error("Error completing with photo:", error);
+            throw error; // Re-throw so UI can handle it
         }
     };
 
@@ -231,5 +267,5 @@ export const useBingo = () => {
         }
     };
 
-    return { items, loading, toggleItem, updateItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard };
+    return { items, loading, toggleItem, updateItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto };
 };

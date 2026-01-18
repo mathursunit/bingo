@@ -7,6 +7,7 @@ export interface BingoItem {
     completedBy?: string; // email or name
     completedAt?: Timestamp;
     isFreeSpace?: boolean;
+    proofPhotoUrl?: string; // URL to uploaded proof photo
     style?: {
         color?: string;
         bold?: boolean;

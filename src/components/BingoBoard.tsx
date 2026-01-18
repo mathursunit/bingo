@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useBingo } from '../hooks/useBingo';
 import { useAuth } from '../contexts/AuthContext';
 import { cn } from '../lib/utils';
-import { Edit2, Check, Award, Printer, LogOut, Shuffle } from 'lucide-react';
+import { Edit2, Check, Award, Printer, LogOut, Shuffle, Camera, X } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { BingoItem } from '../types';
 
 export const BingoBoard: React.FC = () => {
-    const { items, loading, toggleItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard } = useBingo();
+    const { items, loading, toggleItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto } = useBingo();
     const { logout, user } = useAuth();
     const [editMode, setEditMode] = useState(false);
 
@@ -20,6 +20,16 @@ export const BingoBoard: React.FC = () => {
     const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null);
     const [editFormText, setEditFormText] = useState("");
     const [editFormStyle, setEditFormStyle] = useState<{ color?: string; bold?: boolean; italic?: boolean; fontSize?: 'sm' | 'base' | 'lg' | 'xl' }>({});
+
+    // Completion Modal State
+    const [isCompletionModalOpen, setIsCompletionModalOpen] = useState(false);
+    const [completingItemIndex, setCompletingItemIndex] = useState<number | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Photo Viewer State
+    const [isPhotoViewerOpen, setIsPhotoViewerOpen] = useState(false);
+    const [viewingItem, setViewingItem] = useState<BingoItem | null>(null);
 
     const [celebrationDismissed, setCelebrationDismissed] = useState(() => {
         return localStorage.getItem('celebrationDismissed') === 'true';
@@ -178,10 +188,23 @@ export const BingoBoard: React.FC = () => {
                                 transition={{ delay: index * 0.02 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => {
-                                    if (editMode) return; // Grid clicks disabled in edit mode (handled by inner click)
+                                    if (editMode) return;
                                     if (isLocked) return;
                                     if (item.isFreeSpace) return;
-                                    toggleItem(index);
+
+                                    if (item.isCompleted) {
+                                        // View photo if exists, otherwise just toggle off
+                                        if (item.proofPhotoUrl) {
+                                            setViewingItem(item);
+                                            setIsPhotoViewerOpen(true);
+                                        } else {
+                                            toggleItem(index);
+                                        }
+                                    } else {
+                                        // Open completion modal for incomplete items
+                                        setCompletingItemIndex(index);
+                                        setIsCompletionModalOpen(true);
+                                    }
                                 }}
                                 className={cn(
                                     "relative rounded-lg flex items-center justify-center p-1 cursor-pointer select-none border backdrop-blur-sm overflow-hidden",
@@ -231,6 +254,11 @@ export const BingoBoard: React.FC = () => {
                                             <Check className="w-12 h-12 text-white" />
                                         </motion.div>
                                         <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-accent-primary rounded-full shadow-[0_0_5px_rgba(139,92,246,0.8)]"></div>
+                                        {item.proofPhotoUrl && (
+                                            <div className="absolute bottom-0.5 left-0.5 p-0.5 bg-accent-gold/80 rounded-sm">
+                                                <Camera className="w-2.5 h-2.5 text-black" />
+                                            </div>
+                                        )}
                                     </>
                                 )}
                             </motion.div>
@@ -474,6 +502,145 @@ export const BingoBoard: React.FC = () => {
                                         Ok
                                     </button>
                                 </div>
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Completion Confirmation Modal */}
+                <AnimatePresence>
+                    {isCompletionModalOpen && completingItemIndex !== null && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+                            onClick={() => { setIsCompletionModalOpen(false); setCompletingItemIndex(null); }}
+                        >
+                            <motion.div
+                                initial={{ scale: 0.9, y: 20 }}
+                                animate={{ scale: 1, y: 0 }}
+                                exit={{ scale: 0.9, y: 20 }}
+                                className="bg-bg-dark border border-accent-primary/30 p-6 rounded-2xl w-full max-w-sm shadow-2xl"
+                                onClick={e => e.stopPropagation()}
+                            >
+                                <h3 className="text-xl font-bold text-white mb-2 text-center">Complete Task</h3>
+                                <p className="text-slate-300 text-sm text-center mb-6 line-clamp-2">
+                                    &ldquo;{displayItems[completingItemIndex]?.text}&rdquo;
+                                </p>
+
+                                <div className="space-y-3">
+                                    {/* Photo Upload Input (Hidden) */}
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        capture="environment"
+                                        ref={fileInputRef}
+                                        className="hidden"
+                                        onChange={async (e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file && completingItemIndex !== null) {
+                                                setIsUploading(true);
+                                                try {
+                                                    await completeWithPhoto(completingItemIndex, file);
+                                                    setIsCompletionModalOpen(false);
+                                                    setCompletingItemIndex(null);
+                                                } catch (err) {
+                                                    alert('Failed to upload photo. Please try again.');
+                                                } finally {
+                                                    setIsUploading(false);
+                                                }
+                                            }
+                                        }}
+                                    />
+
+                                    <button
+                                        onClick={() => fileInputRef.current?.click()}
+                                        disabled={isUploading}
+                                        className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2 hover:shadow-amber-500/25 active:scale-95 transition-all disabled:opacity-50"
+                                    >
+                                        <Camera size={20} />
+                                        {isUploading ? 'Uploading...' : 'Add Photo & Complete'}
+                                    </button>
+
+                                    <button
+                                        onClick={() => {
+                                            toggleItem(completingItemIndex!);
+                                            setIsCompletionModalOpen(false);
+                                            setCompletingItemIndex(null);
+                                        }}
+                                        disabled={isUploading}
+                                        className="w-full py-3 px-4 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2 hover:shadow-green-500/25 active:scale-95 transition-all disabled:opacity-50"
+                                    >
+                                        <Check size={20} />
+                                        Mark Complete
+                                    </button>
+
+                                    <button
+                                        onClick={() => { setIsCompletionModalOpen(false); setCompletingItemIndex(null); }}
+                                        disabled={isUploading}
+                                        className="w-full py-3 rounded-xl font-semibold bg-white/5 text-slate-400 hover:bg-white/10 transition-colors disabled:opacity-50"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Photo Viewer Modal */}
+                <AnimatePresence>
+                    {isPhotoViewerOpen && viewingItem && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md"
+                            onClick={() => { setIsPhotoViewerOpen(false); setViewingItem(null); }}
+                        >
+                            <motion.div
+                                initial={{ scale: 0.9 }}
+                                animate={{ scale: 1 }}
+                                exit={{ scale: 0.9 }}
+                                className="relative max-w-lg w-full"
+                                onClick={e => e.stopPropagation()}
+                            >
+                                {/* Close Button */}
+                                <button
+                                    onClick={() => { setIsPhotoViewerOpen(false); setViewingItem(null); }}
+                                    className="absolute -top-12 right-0 p-2 text-white/70 hover:text-white transition-colors"
+                                >
+                                    <X size={28} />
+                                </button>
+
+                                {/* Photo */}
+                                <div className="rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
+                                    <img
+                                        src={viewingItem.proofPhotoUrl}
+                                        alt="Proof photo"
+                                        className="w-full h-auto max-h-[60vh] object-contain bg-black"
+                                    />
+                                    <div className="p-4 bg-bg-dark/95">
+                                        <p className="text-white font-semibold mb-1">{viewingItem.text}</p>
+                                        <p className="text-slate-400 text-xs">
+                                            Completed by {viewingItem.completedBy} • {formatDate(viewingItem.completedAt)}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Unmark Button */}
+                                <button
+                                    onClick={() => {
+                                        const idx = items.findIndex(i => i.id === viewingItem.id);
+                                        if (idx !== -1) toggleItem(idx);
+                                        setIsPhotoViewerOpen(false);
+                                        setViewingItem(null);
+                                    }}
+                                    className="mt-4 w-full py-2 text-sm text-red-400 hover:text-red-300 transition-colors"
+                                >
+                                    Unmark as Complete
+                                </button>
                             </motion.div>
                         </motion.div>
                     )}

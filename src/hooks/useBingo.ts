@@ -94,7 +94,9 @@ export const useBingo = () => {
                     id: i,
                     text: shuffled[itemIndex],
                     isCompleted: false,
-                    isFreeSpace: false
+                    isFreeSpace: false,
+                    targetCount: 1,
+                    currentCount: 0
                 });
                 itemIndex++;
             }
@@ -114,15 +116,29 @@ export const useBingo = () => {
 
         if (item.isFreeSpace) return;
 
-        item.isCompleted = !item.isCompleted;
+        const targetCount = item.targetCount || 1;
+        const currentCount = item.currentCount || 0;
+
         if (item.isCompleted) {
+            // Decrement count (marking as in-progress)
+            const newCount = Math.max(0, currentCount - 1);
+            item.currentCount = newCount;
+            item.isCompleted = newCount >= targetCount;
+
+            if (newCount === 0) {
+                // Fully reset if count reaches 0
+                item.completedBy = null as any;
+                item.completedAt = null as any;
+                item.proofPhotos = [];
+            }
+        } else {
+            // Increment count (marking as complete)
+            const newCount = Math.min(targetCount, currentCount + 1);
+            item.currentCount = newCount;
+            item.isCompleted = newCount >= targetCount;
             item.completedBy = user?.displayName || user?.email || 'Unknown';
             item.completedAt = Timestamp.now();
             triggerConfetti(0.5);
-        } else {
-            item.completedBy = null as any;
-            item.completedAt = null as any;
-            item.proofPhotos = []; // Clear photos when unmarking
         }
 
         setItems(newItems);
@@ -151,10 +167,18 @@ export const useBingo = () => {
 
             if (item.isFreeSpace) return;
 
-            item.isCompleted = true;
+            const targetCount = item.targetCount || 1;
+            const currentCount = item.currentCount || 0;
+            const newCount = Math.min(targetCount, currentCount + 1);
+
+            item.currentCount = newCount;
+            item.isCompleted = newCount >= targetCount;
             item.completedBy = user?.displayName || user?.email || 'Unknown';
             item.completedAt = Timestamp.now();
-            item.proofPhotos = [photoUrl]; // Start with first photo
+
+            // Add photo to existing array or start new one
+            const existingPhotos = item.proofPhotos || [];
+            item.proofPhotos = [...existingPhotos, photoUrl];
 
             setItems(newItems);
             checkWin(newItems);

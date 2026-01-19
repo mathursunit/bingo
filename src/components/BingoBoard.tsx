@@ -21,6 +21,7 @@ export const BingoBoard: React.FC = () => {
     const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null);
     const [editFormText, setEditFormText] = useState("");
     const [editFormStyle, setEditFormStyle] = useState<{ color?: string; bold?: boolean; italic?: boolean; fontSize?: 'sm' | 'base' | 'lg' | 'xl' }>({});
+    const [editFormTargetCount, setEditFormTargetCount] = useState<number>(1);
 
     // Completion Modal State
     const [isCompletionModalOpen, setIsCompletionModalOpen] = useState(false);
@@ -96,6 +97,7 @@ export const BingoBoard: React.FC = () => {
         setEditingItemIndex(index);
         setEditFormText(currentList[index].text);
         setEditFormStyle(currentList[index].style || { color: '#ffffff', fontSize: 'base', bold: false, italic: false });
+        setEditFormTargetCount(currentList[index].targetCount || 1);
         setIsEditModalOpen(true);
     };
 
@@ -107,7 +109,8 @@ export const BingoBoard: React.FC = () => {
         newDrafts[editingItemIndex] = {
             ...newDrafts[editingItemIndex],
             text: editFormText,
-            style: editFormStyle
+            style: editFormStyle,
+            targetCount: editFormTargetCount
         };
         setDraftItems(newDrafts);
 
@@ -280,6 +283,20 @@ export const BingoBoard: React.FC = () => {
                                             </div>
                                         )}
                                     </>
+                                )}
+
+                                {/* Progress indicator for multi-count tiles (e.g., "1/2") */}
+                                {!item.isFreeSpace && !editMode && (item.targetCount || 1) > 1 && (
+                                    <div className={cn(
+                                        "absolute bottom-0.5 right-0.5 px-1 py-0.5 rounded text-[8px] font-bold",
+                                        item.isCompleted
+                                            ? "bg-green-500/80 text-white"
+                                            : (item.currentCount || 0) > 0
+                                                ? "bg-amber-500/80 text-white" // Partial progress
+                                                : "bg-slate-600/80 text-slate-300"
+                                    )}>
+                                        {item.currentCount || 0}/{item.targetCount}
+                                    </div>
                                 )}
                             </motion.div>
                         ))}
@@ -505,6 +522,30 @@ export const BingoBoard: React.FC = () => {
                                             </div>
                                         </div>
                                     </div>
+                                </div>
+
+                                {/* Repeat Count */}
+                                <div className="mb-6">
+                                    <label className="text-xs text-slate-400 mb-2 block">Times to Complete</label>
+                                    <div className="flex gap-2 bg-black/20 rounded-lg p-1">
+                                        {[1, 2].map((count) => (
+                                            <button
+                                                key={count}
+                                                onClick={() => setEditFormTargetCount(count)}
+                                                className={cn(
+                                                    "flex-1 py-2 text-sm font-bold rounded transition-colors",
+                                                    editFormTargetCount === count
+                                                        ? "bg-accent-primary text-white"
+                                                        : "text-slate-400 hover:text-white"
+                                                )}
+                                            >
+                                                {count === 1 ? "Once" : "Twice"}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    {editFormTargetCount === 2 && (
+                                        <p className="text-[10px] text-slate-500 mt-1">This task must be completed 2 times to count as done.</p>
+                                    )}
                                 </div>
 
                                 {/* Actions */}

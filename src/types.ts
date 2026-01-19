@@ -4,10 +4,12 @@ export interface BingoItem {
     id: number;
     text: string;
     isCompleted: boolean;
-    completedBy?: string; // email or name
-    completedAt?: Timestamp;
+    completedBy?: string; // email or name (most recent completion)
+    completedAt?: Timestamp; // most recent completion time
     isFreeSpace?: boolean;
-    proofPhotos?: string[]; // URLs to uploaded proof photos (max 5)
+    proofPhotos?: string[]; // URLs to uploaded proof photos (max 5 total)
+    targetCount?: number; // How many times to complete (1 or 2, default 1)
+    currentCount?: number; // How many times completed so far (0, 1, or 2)
     style?: {
         color?: string;
         bold?: boolean;

@@ -154,6 +154,43 @@ export const useBingo = () => {
         }
     };
 
+    // Decrement progress for multi-count tiles
+    const decrementProgress = async (index: number) => {
+        if (!items.length) return;
+        const newItems = items.map(item => ({ ...item }));
+        const item = newItems[index];
+
+        if (item.isFreeSpace) return;
+
+        const currentCount = item.currentCount || 0;
+        if (currentCount <= 0) return; // Nothing to decrement
+
+        const targetCount = item.targetCount || 1;
+        const newCount = currentCount - 1;
+
+        item.currentCount = newCount;
+        item.isCompleted = newCount >= targetCount;
+
+        if (newCount === 0) {
+            // Fully reset if count reaches 0
+            item.completedBy = null as any;
+            item.completedAt = null as any;
+            item.proofPhotos = [];
+        }
+
+        setItems(newItems);
+        checkWin(newItems);
+
+        try {
+            await updateDoc(doc(db, 'years', YEAR_DOC_ID), {
+                items: newItems,
+                lastUpdated: Timestamp.now()
+            });
+        } catch (error) {
+            console.error("Error decrementing progress:", error);
+        }
+    };
+
     const completeWithPhoto = async (index: number, photoFile: File) => {
         if (!items.length || !user) return;
 
@@ -323,5 +360,5 @@ export const useBingo = () => {
         }
     };
 
-    return { items, loading, toggleItem, updateItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile };
+    return { items, loading, toggleItem, updateItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, decrementProgress };
 };

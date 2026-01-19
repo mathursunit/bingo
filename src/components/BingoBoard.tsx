@@ -9,7 +9,7 @@ import type { BingoItem } from '../types';
 import { MemoriesAlbum } from './MemoriesAlbum';
 
 export const BingoBoard: React.FC = () => {
-    const { items, loading, toggleItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile } = useBingo();
+    const { items, loading, toggleItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, decrementProgress } = useBingo();
     const { logout, user } = useAuth();
     const [editMode, setEditMode] = useState(false);
 
@@ -585,66 +585,107 @@ export const BingoBoard: React.FC = () => {
                                 className="bg-bg-dark border border-accent-primary/30 p-6 rounded-2xl w-full max-w-sm shadow-2xl"
                                 onClick={e => e.stopPropagation()}
                             >
-                                <h3 className="text-xl font-bold text-white mb-2 text-center">Complete Task</h3>
-                                <p className="text-slate-300 text-sm text-center mb-6 line-clamp-2">
-                                    &ldquo;{displayItems[completingItemIndex]?.text}&rdquo;
-                                </p>
+                                {(() => {
+                                    const item = displayItems[completingItemIndex];
+                                    const targetCount = item?.targetCount || 1;
+                                    const currentCount = item?.currentCount || 0;
+                                    const isMultiCount = targetCount > 1;
+                                    const hasProgress = currentCount > 0;
 
-                                <div className="space-y-3">
-                                    {/* Photo Upload Input (Hidden) */}
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        capture="environment"
-                                        ref={fileInputRef}
-                                        className="hidden"
-                                        onChange={async (e) => {
-                                            const file = e.target.files?.[0];
-                                            if (file && completingItemIndex !== null) {
-                                                setIsUploading(true);
-                                                try {
-                                                    await completeWithPhoto(completingItemIndex, file);
-                                                    setIsCompletionModalOpen(false);
-                                                    setCompletingItemIndex(null);
-                                                } catch (err) {
-                                                    alert('Failed to upload photo. Please try again.');
-                                                } finally {
-                                                    setIsUploading(false);
-                                                }
-                                            }
-                                        }}
-                                    />
+                                    return (
+                                        <>
+                                            <h3 className="text-xl font-bold text-white mb-2 text-center">
+                                                {hasProgress ? 'Add Progress' : 'Complete Task'}
+                                            </h3>
+                                            <p className="text-slate-300 text-sm text-center mb-2 line-clamp-2">
+                                                &ldquo;{item?.text}&rdquo;
+                                            </p>
 
-                                    <button
-                                        onClick={() => fileInputRef.current?.click()}
-                                        disabled={isUploading}
-                                        className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2 hover:shadow-amber-500/25 active:scale-95 transition-all disabled:opacity-50"
-                                    >
-                                        <Camera size={20} />
-                                        {isUploading ? 'Uploading...' : 'Add Photo & Complete'}
-                                    </button>
+                                            {/* Progress indicator for multi-count tiles */}
+                                            {isMultiCount && (
+                                                <div className="text-center mb-4">
+                                                    <span className={cn(
+                                                        "inline-block px-3 py-1 rounded-full text-sm font-bold",
+                                                        hasProgress ? "bg-amber-500/20 text-amber-400" : "bg-slate-600/50 text-slate-400"
+                                                    )}>
+                                                        Progress: {currentCount} / {targetCount}
+                                                    </span>
+                                                </div>
+                                            )}
 
-                                    <button
-                                        onClick={() => {
-                                            toggleItem(completingItemIndex!);
-                                            setIsCompletionModalOpen(false);
-                                            setCompletingItemIndex(null);
-                                        }}
-                                        disabled={isUploading}
-                                        className="w-full py-3 px-4 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2 hover:shadow-green-500/25 active:scale-95 transition-all disabled:opacity-50"
-                                    >
-                                        <Check size={20} />
-                                        Mark Complete
-                                    </button>
+                                            <div className="space-y-3">
+                                                {/* Photo Upload Input (Hidden) */}
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    capture="environment"
+                                                    ref={fileInputRef}
+                                                    className="hidden"
+                                                    onChange={async (e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (file && completingItemIndex !== null) {
+                                                            setIsUploading(true);
+                                                            try {
+                                                                await completeWithPhoto(completingItemIndex, file);
+                                                                setIsCompletionModalOpen(false);
+                                                                setCompletingItemIndex(null);
+                                                            } catch (err) {
+                                                                alert('Failed to upload photo. Please try again.');
+                                                            } finally {
+                                                                setIsUploading(false);
+                                                            }
+                                                        }
+                                                    }}
+                                                />
 
-                                    <button
-                                        onClick={() => { setIsCompletionModalOpen(false); setCompletingItemIndex(null); }}
-                                        disabled={isUploading}
-                                        className="w-full py-3 rounded-xl font-semibold bg-white/5 text-slate-400 hover:bg-white/10 transition-colors disabled:opacity-50"
-                                    >
-                                        Cancel
-                                    </button>
-                                </div>
+                                                <button
+                                                    onClick={() => fileInputRef.current?.click()}
+                                                    disabled={isUploading}
+                                                    className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2 hover:shadow-amber-500/25 active:scale-95 transition-all disabled:opacity-50"
+                                                >
+                                                    <Camera size={20} />
+                                                    {isUploading ? 'Uploading...' : (isMultiCount ? 'Add Photo & +1' : 'Add Photo & Complete')}
+                                                </button>
+
+                                                <button
+                                                    onClick={() => {
+                                                        toggleItem(completingItemIndex!);
+                                                        setIsCompletionModalOpen(false);
+                                                        setCompletingItemIndex(null);
+                                                    }}
+                                                    disabled={isUploading}
+                                                    className="w-full py-3 px-4 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2 hover:shadow-green-500/25 active:scale-95 transition-all disabled:opacity-50"
+                                                >
+                                                    <Check size={20} />
+                                                    {isMultiCount ? `Mark +1 (${currentCount + 1}/${targetCount})` : 'Mark Complete'}
+                                                </button>
+
+                                                {/* Remove Progress button - only show if there's existing progress */}
+                                                {hasProgress && (
+                                                    <button
+                                                        onClick={() => {
+                                                            decrementProgress(completingItemIndex!);
+                                                            setIsCompletionModalOpen(false);
+                                                            setCompletingItemIndex(null);
+                                                        }}
+                                                        disabled={isUploading}
+                                                        className="w-full py-2 rounded-xl font-semibold text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                                                    >
+                                                        Remove Progress ({currentCount - 1}/{targetCount})
+                                                    </button>
+                                                )}
+
+                                                <button
+                                                    onClick={() => { setIsCompletionModalOpen(false); setCompletingItemIndex(null); }}
+                                                    disabled={isUploading}
+                                                    className="w-full py-3 rounded-xl font-semibold bg-white/5 text-slate-400 hover:bg-white/10 transition-colors disabled:opacity-50"
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        </>
+                                    );
+                                })()}
                             </motion.div>
                         </motion.div>
                     )}

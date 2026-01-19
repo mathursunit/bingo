@@ -528,7 +528,7 @@ export const BingoBoard: React.FC = () => {
                                 <div className="mb-6">
                                     <label className="text-xs text-slate-400 mb-2 block">Times to Complete</label>
                                     <div className="flex gap-2 bg-black/20 rounded-lg p-1">
-                                        {[1, 2].map((count) => (
+                                        {[1, 2, 3, 4].map((count) => (
                                             <button
                                                 key={count}
                                                 onClick={() => setEditFormTargetCount(count)}
@@ -539,12 +539,12 @@ export const BingoBoard: React.FC = () => {
                                                         : "text-slate-400 hover:text-white"
                                                 )}
                                             >
-                                                {count === 1 ? "Once" : "Twice"}
+                                                {count}x
                                             </button>
                                         ))}
                                     </div>
-                                    {editFormTargetCount === 2 && (
-                                        <p className="text-[10px] text-slate-500 mt-1">This task must be completed 2 times to count as done.</p>
+                                    {editFormTargetCount > 1 && (
+                                        <p className="text-[10px] text-slate-500 mt-1">This task must be completed {editFormTargetCount} times to count as done.</p>
                                     )}
                                 </div>
 

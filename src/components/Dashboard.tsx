@@ -4,7 +4,7 @@ import { collection, query, where, getDocs, addDoc, deleteDoc, doc, Timestamp, u
 import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { useDialog } from '../contexts/DialogContext';
-import { Plus, LayoutGrid, Calendar, Trash2, LogOut } from 'lucide-react';
+import { Plus, LayoutGrid, Calendar, Trash2, LogOut, Users } from 'lucide-react';
 
 interface BoardSummary {
     id: string;
@@ -14,6 +14,7 @@ interface BoardSummary {
     isLocked?: boolean;
     ownerId?: string;
     ownerName?: string;
+    sharedCount?: number;
     myRole?: 'owner' | 'editor' | 'viewer';
 }
 
@@ -151,9 +152,14 @@ export const Dashboard: React.FC = () => {
                     memberSnapshot.docs.forEach(doc => {
                         const data = doc.data();
                         const role = data.members?.[user.uid];
+                        // Count shared users (excluding owner)
+                        const membersMap = data.members || {};
+                        const sharedCount = Object.values(membersMap).filter(r => r !== 'owner').length;
+
                         allBoardsMap.set(doc.id, {
                             id: doc.id,
                             ...data,
+                            sharedCount,
                             myRole: role as 'owner' | 'editor' | 'viewer'
                         } as BoardSummary);
                     });
@@ -425,6 +431,16 @@ export const Dashboard: React.FC = () => {
                                     <Trash2 size={18} />
                                 </button>
 
+                                {/* Shared badge for owned boards */}
+                                {board.sharedCount && board.sharedCount > 0 && (
+                                    <div className="absolute top-4 left-4 z-10">
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-500/20 text-green-400 border border-green-500/30">
+                                            <Users size={10} />
+                                            Shared with {board.sharedCount}
+                                        </span>
+                                    </div>
+                                )}
+
                                 <div>
                                     <h3 className="text-xl font-bold text-white mb-2 line-clamp-1">{board.title}</h3>
                                     <div className="flex items-center gap-2 text-xs text-slate-400">
@@ -532,7 +548,7 @@ export const Dashboard: React.FC = () => {
                             {previewTemplate ? (
                                 <div className="space-y-6">
                                     <div className="flex justify-center mb-6">
-                                        <div className="aspect-square w-full max-w-[320px] grid grid-cols-5 gap-1.5 p-2 bg-slate-950/50 rounded-xl border border-white/10">
+                                        <div className="aspect-square w-full max-w-[420px] grid grid-cols-5 gap-2 p-3 bg-slate-950/50 rounded-xl border border-white/10">
                                             {TEMPLATES[previewTemplate].items.slice(0, 25).map((item, i) => {
                                                 const isCenter = i === 12;
                                                 const isFreeSpace = item.trim().toUpperCase() === "FREE SPACE" || isCenter;
@@ -541,8 +557,8 @@ export const Dashboard: React.FC = () => {
                                                     <div
                                                         key={i}
                                                         className={`
-                                                            relative rounded flex items-center justify-center p-0.5 text-center select-none overflow-hidden 
-                                                            text-[6px] sm:text-[8px] leading-tight font-medium border shadow-sm
+                                                            relative rounded-lg flex items-center justify-center p-1 text-center select-none overflow-hidden 
+                                                            text-[8px] sm:text-[10px] leading-tight font-medium border shadow-sm
                                                             ${isFreeSpace
                                                                 ? 'bg-gradient-to-br from-accent-gold/20 to-accent-secondary/20 border-accent-gold/50 text-accent-gold font-bold'
                                                                 : 'bg-white/5 border-white/10 text-slate-300'}

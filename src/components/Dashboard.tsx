@@ -137,51 +137,30 @@ export const Dashboard: React.FC = () => {
                 console.log('Fetching boards for user:', user.uid, user.email);
                 const allBoardsMap = new Map<string, BoardSummary>();
 
-                // 1. Fetch boards from 'boards' collection where I am the owner
+                // Primary query: Fetch boards where user is in the members map
+                // This works with Firestore security rules and captures all roles (owner, editor, viewer)
                 try {
-                    const ownedQuery = query(
-                        collection(db, 'boards'),
-                        where('ownerId', '==', user.uid)
-                    );
-                    const ownedSnapshot = await getDocs(ownedQuery);
-                    console.log('Owned boards (by ownerId) found:', ownedSnapshot.docs.length);
-
-                    ownedSnapshot.docs.forEach(doc => {
-                        allBoardsMap.set(doc.id, {
-                            id: doc.id,
-                            ...doc.data(),
-                            myRole: 'owner' as const
-                        } as BoardSummary);
-                    });
-                } catch (e) {
-                    console.error('Error querying owned boards:', e);
-                }
-
-                // 2. Fetch boards where I am in the members map
-                try {
-                    const sharedQuery = query(
+                    const memberQuery = query(
                         collection(db, 'boards'),
                         where(`members.${user.uid}`, 'in', ['owner', 'editor', 'viewer'])
                     );
-                    const sharedSnapshot = await getDocs(sharedQuery);
-                    console.log('Boards with membership found:', sharedSnapshot.docs.length);
+                    const memberSnapshot = await getDocs(memberQuery);
+                    console.log('Boards with membership found:', memberSnapshot.docs.length);
 
-                    sharedSnapshot.docs.forEach(doc => {
-                        if (!allBoardsMap.has(doc.id)) {
-                            const data = doc.data();
-                            const role = data.members?.[user.uid];
-                            allBoardsMap.set(doc.id, {
-                                id: doc.id,
-                                ...data,
-                                myRole: role === 'owner' ? 'owner' : role as 'editor' | 'viewer'
-                            } as BoardSummary);
-                        }
+                    memberSnapshot.docs.forEach(doc => {
+                        const data = doc.data();
+                        const role = data.members?.[user.uid];
+                        allBoardsMap.set(doc.id, {
+                            id: doc.id,
+                            ...data,
+                            myRole: role as 'owner' | 'editor' | 'viewer'
+                        } as BoardSummary);
                     });
                 } catch (e) {
-                    console.log('Membership query failed (index may be needed):', e);
+                    console.error('Error querying boards by membership:', e);
                 }
 
-                // 3. Check the legacy 'years' collection for the user's old board
+                // 2. Check the legacy 'years' collection for the user's old board
                 try {
                     const yearsQuery = query(
                         collection(db, 'years'),

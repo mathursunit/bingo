@@ -348,9 +348,8 @@ export const Dashboard: React.FC = () => {
                         <span className="font-semibold text-slate-300 group-hover:text-white">Create New Board</span>
                     </button>
 
-                    {/* Board Cards */}
-                    {boards.map(board => {
-                        // Check if this is a legacy board from the 'years' collection
+                    {/* My Boards - boards I own */}
+                    {boards.filter(b => b.myRole === 'owner').map(board => {
                         const isLegacyBoard = board.id === '2026' || !board.ownerId;
                         const boardPath = isLegacyBoard ? `/board/legacy/${board.id}` : `/board/${board.id}`;
 
@@ -358,34 +357,20 @@ export const Dashboard: React.FC = () => {
                             <div
                                 key={board.id}
                                 onClick={() => navigate(boardPath)}
-                                className="group relative h-48 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-white/10 hover:border-accent-secondary/50 p-6 flex flex-col justify-between cursor-pointer transition-all hover:translate-y-[-4px] hover:shadow-xl overflow-hidden"
+                                className="group relative h-48 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-white/10 hover:border-accent-primary/50 p-6 flex flex-col justify-between cursor-pointer transition-all hover:translate-y-[-4px] hover:shadow-xl overflow-hidden"
                             >
                                 <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                                     <LayoutGrid className="w-24 h-24" />
                                 </div>
 
-                                {/* Delete button - only show for owned boards */}
-                                {board.myRole === 'owner' && (
-                                    <button
-                                        onClick={(e) => handleDeleteBoard(e, board.id, board.title)}
-                                        className="absolute top-4 right-4 p-2 text-slate-500 hover:text-red-400 hover:bg-white/10 rounded-full transition-all opacity-0 group-hover:opacity-100 z-10"
-                                        title="Delete Board"
-                                    >
-                                        <Trash2 size={18} />
-                                    </button>
-                                )}
-
-                                {/* Role Badge */}
-                                {board.myRole && board.myRole !== 'owner' && (
-                                    <div className="absolute top-4 left-4 z-10">
-                                        <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${board.myRole === 'editor'
-                                            ? 'bg-accent-secondary/20 text-accent-secondary border border-accent-secondary/30'
-                                            : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                                            }`}>
-                                            {board.myRole === 'editor' ? '✏️ Editor' : '👁️ Viewer'}
-                                        </span>
-                                    </div>
-                                )}
+                                {/* Delete button for owned boards */}
+                                <button
+                                    onClick={(e) => handleDeleteBoard(e, board.id, board.title)}
+                                    className="absolute top-4 right-4 p-2 text-slate-500 hover:text-red-400 hover:bg-white/10 rounded-full transition-all opacity-0 group-hover:opacity-100 z-10"
+                                    title="Delete Board"
+                                >
+                                    <Trash2 size={18} />
+                                </button>
 
                                 <div>
                                     <h3 className="text-xl font-bold text-white mb-2 line-clamp-1">{board.title}</h3>
@@ -404,6 +389,62 @@ export const Dashboard: React.FC = () => {
                         );
                     })}
                 </div>
+
+                {/* Shared With Me Section */}
+                {boards.filter(b => b.myRole !== 'owner').length > 0 && (
+                    <>
+                        <h2 className="text-xl font-bold text-white mt-10 mb-6 flex items-center gap-2">
+                            <span className="bg-gradient-to-r from-accent-secondary to-pink-500 bg-clip-text text-transparent">
+                                Shared With Me
+                            </span>
+                            <span className="text-sm font-normal text-slate-500">
+                                ({boards.filter(b => b.myRole !== 'owner').length})
+                            </span>
+                        </h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {boards.filter(b => b.myRole !== 'owner').map(board => {
+                                const isLegacyBoard = board.id === '2026' || !board.ownerId;
+                                const boardPath = isLegacyBoard ? `/board/legacy/${board.id}` : `/board/${board.id}`;
+
+                                return (
+                                    <div
+                                        key={board.id}
+                                        onClick={() => navigate(boardPath)}
+                                        className="group relative h-48 rounded-2xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-white/10 hover:border-accent-secondary/50 p-6 flex flex-col justify-between cursor-pointer transition-all hover:translate-y-[-4px] hover:shadow-xl overflow-hidden"
+                                    >
+                                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                            <LayoutGrid className="w-24 h-24" />
+                                        </div>
+
+                                        {/* Role Badge */}
+                                        <div className="absolute top-4 left-4 z-10">
+                                            <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${board.myRole === 'editor'
+                                                    ? 'bg-accent-secondary/20 text-accent-secondary border border-accent-secondary/30'
+                                                    : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                                                }`}>
+                                                {board.myRole === 'editor' ? '✏️ Editor' : '👁️ Viewer'}
+                                            </span>
+                                        </div>
+
+                                        <div className="mt-6">
+                                            <h3 className="text-xl font-bold text-white mb-2 line-clamp-1">{board.title}</h3>
+                                            <div className="flex items-center gap-2 text-xs text-slate-400">
+                                                <Calendar className="w-3 h-3" />
+                                                {board.createdAt?.toDate ? board.createdAt.toDate().toLocaleDateString() : 'Unknown date'}
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-auto">
+                                            <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-accent-secondary/20 text-accent-secondary border border-accent-secondary/20 group-hover:bg-accent-secondary group-hover:text-white transition-colors">
+                                                Open Board
+                                            </span>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </>
+                )}
             </div>
 
             {/* Template Selection Modal */}

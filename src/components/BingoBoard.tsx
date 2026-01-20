@@ -329,7 +329,7 @@ export const BingoBoard: React.FC = () => {
                             animate={{ opacity: 1, x: 0 }}
                             src="/logo.png"
                             alt="SunSar Bingo"
-                            className="h-14 sm:h-16 w-auto object-contain cursor-pointer active:scale-95 transition-transform"
+                            className="h-14 sm:h-16 w-auto object-contain cursor-pointer active:scale-95 transition-transform mix-blend-screen"
                             onClick={handleLogoTap}
                         />
                         <motion.div

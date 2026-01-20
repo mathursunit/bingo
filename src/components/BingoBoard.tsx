@@ -322,72 +322,81 @@ export const BingoBoard: React.FC = () => {
                 <div className="background-animation" />
 
                 {/* Header */}
-                <header className="w-full max-w-[500px] flex justify-between items-center mb-4 pt-2 px-2">
-                    <div className="flex items-center gap-2">
-                        <motion.img
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            src="/logo.png"
-                            alt="SunSar Bingo"
-                            className="h-14 sm:h-16 w-auto object-contain cursor-pointer active:scale-95 transition-transform"
-                            onClick={handleLogoTap}
-                        />
-                        {title && (
-                            <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-accent-primary to-accent-secondary bg-clip-text text-transparent ml-2 line-clamp-1">
+                {/* Header Section */}
+                <div className="w-full max-w-[500px] flex flex-col gap-6 mb-8 pt-2 px-2">
+                    <header className="w-full flex justify-between items-center">
+                        <div className="flex items-center">
+                            <motion.img
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                src="/logo.png"
+                                alt="SunSar Bingo"
+                                className="h-10 sm:h-12 w-auto object-contain cursor-pointer active:scale-95 transition-transform"
+                                onClick={handleLogoTap}
+                            />
+                        </div>
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                            <button
+                                onClick={() => setIsMemoriesOpen(true)}
+                                className="text-slate-400 hover:text-accent-gold transition-colors p-2 hover:bg-white/5 rounded-full"
+                                title="View Memories"
+                            >
+                                <BookOpen size={18} />
+                            </button>
+                            <button
+                                onClick={() => navigate('/dashboard')}
+                                className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-full"
+                                title="Dashboard"
+                            >
+                                <LayoutGrid size={18} />
+                            </button>
+                            <button
+                                onClick={() => setIsShareModalOpen(true)}
+                                className="text-slate-400 hover:text-accent-primary transition-colors p-2 hover:bg-white/5 rounded-full"
+                                title="Share Board"
+                            >
+                                <Share2 size={18} />
+                            </button>
+                            <button
+                                onClick={openSettings}
+                                className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-full"
+                                title="Settings"
+                            >
+                                <Settings size={18} />
+                            </button>
+                            <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className="relative cursor-pointer group px-1"
+                            >
+                                <img
+                                    src={user?.photoURL || ''}
+                                    alt="User"
+                                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-glass-border group-hover:border-accent-primary transition-colors object-cover shrink-0"
+                                />
+                            </motion.div>
+                            <button
+                                onClick={logout}
+                                className="text-slate-400 hover:text-red-400 transition-colors p-2 hover:bg-white/5 rounded-full"
+                                title="Logout"
+                            >
+                                <LogOut size={18} />
+                            </button>
+                        </div>
+                    </header>
+
+                    {title && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="text-center"
+                        >
+                            <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-accent-primary via-accent-secondary to-accent-primary bg-clip-text text-transparent inline-block pb-1">
                                 {title}
                             </h1>
-                        )}
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <button
-                            onClick={() => setIsMemoriesOpen(true)}
-                            className="text-slate-400 hover:text-accent-gold transition-colors p-2 hover:bg-white/5 rounded-full"
-                            title="View Memories"
-                        >
-                            <BookOpen size={20} />
-                        </button>
-                        <button
-                            onClick={() => navigate('/dashboard')}
-                            className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-full"
-                            title="Dashboard"
-                        >
-                            <LayoutGrid size={20} />
-                        </button>
-                        <button
-                            onClick={() => setIsShareModalOpen(true)}
-                            className="text-slate-400 hover:text-accent-primary transition-colors p-2 hover:bg-white/5 rounded-full"
-                            title="Share Board"
-                        >
-                            <Share2 size={20} />
-                        </button>
-                        <button
-                            onClick={openSettings}
-                            className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-full"
-                            title="Settings"
-                        >
-                            <Settings size={20} />
-                        </button>
-                        <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            className="relative cursor-pointer group"
-                        >
-                            <img
-                                src={user?.photoURL || ''}
-                                alt="User"
-                                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-glass-border group-hover:border-accent-primary transition-colors object-cover shrink-0"
-                            />
-                            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-bg-dark"></div>
                         </motion.div>
-                        <button
-                            onClick={logout}
-                            className="text-slate-400 hover:text-red-400 transition-colors p-2 hover:bg-white/5 rounded-full"
-                            title="Logout"
-                        >
-                            <LogOut size={20} />
-                        </button>
-                    </div>
-                </header>
+                    )}
+                </div>
 
                 {/* The Grid */}
                 <div className="w-full max-w-[500px] aspect-square relative mb-6">

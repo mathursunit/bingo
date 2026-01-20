@@ -17,6 +17,7 @@ interface BoardSummary {
     ownerName?: string;
     sharedCount?: number;
     myRole?: 'owner' | 'editor' | 'viewer';
+    members?: Record<string, string>;
 }
 
 export const Dashboard: React.FC = () => {
@@ -174,7 +175,8 @@ export const Dashboard: React.FC = () => {
                             id: doc.id,
                             ...data,
                             sharedCount,
-                            myRole: role as 'owner' | 'editor' | 'viewer'
+                            myRole: role as 'owner' | 'editor' | 'viewer',
+                            members: membersMap
                         } as BoardSummary);
                     });
                 } catch (e) {
@@ -198,7 +200,8 @@ export const Dashboard: React.FC = () => {
                             createdAt: data.createdAt,
                             isLocked: data.isLocked,
                             ownerId: data.ownerId,
-                            myRole: 'owner' as const
+                            myRole: 'owner' as const,
+                            members: {}
                         } as BoardSummary);
                     });
                 } catch (e) {
@@ -221,7 +224,8 @@ export const Dashboard: React.FC = () => {
                                     createdAt: data.createdAt,
                                     isLocked: data.isLocked,
                                     ownerId: data.ownerId,
-                                    myRole: data.ownerId === user.uid ? 'owner' : (data.members?.[user.uid] || 'viewer') as any
+                                    myRole: data.ownerId === user.uid ? 'owner' : (data.members?.[user.uid] || 'viewer') as any,
+                                    members: data.members || {}
                                 } as BoardSummary);
                             }
                         }
@@ -233,8 +237,18 @@ export const Dashboard: React.FC = () => {
                 const allBoards = Array.from(allBoardsMap.values());
 
                 // Fetch owner names for shared boards
-                const sharedBoards = allBoards.filter(b => b.myRole !== 'owner' && b.ownerId);
-                const ownerIds = [...new Set(sharedBoards.map(b => b.ownerId!))];
+                const ownerIdsSet = new Set<string>();
+                allBoards.forEach(b => {
+                    if (b.myRole !== 'owner') {
+                        if (b.ownerId && b.ownerId !== user.uid) ownerIdsSet.add(b.ownerId);
+                        if (b.members) {
+                            Object.entries(b.members).forEach(([uid, role]) => {
+                                if (role === 'owner' && uid !== user.uid) ownerIdsSet.add(uid);
+                            });
+                        }
+                    }
+                });
+                const ownerIds = Array.from(ownerIdsSet);
 
                 // Lookup owner names from users collection
                 const ownerNames: Record<string, string> = {};
@@ -252,8 +266,15 @@ export const Dashboard: React.FC = () => {
 
                 // Update boards with owner names
                 const boardsWithOwners = allBoards.map(board => {
-                    if (board.myRole !== 'owner' && board.ownerId && ownerNames[board.ownerId]) {
-                        return { ...board, ownerName: ownerNames[board.ownerId] };
+                    let displayOwnerId = board.ownerId;
+                    if (board.members) {
+                        // Find an owner that is NOT the current user
+                        const memberOwner = Object.keys(board.members).find(uid => board.members![uid] === 'owner' && uid !== user.uid);
+                        if (memberOwner) displayOwnerId = memberOwner;
+                    }
+
+                    if (board.myRole !== 'owner' && displayOwnerId && ownerNames[displayOwnerId]) {
+                        return { ...board, ownerName: ownerNames[displayOwnerId] };
                     }
                     return board;
                 });

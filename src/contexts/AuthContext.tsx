@@ -13,7 +13,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const ALLOWED_EMAILS = ['sunit.mathur@gmail.com', 'sarawbush@gmail.com'];
+
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<UserProfile | null>(null);
@@ -21,21 +21,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             if (firebaseUser) {
-                if (firebaseUser.email && ALLOWED_EMAILS.includes(firebaseUser.email)) {
-                    setUser({
-                        uid: firebaseUser.uid,
-                        email: firebaseUser.email,
-                        displayName: firebaseUser.displayName,
-                        photoURL: firebaseUser.photoURL,
-                    });
-                    setError(null);
-                } else {
-                    // Not allowed
-                    signOut(auth);
-                    setUser(null);
-                    setError("Sorry! This app is strictly for Sara & Sunit. ✨");
+                // ALLOWED_EMAILS check removed for global release
+                // if (firebaseUser.email && ALLOWED_EMAILS.includes(firebaseUser.email)) ...
+
+                const updatedUser = {
+                    uid: firebaseUser.uid,
+                    email: firebaseUser.email,
+                    displayName: firebaseUser.displayName,
+                    photoURL: firebaseUser.photoURL,
+                };
+
+                setUser(updatedUser);
+                setError(null);
+
+                // Sync user profile to Firestore
+                try {
+                    // Dynamic import or ensure db is imported
+                    const { doc, setDoc, Timestamp } = await import('firebase/firestore');
+                    const { db } = await import('../firebase');
+
+                    await setDoc(doc(db, 'users', firebaseUser.uid), {
+                        ...updatedUser,
+                        lastSeen: Timestamp.now()
+                    }, { merge: true });
+                } catch (e) {
+                    console.error("Error syncing user profile:", e);
                 }
             } else {
                 setUser(null);

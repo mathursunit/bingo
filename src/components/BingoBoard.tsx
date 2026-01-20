@@ -2,14 +2,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useBingo } from '../hooks/useBingo';
 import { useAuth } from '../contexts/AuthContext';
 import { cn } from '../lib/utils';
-import { Edit2, Check, Award, LogOut, Shuffle, Camera, X, ChevronLeft, ChevronRight, Plus, BookOpen, Printer } from 'lucide-react';
+import { Edit2, Check, Award, LogOut, Shuffle, Camera, X, ChevronLeft, ChevronRight, Plus, BookOpen, Printer, LayoutGrid, Share2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { BingoItem } from '../types';
 import { MemoriesAlbum } from './MemoriesAlbum';
 
+import { useParams, useNavigate } from 'react-router-dom';
+
 export const BingoBoard: React.FC = () => {
-    const { items, loading, toggleItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, decrementProgress } = useBingo();
+    const { boardId } = useParams();
+    const navigate = useNavigate();
+    const { items, loading, toggleItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, decrementProgress, inviteUser } = useBingo(boardId);
     const { logout, user } = useAuth();
     const [editMode, setEditMode] = useState(false);
 
@@ -170,6 +174,23 @@ export const BingoBoard: React.FC = () => {
                             title="View Memories"
                         >
                             <BookOpen size={20} />
+                        </button>
+                        <button
+                            onClick={() => navigate('/dashboard')}
+                            className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-full"
+                            title="Dashboard"
+                        >
+                            <LayoutGrid size={20} />
+                        </button>
+                        <button
+                            onClick={async () => {
+                                const email = prompt("Enter email to invite:");
+                                if (email) await inviteUser(email);
+                            }}
+                            className="text-slate-400 hover:text-accent-primary transition-colors p-2 hover:bg-white/5 rounded-full"
+                            title="Share Board"
+                        >
+                            <Share2 size={20} />
                         </button>
                         <motion.div
                             initial={{ scale: 0 }}

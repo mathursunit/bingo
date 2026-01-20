@@ -56,15 +56,22 @@ export const MigrateLegacy = () => {
             // Legacy items handling
             const newItems = legacyData.items.map((item: any, index: number) => {
                 const isFreeSpace = index === 12; // Standard 5x5 center
-                return {
+                const isDone = item.completed || item.isCompleted || false;
+
+                const newItem: any = {
                     id: index,
-                    text: item.text || item, // Handle object or string
-                    isCompleted: item.completed || item.isCompleted || false,
+                    text: item.text || item || "", // Handle object or string
+                    isCompleted: isDone,
                     isFreeSpace: isFreeSpace,
                     targetCount: 1,
-                    currentCount: (item.completed || item.isCompleted) ? 1 : 0,
-                    completedBy: (item.completed || item.isCompleted) ? saraUid : undefined // Default legacy completions to owner
+                    currentCount: isDone ? 1 : 0
                 };
+
+                if (isDone) {
+                    newItem.completedBy = saraUid;
+                }
+
+                return newItem;
             });
 
             const newBoardData = {

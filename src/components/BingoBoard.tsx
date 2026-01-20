@@ -217,7 +217,7 @@ export const BingoBoard: React.FC = () => {
 
     const handleFinalize = async () => {
         const confirmed = await dialog.confirm(
-            "This will randomly shuffle all tiles (except the center) and lock the board.\n\n(Tip: Tap the logo 5 times to unlock later)",
+            "This will randomly shuffle all tiles (except the center) and lock the board. You won't be able to edit it after this.",
             { title: 'Shuffle & Lock Board?', confirmText: 'Lock It!', type: 'warning' }
         );
         if (confirmed) {

@@ -7,8 +7,26 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export const SettingsModal: React.FC = () => {
     const { isSettingsOpen, closeSettings, settings, updateSettings } = useSettings();
+    const initialSettingsRef = React.useRef(settings);
+
+    // Snapshot settings when the modal opens to allow revert on cancel
+    React.useEffect(() => {
+        if (isSettingsOpen) {
+            initialSettingsRef.current = settings;
+        }
+    }, [isSettingsOpen]);
 
     if (!isSettingsOpen) return null;
+
+    const handleCancel = () => {
+        updateSettings(initialSettingsRef.current, false);
+        closeSettings();
+    };
+
+    const handleSave = () => {
+        updateSettings(settings, true);
+        closeSettings();
+    };
 
     const themes = [
         { id: 'dawn', name: 'Dawn', color: 'bg-[#0f111a] from-violet-500/20 to-pink-500/20' },
@@ -34,26 +52,26 @@ export const SettingsModal: React.FC = () => {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-                        onClick={closeSettings}
+                        onClick={handleCancel}
                     />
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                        className="relative w-full max-w-lg bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden max-h-[85vh] overflow-y-auto"
+                        className="relative w-full max-w-lg bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden max-h-[85vh] flex flex-col"
                     >
                         {/* Header */}
-                        <div className="p-6 border-b border-white/10 flex justify-between items-center sticky top-0 bg-slate-900/95 backdrop-blur z-10">
+                        <div className="p-6 border-b border-white/10 flex justify-between items-center sticky top-0 bg-slate-900 z-10">
                             <h2 className="text-xl font-bold text-white flex items-center gap-2">
                                 <Palette className="w-5 h-5 text-accent-primary" />
                                 Customization
                             </h2>
-                            <button onClick={closeSettings} className="text-slate-400 hover:text-white transition-colors">
+                            <button onClick={handleCancel} className="text-slate-400 hover:text-white transition-colors">
                                 <X className="w-6 h-6" />
                             </button>
                         </div>
 
-                        <div className="p-6 space-y-8">
+                        <div className="flex-1 overflow-y-auto p-6 space-y-8">
                             {/* Theme Section */}
                             <section>
                                 <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
@@ -63,7 +81,7 @@ export const SettingsModal: React.FC = () => {
                                     {themes.map((theme) => (
                                         <button
                                             key={theme.id}
-                                            onClick={() => updateSettings({ theme: theme.id })}
+                                            onClick={() => updateSettings({ theme: theme.id }, false)}
                                             className={cn(
                                                 "relative group overflow-hidden rounded-xl border transition-all duration-300",
                                                 settings.theme === theme.id
@@ -99,7 +117,7 @@ export const SettingsModal: React.FC = () => {
                                     {fonts.map((font) => (
                                         <button
                                             key={font.id}
-                                            onClick={() => updateSettings({ font: font.id })}
+                                            onClick={() => updateSettings({ font: font.id }, false)}
                                             className={cn(
                                                 "flex items-center justify-between p-4 rounded-xl border transition-all duration-200 text-left",
                                                 settings.font === font.id
@@ -147,13 +165,29 @@ export const SettingsModal: React.FC = () => {
                                         <input
                                             type="checkbox"
                                             checked={settings.enableAnimation}
-                                            onChange={(e) => updateSettings({ enableAnimation: e.target.checked })}
+                                            onChange={(e) => updateSettings({ enableAnimation: e.target.checked }, false)}
                                             className="sr-only peer"
                                         />
                                         <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-accent-primary rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent-primary"></div>
                                     </label>
                                 </div>
                             </section>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="p-6 border-t border-white/10 flex justify-end gap-3 sticky bottom-0 bg-slate-900 z-10 shrink-0">
+                            <button
+                                onClick={handleCancel}
+                                className="px-4 py-2 rounded-xl font-semibold bg-white/5 text-slate-300 hover:bg-white/10 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSave}
+                                className="px-6 py-2 bg-gradient-to-r from-accent-primary to-accent-secondary rounded-xl font-bold text-white shadow-lg hover:shadow-accent-primary/25 transition-all active:scale-95"
+                            >
+                                Save Changes
+                            </button>
                         </div>
                     </motion.div>
                 </div>

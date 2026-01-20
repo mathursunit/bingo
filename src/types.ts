@@ -21,6 +21,7 @@ export interface BingoItem {
 
 export interface BingoYear {
     id: string;
+    title?: string;
     isActive: boolean;
     isLocked?: boolean;
     items: BingoItem[];

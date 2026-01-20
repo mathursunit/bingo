@@ -24,6 +24,7 @@ export const useBingo = (boardId?: string) => {
     const [loading, setLoading] = useState(true);
     const [hasWon, setHasWon] = useState(false);
     const [isLocked, setIsLocked] = useState(false);
+    const [title, setTitle] = useState('');
 
     // Dynamic Doc Ref
     const docRef = useMemo(() => {
@@ -128,6 +129,7 @@ export const useBingo = (boardId?: string) => {
                 setItems(data.items || []);
                 setMembers(data.members || {});
                 setIsLocked(data.isLocked || false);
+                setTitle(data.title || '');
                 checkWin(data.items || []);
             } else {
                 // Initialize if document doesn't exist
@@ -441,5 +443,5 @@ export const useBingo = (boardId?: string) => {
         }
     };
 
-    return { items, members, loading, toggleItem, updateItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, decrementProgress, inviteUser, removeMember };
+    return { items, members, loading, toggleItem, updateItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, decrementProgress, inviteUser, removeMember, title };
 };

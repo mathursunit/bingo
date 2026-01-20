@@ -20,7 +20,7 @@ export const BingoBoard: React.FC = () => {
     // For legacy boards, yearId is set and we pass undefined to useBingo (which uses 'years' collection)
     // For new boards, boardId is set and we pass it to useBingo (which uses 'boards' collection)
     const effectiveBoardId = yearId ? undefined : boardId;
-    const { items, members, loading, toggleItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, decrementProgress, inviteUser, removeMember } = useBingo(effectiveBoardId);
+    const { items, members, loading, toggleItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, decrementProgress, inviteUser, removeMember, title } = useBingo(effectiveBoardId);
     const { logout, user } = useAuth();
     const dialog = useDialog();
     const { openSettings } = useSettings();
@@ -332,7 +332,11 @@ export const BingoBoard: React.FC = () => {
                             className="h-14 sm:h-16 w-auto object-contain cursor-pointer active:scale-95 transition-transform"
                             onClick={handleLogoTap}
                         />
-
+                        {title && (
+                            <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-accent-primary to-accent-secondary bg-clip-text text-transparent ml-2 line-clamp-1">
+                                {title}
+                            </h1>
+                        )}
                     </div>
                     <div className="flex items-center gap-3">
                         <button
@@ -387,7 +391,7 @@ export const BingoBoard: React.FC = () => {
 
                 {/* The Grid */}
                 <div className="w-full max-w-[500px] aspect-square relative mb-6">
-                    <div className="grid grid-cols-5 gap-1.5 sm:gap-2 w-full h-full">
+                    <div className="grid grid-cols-5 grid-rows-5 gap-1.5 sm:gap-2 w-full h-full">
                         {displayItems.map((item, index) => (
                             <motion.div
                                 key={item.id}

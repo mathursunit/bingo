@@ -19,7 +19,7 @@ const defaultSettings: Settings = {
 
 interface SettingsContextType {
     settings: Settings;
-    updateSettings: (newSettings: Partial<Settings>) => Promise<void>;
+    updateSettings: (newSettings: Partial<Settings>, persist?: boolean) => Promise<void>;
     isSettingsOpen: boolean;
     openSettings: () => void;
     closeSettings: () => void;
@@ -88,11 +88,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     }, [settings]);
 
-    const updateSettings = async (newSettings: Partial<Settings>) => {
+    const updateSettings = async (newSettings: Partial<Settings>, persist = true) => {
         const updated = { ...settings, ...newSettings };
         setSettings(updated);
 
-        if (user) {
+        if (user && persist) {
             try {
                 await setDoc(doc(db, 'users', user.uid), { settings: updated }, { merge: true });
             } catch (error) {

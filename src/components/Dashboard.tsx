@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { collection, query, where, getDocs, addDoc, deleteDoc, doc, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
+import { useDialog } from '../contexts/DialogContext';
 import { Plus, LayoutGrid, Calendar, Trash2 } from 'lucide-react';
 
 interface BoardSummary {
@@ -11,10 +12,13 @@ interface BoardSummary {
     theme?: string;
     createdAt: any;
     isLocked?: boolean;
+    ownerId?: string;
+    myRole?: 'owner' | 'editor' | 'viewer';
 }
 
 export const Dashboard: React.FC = () => {
     const { user, logout } = useAuth();
+    const dialog = useDialog();
     const navigate = useNavigate();
     const [boards, setBoards] = useState<BoardSummary[]>([]);
     const [loading, setLoading] = useState(true);
@@ -130,20 +134,50 @@ export const Dashboard: React.FC = () => {
 
         const fetchBoards = async () => {
             try {
-                // Query boards where I am the owner
-                // TODO: Add support for 'members' map check or 'users' collection lookup
-                const q = query(
+                // Fetch boards where I am the owner
+                const ownedQuery = query(
                     collection(db, 'boards'),
                     where('ownerId', '==', user.uid)
                 );
-
-                const snapshot = await getDocs(q);
-                const fetchedBoards: BoardSummary[] = snapshot.docs.map(doc => ({
+                const ownedSnapshot = await getDocs(ownedQuery);
+                const ownedBoards: BoardSummary[] = ownedSnapshot.docs.map(doc => ({
                     id: doc.id,
-                    ...doc.data()
+                    ...doc.data(),
+                    myRole: 'owner' as const
                 } as BoardSummary));
 
-                setBoards(fetchedBoards);
+                // Fetch boards where I am a member (shared with me)
+                // Firestore doesn't support querying map keys directly, so we need a different approach
+                // We'll query for boards where members.<uid> exists by using the array approach
+                // Alternative: Query all boards and filter client-side (not ideal for large datasets)
+                // For now, we'll attempt a workaround using the membersList array if it exists
+
+                // Actually, Firestore supports: where(`members.${uid}`, '!=', null) but it requires an index
+                // Let's use a simpler approach: where(`members.${user.uid}`, 'in', ['editor', 'viewer'])
+                const sharedQuery = query(
+                    collection(db, 'boards'),
+                    where(`members.${user.uid}`, 'in', ['editor', 'viewer'])
+                );
+
+                let sharedBoards: BoardSummary[] = [];
+                try {
+                    const sharedSnapshot = await getDocs(sharedQuery);
+                    sharedBoards = sharedSnapshot.docs
+                        .filter(doc => doc.data().ownerId !== user.uid) // Exclude owned boards
+                        .map(doc => {
+                            const data = doc.data();
+                            return {
+                                id: doc.id,
+                                ...data,
+                                myRole: data.members?.[user.uid] as 'editor' | 'viewer'
+                            } as BoardSummary;
+                        });
+                } catch (e) {
+                    // Query might fail if index doesn't exist, that's okay
+                    console.log('Shared boards query failed (index may be missing):', e);
+                }
+
+                setBoards([...ownedBoards, ...sharedBoards]);
             } catch (error) {
                 console.error("Error fetching boards:", error);
             } finally {
@@ -158,7 +192,10 @@ export const Dashboard: React.FC = () => {
         if (!user) return;
 
         const template = TEMPLATES[templateKey];
-        const title = prompt("Enter board title:", template.name);
+        const title = await dialog.prompt(
+            "What would you like to call this board?",
+            { title: 'Board Title', inputDefaultValue: template.name, confirmText: 'Create' }
+        );
         if (!title) return;
 
         try {
@@ -208,7 +245,7 @@ export const Dashboard: React.FC = () => {
             navigate(`/board/${docRef.id}`);
         } catch (error) {
             console.error("Error creating board:", error);
-            alert("Failed to create board");
+            await dialog.alert("Failed to create board. Please try again.", { title: 'Error', type: 'error' });
         } finally {
             setIsCreateModalOpen(false);
         }
@@ -221,13 +258,19 @@ export const Dashboard: React.FC = () => {
     const handleDeleteBoard = async (e: React.MouseEvent, boardId: string, boardTitle: string) => {
         e.stopPropagation(); // Prevent opening the board
 
-        if (confirm(`Are you sure you want to delete the board "${boardTitle}"?\n\nThis action cannot be undone.`)) {
+        const confirmed = await dialog.confirm(
+            `This will permanently delete "${boardTitle}" and all its data.\n\nThis action cannot be undone.`,
+            { title: 'Delete Board?', confirmText: 'Delete', type: 'error' }
+        );
+
+        if (confirmed) {
             try {
                 await deleteDoc(doc(db, 'boards', boardId));
                 setBoards(prev => prev.filter(b => b.id !== boardId));
+                await dialog.alert('Board deleted successfully.', { title: 'Deleted', type: 'success' });
             } catch (error) {
                 console.error("Error deleting board:", error);
-                alert("Failed to delete board");
+                await dialog.alert('Failed to delete board. Please try again.', { title: 'Error', type: 'error' });
             }
         }
     };
@@ -282,13 +325,28 @@ export const Dashboard: React.FC = () => {
                                 <LayoutGrid className="w-24 h-24" />
                             </div>
 
-                            <button
-                                onClick={(e) => handleDeleteBoard(e, board.id, board.title)}
-                                className="absolute top-4 right-4 p-2 text-slate-500 hover:text-red-400 hover:bg-white/10 rounded-full transition-all opacity-0 group-hover:opacity-100 z-10"
-                                title="Delete Board"
-                            >
-                                <Trash2 size={18} />
-                            </button>
+                            {/* Delete button - only show for owned boards */}
+                            {board.myRole === 'owner' && (
+                                <button
+                                    onClick={(e) => handleDeleteBoard(e, board.id, board.title)}
+                                    className="absolute top-4 right-4 p-2 text-slate-500 hover:text-red-400 hover:bg-white/10 rounded-full transition-all opacity-0 group-hover:opacity-100 z-10"
+                                    title="Delete Board"
+                                >
+                                    <Trash2 size={18} />
+                                </button>
+                            )}
+
+                            {/* Role Badge */}
+                            {board.myRole && board.myRole !== 'owner' && (
+                                <div className="absolute top-4 left-4 z-10">
+                                    <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${board.myRole === 'editor'
+                                            ? 'bg-accent-secondary/20 text-accent-secondary border border-accent-secondary/30'
+                                            : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                                        }`}>
+                                        {board.myRole === 'editor' ? '✏️ Editor' : '👁️ Viewer'}
+                                    </span>
+                                </div>
+                            )}
 
                             <div>
                                 <h3 className="text-xl font-bold text-white mb-2 line-clamp-1">{board.title}</h3>

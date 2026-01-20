@@ -400,7 +400,7 @@ export const useBingo = (boardId?: string) => {
         }
     };
 
-    const inviteUser = async (email: string): Promise<{ success: boolean; type: 'success' | 'not_found' | 'error'; message: string }> => {
+    const inviteUser = async (email: string, role: 'viewer' | 'editor' = 'editor'): Promise<{ success: boolean; type: 'success' | 'not_found' | 'error'; message: string }> => {
         try {
             const q = query(collection(db, 'users'), where('email', '==', email));
             const snapshot = await getDocs(q);
@@ -413,13 +413,13 @@ export const useBingo = (boardId?: string) => {
             const uid = userToAdd.id;
 
             await updateDoc(docRef, {
-                [`members.${uid}`]: 'editor'
+                [`members.${uid}`]: role
             });
 
             return {
                 success: true,
                 type: 'success',
-                message: `Added ${userToAdd.data().displayName || email} to the board!`
+                message: `Added ${userToAdd.data().displayName || email} as ${role}!`
             };
         } catch (error) {
             console.error("Error inviting user:", error);

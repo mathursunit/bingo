@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { DialogProvider } from './contexts/DialogContext';
 import { Login } from './components/Login';
 import { BingoBoard } from './components/BingoBoard';
 import { Dashboard } from './components/Dashboard';
@@ -27,7 +28,9 @@ const AppContent = () => {
 function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <DialogProvider>
+        <AppContent />
+      </DialogProvider>
     </AuthProvider>
   );
 }

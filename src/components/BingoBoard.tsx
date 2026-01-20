@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useBingo } from '../hooks/useBingo';
 import { useAuth } from '../contexts/AuthContext';
+import { useDialog } from '../contexts/DialogContext';
 import { cn } from '../lib/utils';
 import { Edit2, Check, Award, LogOut, Shuffle, Camera, X, ChevronLeft, ChevronRight, Plus, BookOpen, Printer, LayoutGrid, Share2, Clock } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -15,6 +16,7 @@ export const BingoBoard: React.FC = () => {
     const navigate = useNavigate();
     const { items, loading, toggleItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, decrementProgress, inviteUser } = useBingo(boardId);
     const { logout, user } = useAuth();
+    const dialog = useDialog();
     const [editMode, setEditMode] = useState(false);
 
     // Draft State
@@ -105,8 +107,12 @@ export const BingoBoard: React.FC = () => {
         setLogoTapCount(prev => prev + 1);
     };
 
-    const handleFinalize = () => {
-        if (window.confirm("Jumble & Finalize Board?\n\nThis will randomly shuffle all tiles (except the center) and LOCK the board. \n\n(Tap the logo 5 times to Undo/Unlock).")) {
+    const handleFinalize = async () => {
+        const confirmed = await dialog.confirm(
+            "This will randomly shuffle all tiles (except the center) and LOCK the board.\n\n(Tap the logo 5 times to Undo/Unlock).",
+            { title: 'Jumble & Finalize Board?', confirmText: 'Finalize', type: 'warning' }
+        );
+        if (confirmed) {
             jumbleAndLock();
             setEditMode(false);
         }
@@ -245,19 +251,55 @@ export const BingoBoard: React.FC = () => {
                         </button>
                         <button
                             onClick={async () => {
-                                const email = prompt("Enter email to invite:");
-                                if (email) {
-                                    const result = await inviteUser(email);
+                                const shareResult = await dialog.sharePrompt(
+                                    "Enter their email address to invite them to this board.",
+                                    { title: 'Share Board' }
+                                );
+
+                                if (shareResult) {
+                                    const result = await inviteUser(shareResult.email, shareResult.role);
                                     if (result.type === 'success') {
-                                        alert(result.message);
+                                        await dialog.alert(result.message, { title: 'Success!', type: 'success' });
                                     } else if (result.type === 'not_found') {
-                                        if (confirm("User not found!\n\nWould you like to send them an email invitation to join?")) {
-                                            const subject = encodeURIComponent("Join me on SunSar Bingo!");
-                                            const body = encodeURIComponent(`Hey! come join me on SunSar Bingo to track our 2026 goals together.\n\nSign up here: ${window.location.origin}`);
-                                            window.open(`mailto:${email}?subject=${subject}&body=${body}`);
+                                        const sendEmail = await dialog.confirm(
+                                            `"${shareResult.email}" hasn't signed up yet.\n\nWould you like to send them an email invitation to join SunSar Bingo?`,
+                                            { title: 'User Not Found', confirmText: 'Send Invite Email', type: 'info' }
+                                        );
+                                        if (sendEmail) {
+                                            // Try to send via Firebase Cloud Function, fallback to mailto
+                                            try {
+                                                const { sendInviteEmail, openMailtoFallback } = await import('../lib/emailService');
+                                                const emailResult = await sendInviteEmail({
+                                                    recipientEmail: shareResult.email,
+                                                    senderName: user?.displayName || user?.email || 'A friend',
+                                                });
+
+                                                if (emailResult.success) {
+                                                    await dialog.alert(
+                                                        `Invitation sent to ${shareResult.email}! They'll receive an email with instructions to join.`,
+                                                        { title: 'Invitation Sent!', type: 'success' }
+                                                    );
+                                                } else {
+                                                    // Fallback to mailto
+                                                    openMailtoFallback(shareResult.email, user?.displayName || 'A friend');
+                                                    await dialog.alert(
+                                                        "Your email app should open with a pre-filled invitation. Send it to invite your friend!",
+                                                        { title: 'Email Ready', type: 'info' }
+                                                    );
+                                                }
+                                            } catch (err) {
+                                                // Cloud function not available, use mailto fallback
+                                                const subject = encodeURIComponent("Join me on SunSar Bingo!");
+                                                const body = encodeURIComponent(`Hey! Come join me on SunSar Bingo to track our 2026 goals together.\n\nSign up here: ${window.location.origin}`);
+                                                window.open(`mailto:${shareResult.email}?subject=${subject}&body=${body}`);
+                                                await dialog.alert(
+                                                    "Your email app should open with a pre-filled invitation. Send it to invite your friend!",
+                                                    { title: 'Email Ready', type: 'info' }
+                                                );
+                                            }
                                         }
                                     } else {
-                                        alert(result.message);
+                                        await dialog.alert(result.message, { title: 'Error', type: 'error' });
                                     }
                                 }
                             }}

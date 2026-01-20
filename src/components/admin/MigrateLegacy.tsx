@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { collection, query, where, getDocs, getDoc, doc, addDoc, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, getDoc, doc, addDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { useAuth } from '../../contexts/AuthContext';
 import { ArrowLeft, Play, CheckCircle, AlertTriangle, Loader2 } from 'lucide-react';
@@ -96,8 +96,6 @@ export const MigrateLegacy = () => {
                 theme: 'dawn'
             };
 
-            // 4. Create New Board
-            log("Creating new board in 'boards' collection...");
             const docRef = await addDoc(collection(db, 'boards'), newBoardData);
             setNewBoardId(docRef.id);
             log(`SUCCESS! New Board Created. ID: ${docRef.id}`);
@@ -120,28 +118,28 @@ export const MigrateLegacy = () => {
         try {
             // 1. Find the board
             log("Finding the '2026 Bingo' board...");
-            // Query for board created by this user with title "2026 Bingo"
+            // REPLACED: Relaxed query to find board even if current user is editor
             const boardsQuery = query(
                 collection(db, 'boards'),
-                where('title', '==', '2026 Bingo'),
-                where(`members.${user.uid}`, '==', 'owner')
+                where('title', '==', '2026 Bingo')
             );
             const snapshot = await getDocs(boardsQuery);
 
-            if (snapshot.empty) {
-                throw new Error("Could not find the '2026 Bingo' board where you are an owner.");
+            const myBoard = snapshot.docs.find(doc => {
+                const d = doc.data();
+                return d.members?.[user.uid] !== undefined;
+            });
+
+            if (!myBoard) {
+                throw new Error("Could not find a '2026 Bingo' board where you are a member.");
             }
 
-            // Get the most recent one if multiple
-            const boardDoc = snapshot.docs[0]; // Assuming the first one is the target or only one
-            const boardId = boardDoc.id;
+            const boardId = myBoard.id;
             log(`Found board: ${boardId}`);
 
-            // 2. Resolve Users Again (to be safe)
+            // 2. Resolve Users Again
             const saraEmail = 'sarawbush@gmail.com';
 
-
-            // We need Sara's UID to ensure she remains owner
             const saraQuery = query(collection(db, 'users'), where('email', '==', saraEmail));
             const saraSnap = await getDocs(saraQuery);
             const saraUid = saraSnap.docs[0]?.id;
@@ -151,18 +149,14 @@ export const MigrateLegacy = () => {
             // 3. Update Permissions
             log(`Downgrading ${user.email} to 'editor'...`);
             log(`Ensuring ${saraEmail} is 'owner'...`);
+            log(`Transferring ownership to ${saraEmail}...`);
 
             const boardRef = doc(db, 'boards', boardId);
 
-            // We use updateDoc. 
-            // Note: If security rules block changing 'members' for specific keys, this might fail,
-            // but usually owners can modify members.
-            await import('firebase/firestore').then(fs => {
-                fs.updateDoc(boardRef, {
-                    [`members.${user.uid}`]: 'editor',
-                    [`members.${saraUid}`]: 'owner',
-                    ownerId: saraUid // Attempt to fix "Shared by..." display
-                });
+            await updateDoc(boardRef, {
+                [`members.${user.uid}`]: 'editor',
+                [`members.${saraUid}`]: 'owner',
+                ownerId: saraUid // Attempt to fix "Shared by..." display
             });
 
             log("SUCCESS! Permissions updated.");
@@ -232,8 +226,8 @@ export const MigrateLegacy = () => {
                                 onClick={runMigration}
                                 disabled={status === 'running'}
                                 className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all ${status === 'running'
-                                    ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                                    : 'bg-gradient-to-r from-accent-primary to-accent-secondary text-white hover:shadow-lg hover:shadow-accent-primary/20'
+                                        ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                                        : 'bg-gradient-to-r from-accent-primary to-accent-secondary text-white hover:shadow-lg hover:shadow-accent-primary/20'
                                     }`}
                             >
                                 {status === 'running' ? 'Migrating...' : 'Start New Migration'}

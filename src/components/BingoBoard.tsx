@@ -287,61 +287,6 @@ export const BingoBoard: React.FC = () => {
                 <div className="w-12 h-12 border-4 border-accent-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                 <p>Loading Board...</p>
             </div>
-            {/* Share Modal */}
-            {isShareModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsShareModalOpen(false)} />
-                    <div className="relative w-full max-w-md bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-                        <div className="p-6 border-b border-white/10 flex justify-between items-center">
-                            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                                <Share2 className="w-5 h-5 text-accent-primary" />
-                                Shared With
-                            </h2>
-                            <button onClick={() => setIsShareModalOpen(false)} className="text-slate-400 hover:text-white">
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-                        <div className="p-6">
-                            {memberDetails.length === 0 ? (
-                                <div className="text-center text-slate-400 py-8">
-                                    <p>This board hasn't been shared yet.</p>
-                                </div>
-                            ) : (
-                                <div className="space-y-4 mb-6">
-                                    {memberDetails.map(member => (
-                                        <div key={member.id} className="flex items-center justify-between bg-white/5 p-3 rounded-xl border border-white/5">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-white">
-                                                    {member.name.charAt(0)}
-                                                </div>
-                                                <div>
-                                                    <div className="text-sm font-semibold text-white">{member.name}</div>
-                                                    <div className="text-xs text-slate-400">{member.email} • {member.role}</div>
-                                                </div>
-                                            </div>
-                                            <button
-                                                onClick={() => handleRemoveMember(member.id, member.name)}
-                                                className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                                                title="Remove User"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-
-                            <button
-                                onClick={handleInviteClick}
-                                className="w-full py-3 bg-gradient-to-r from-accent-primary to-accent-secondary rounded-xl font-bold text-white shadow-lg hover:shadow-accent-primary/25 transition-all flex items-center justify-center gap-2"
-                            >
-                                <Plus size={18} />
-                                Invite New User
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 
@@ -1268,6 +1213,62 @@ export const BingoBoard: React.FC = () => {
                 isOpen={isMemoriesOpen}
                 onClose={() => setIsMemoriesOpen(false)}
             />
+
+            {/* Share Modal */}
+            {isShareModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsShareModalOpen(false)} />
+                    <div className="relative w-full max-w-md bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                        <div className="p-6 border-b border-white/10 flex justify-between items-center">
+                            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                                <Share2 className="w-5 h-5 text-accent-primary" />
+                                Shared With
+                            </h2>
+                            <button onClick={() => setIsShareModalOpen(false)} className="text-slate-400 hover:text-white">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="p-6">
+                            {memberDetails.length === 0 ? (
+                                <div className="text-center text-slate-400 py-8">
+                                    <p>This board hasn't been shared yet.</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-4 mb-6">
+                                    {memberDetails.map(member => (
+                                        <div key={member.id} className="flex items-center justify-between bg-white/5 p-3 rounded-xl border border-white/5">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-white">
+                                                    {member.name.charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <div className="text-sm font-semibold text-white">{member.name}</div>
+                                                    <div className="text-xs text-slate-400">{member.email} • {member.role}</div>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => handleRemoveMember(member.id, member.name)}
+                                                className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                                title="Remove User"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            <button
+                                onClick={handleInviteClick}
+                                className="w-full py-3 bg-gradient-to-r from-accent-primary to-accent-secondary rounded-xl font-bold text-white shadow-lg hover:shadow-accent-primary/25 transition-all flex items-center justify-center gap-2"
+                            >
+                                <Plus size={18} />
+                                Invite New User
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 };

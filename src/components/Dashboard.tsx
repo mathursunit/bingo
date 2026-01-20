@@ -5,7 +5,7 @@ import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { useDialog } from '../contexts/DialogContext';
 import { useSettings } from '../contexts/SettingsContext';
-import { Plus, LayoutGrid, Calendar, Trash2, LogOut, Users, Settings, HelpCircle } from 'lucide-react';
+import { Plus, LayoutGrid, Calendar, Trash2, LogOut, Users, Settings, HelpCircle, Pencil, Check, X } from 'lucide-react';
 
 interface BoardSummary {
     id: string;
@@ -30,6 +30,50 @@ export const Dashboard: React.FC = () => {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [previewTemplate, setPreviewTemplate] = useState<keyof typeof TEMPLATES | null>(null);
     const [selectedGridSize, setSelectedGridSize] = useState<number>(5);
+    const [editingBoardId, setEditingBoardId] = useState<string | null>(null);
+    const [editTitleValue, setEditTitleValue] = useState("");
+
+    const handleStartEdit = (e: React.MouseEvent, board: BoardSummary) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setEditingBoardId(board.id);
+        setEditTitleValue(board.title);
+    };
+
+    const handleSaveEdit = async (e: React.MouseEvent | React.KeyboardEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!editingBoardId) return;
+
+        try {
+            await updateDoc(doc(db, 'boards', editingBoardId), {
+                title: editTitleValue
+            });
+            setBoards(prev => prev.map(b =>
+                b.id === editingBoardId ? { ...b, title: editTitleValue } : b
+            ));
+        } catch (error) {
+            console.error("Error updating title:", error);
+        }
+        setEditingBoardId(null);
+    };
+
+    const handleCancelEdit = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setEditingBoardId(null);
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            handleSaveEdit(e);
+        } else if (e.key === 'Escape') {
+            e.stopPropagation(); // prevent modal close if inside one?
+            setEditingBoardId(null);
+        } else {
+            e.stopPropagation(); // prevent card click
+        }
+    };
 
     const GRID_SIZE_OPTIONS = [
         { size: 3, label: '3×3', description: 'Quick (9 tiles)', icon: '⚡' },
@@ -500,7 +544,7 @@ export const Dashboard: React.FC = () => {
                                     <div className="flex-1">
                                         {/* Badge Area */}
                                         <div className="h-7 mb-2">
-                                            {board.sharedCount && board.sharedCount > 0 && (
+                                            {!!board.sharedCount && board.sharedCount > 0 && (
                                                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                                                     <Users size={10} />
                                                     Shared with {board.sharedCount}
@@ -508,9 +552,34 @@ export const Dashboard: React.FC = () => {
                                             )}
                                         </div>
 
-                                        <h3 className="text-xl font-bold text-white mb-1.5 line-clamp-2 pr-8 group-hover:text-accent-primary transition-colors">
-                                            {board.title}
-                                        </h3>
+                                        {editingBoardId === board.id ? (
+                                            <div className="flex items-center gap-2 mb-1.5 z-30 relative" onClick={e => e.stopPropagation()}>
+                                                <input
+                                                    type="text"
+                                                    value={editTitleValue}
+                                                    onChange={(e) => setEditTitleValue(e.target.value)}
+                                                    onKeyDown={handleKeyDown}
+                                                    onClick={e => e.stopPropagation()}
+                                                    autoFocus
+                                                    className="bg-black/50 text-white font-bold text-xl rounded px-2 py-0.5 border border-accent-primary outline-none min-w-0 flex-1 w-full"
+                                                />
+                                                <button onClick={handleSaveEdit} className="p-1 text-green-400 hover:bg-green-400/20 rounded-full transition-colors"><Check size={18} /></button>
+                                                <button onClick={handleCancelEdit} className="p-1 text-red-400 hover:bg-red-400/20 rounded-full transition-colors"><X size={18} /></button>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-start gap-2 pr-8 mb-1.5">
+                                                <h3 className="text-xl font-bold text-white line-clamp-2 group-hover:text-accent-primary transition-colors">
+                                                    {board.title}
+                                                </h3>
+                                                <button
+                                                    onClick={(e) => handleStartEdit(e, board)}
+                                                    className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-white p-1.5 rounded-full hover:bg-white/10 transition-all z-20"
+                                                    title="Rename Board"
+                                                >
+                                                    <Pencil size={14} />
+                                                </button>
+                                            </div>
+                                        )}
 
                                         <div className="flex items-center gap-2 text-xs text-slate-400">
                                             <Calendar className="w-3.5 h-3.5" />

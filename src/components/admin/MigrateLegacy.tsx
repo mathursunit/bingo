@@ -74,18 +74,26 @@ export const MigrateLegacy = () => {
                 return newItem;
             });
 
+            // 4. Create New Board
+            log("Creating new board in 'boards' collection...");
+
+            // SECURITY FIX: Must create board as current user to pass Firestore rules
+            const creatorUid = user.uid;
+            log(`Creating as current user: ${creatorUid} (to satisfy security rules)`);
+
             const newBoardData = {
-                title: "2026 Bingo", // Force title as requested
+                title: "2026 Bingo",
                 gridSize: 5,
                 createdAt: Timestamp.now(),
-                ownerId: saraUid,
+                ownerId: creatorUid, // The creator must be the owner record
                 updatedAt: Timestamp.now(),
                 members: {
-                    [saraUid]: 'owner',
-                    [sunitUid]: 'editor'
+                    [saraUid]: 'owner',     // Sara is explicitly made Owner
+                    [sunitUid]: 'editor',   // Sunit is Editor (as requested)
+                    [creatorUid]: 'owner'   // Ensure creator is owner (overrides Sunit's editor status if he is creator)
                 },
                 items: newItems,
-                theme: 'dawn' // Default theme
+                theme: 'dawn'
             };
 
             // 4. Create New Board

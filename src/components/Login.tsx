@@ -19,8 +19,8 @@ export const Login: React.FC = () => {
                 </h1>
 
                 <p className="text-slate-300 font-light text-lg">
-                    Ready for the 2026 adventures? <br />
-                    Sign in to view the shared board.
+                    Track your goals, share with friends,<br />
+                    and make 2026 your best year yet.
                 </p>
 
                 {error && (
@@ -41,7 +41,7 @@ export const Login: React.FC = () => {
             </div>
 
             <footer className="absolute bottom-4 text-slate-500 text-xs">
-                Restricted Access • Sara & Sunit Only
+                © 2026 SunSar Bingo • Free & Open Source
             </footer>
         </div>
     );

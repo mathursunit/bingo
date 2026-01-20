@@ -17,6 +17,7 @@ const AppContent = () => {
       <Routes>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/board/legacy/:yearId" element={<BingoBoard />} />
         <Route path="/board/:boardId" element={<BingoBoard />} />
         {/* Fallback for legacy URL or direct access, though typically redirected */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

@@ -12,9 +12,12 @@ import { MemoriesAlbum } from './MemoriesAlbum';
 import { useParams, useNavigate } from 'react-router-dom';
 
 export const BingoBoard: React.FC = () => {
-    const { boardId } = useParams();
+    const { boardId, yearId } = useParams();
     const navigate = useNavigate();
-    const { items, loading, toggleItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, decrementProgress, inviteUser } = useBingo(boardId);
+    // For legacy boards, yearId is set and we pass undefined to useBingo (which uses 'years' collection)
+    // For new boards, boardId is set and we pass it to useBingo (which uses 'boards' collection)
+    const effectiveBoardId = yearId ? undefined : boardId;
+    const { items, loading, toggleItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, decrementProgress, inviteUser } = useBingo(effectiveBoardId);
     const { logout, user } = useAuth();
     const dialog = useDialog();
     const [editMode, setEditMode] = useState(false);

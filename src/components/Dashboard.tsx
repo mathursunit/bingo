@@ -135,24 +135,29 @@ export const Dashboard: React.FC = () => {
         const fetchBoards = async () => {
             try {
                 console.log('Fetching boards for user:', user.uid, user.email);
+                const allBoardsMap = new Map<string, BoardSummary>();
 
-                // Fetch boards where I am the owner (by ownerId field)
-                const ownedQuery = query(
-                    collection(db, 'boards'),
-                    where('ownerId', '==', user.uid)
-                );
-                const ownedSnapshot = await getDocs(ownedQuery);
-                console.log('Owned boards found:', ownedSnapshot.docs.length);
+                // 1. Fetch boards from 'boards' collection where I am the owner
+                try {
+                    const ownedQuery = query(
+                        collection(db, 'boards'),
+                        where('ownerId', '==', user.uid)
+                    );
+                    const ownedSnapshot = await getDocs(ownedQuery);
+                    console.log('Owned boards (by ownerId) found:', ownedSnapshot.docs.length);
 
-                const ownedBoards: BoardSummary[] = ownedSnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data(),
-                    myRole: 'owner' as const
-                } as BoardSummary));
+                    ownedSnapshot.docs.forEach(doc => {
+                        allBoardsMap.set(doc.id, {
+                            id: doc.id,
+                            ...doc.data(),
+                            myRole: 'owner' as const
+                        } as BoardSummary);
+                    });
+                } catch (e) {
+                    console.error('Error querying owned boards:', e);
+                }
 
-                // Also query for boards where I am 'owner' in members map (for backwards compatibility)
-                // AND boards where I am editor/viewer
-                let sharedBoards: BoardSummary[] = [];
+                // 2. Fetch boards where I am in the members map
                 try {
                     const sharedQuery = query(
                         collection(db, 'boards'),
@@ -161,27 +166,72 @@ export const Dashboard: React.FC = () => {
                     const sharedSnapshot = await getDocs(sharedQuery);
                     console.log('Boards with membership found:', sharedSnapshot.docs.length);
 
-                    // Filter out boards we already have from the ownerId query
-                    const ownedIds = new Set(ownedBoards.map(b => b.id));
-
-                    sharedBoards = sharedSnapshot.docs
-                        .filter(doc => !ownedIds.has(doc.id)) // Avoid duplicates
-                        .map(doc => {
+                    sharedSnapshot.docs.forEach(doc => {
+                        if (!allBoardsMap.has(doc.id)) {
                             const data = doc.data();
                             const role = data.members?.[user.uid];
-                            return {
+                            allBoardsMap.set(doc.id, {
                                 id: doc.id,
                                 ...data,
                                 myRole: role === 'owner' ? 'owner' : role as 'editor' | 'viewer'
-                            } as BoardSummary;
-                        });
+                            } as BoardSummary);
+                        }
+                    });
                 } catch (e) {
-                    // Query might fail if index doesn't exist
-                    console.log('Shared boards query failed (index may be missing):', e);
+                    console.log('Membership query failed (index may be needed):', e);
                 }
 
-                const allBoards = [...ownedBoards, ...sharedBoards];
-                console.log('Total boards to display:', allBoards.length);
+                // 3. Check the legacy 'years' collection for the user's old board
+                try {
+                    const yearsQuery = query(
+                        collection(db, 'years'),
+                        where('ownerId', '==', user.uid)
+                    );
+                    const yearsSnapshot = await getDocs(yearsQuery);
+                    console.log('Legacy boards (years collection) found:', yearsSnapshot.docs.length);
+
+                    yearsSnapshot.docs.forEach(doc => {
+                        const data = doc.data();
+                        allBoardsMap.set(`legacy_${doc.id}`, {
+                            id: doc.id,
+                            title: data.title || `2026 Bingo`,
+                            createdAt: data.createdAt,
+                            isLocked: data.isLocked,
+                            ownerId: data.ownerId,
+                            myRole: 'owner' as const
+                        } as BoardSummary);
+                    });
+                } catch (e) {
+                    console.log('Years collection query failed:', e);
+                }
+
+                // 4. Also check the '2026' document directly in years collection
+                try {
+                    const legacyDoc = await getDocs(collection(db, 'years'));
+                    console.log('All years docs:', legacyDoc.docs.length);
+                    legacyDoc.docs.forEach(doc => {
+                        const data = doc.data();
+                        // Check if this user created it or is a member
+                        if (data.ownerId === user.uid || data.members?.[user.uid]) {
+                            const key = `legacy_years_${doc.id}`;
+                            if (!allBoardsMap.has(key)) {
+                                allBoardsMap.set(key, {
+                                    id: doc.id,
+                                    title: data.title || `${doc.id} Bingo`,
+                                    createdAt: data.createdAt,
+                                    isLocked: data.isLocked,
+                                    ownerId: data.ownerId,
+                                    myRole: data.ownerId === user.uid ? 'owner' : (data.members?.[user.uid] || 'viewer') as any
+                                } as BoardSummary);
+                            }
+                        }
+                    });
+                } catch (e) {
+                    console.log('Direct years fetch failed:', e);
+                }
+
+                const allBoards = Array.from(allBoardsMap.values());
+                console.log('Total boards to display:', allBoards.length, allBoards.map(b => b.title));
                 setBoards(allBoards);
             } catch (error) {
                 console.error("Error fetching boards:", error);
@@ -320,54 +370,60 @@ export const Dashboard: React.FC = () => {
                     </button>
 
                     {/* Board Cards */}
-                    {boards.map(board => (
-                        <div
-                            key={board.id}
-                            onClick={() => navigate(`/board/${board.id}`)}
-                            className="group relative h-48 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-white/10 hover:border-accent-secondary/50 p-6 flex flex-col justify-between cursor-pointer transition-all hover:translate-y-[-4px] hover:shadow-xl overflow-hidden"
-                        >
-                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                                <LayoutGrid className="w-24 h-24" />
-                            </div>
+                    {boards.map(board => {
+                        // Check if this is a legacy board from the 'years' collection
+                        const isLegacyBoard = board.id === '2026' || !board.ownerId;
+                        const boardPath = isLegacyBoard ? `/board/legacy/${board.id}` : `/board/${board.id}`;
 
-                            {/* Delete button - only show for owned boards */}
-                            {board.myRole === 'owner' && (
-                                <button
-                                    onClick={(e) => handleDeleteBoard(e, board.id, board.title)}
-                                    className="absolute top-4 right-4 p-2 text-slate-500 hover:text-red-400 hover:bg-white/10 rounded-full transition-all opacity-0 group-hover:opacity-100 z-10"
-                                    title="Delete Board"
-                                >
-                                    <Trash2 size={18} />
-                                </button>
-                            )}
+                        return (
+                            <div
+                                key={board.id}
+                                onClick={() => navigate(boardPath)}
+                                className="group relative h-48 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-white/10 hover:border-accent-secondary/50 p-6 flex flex-col justify-between cursor-pointer transition-all hover:translate-y-[-4px] hover:shadow-xl overflow-hidden"
+                            >
+                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                    <LayoutGrid className="w-24 h-24" />
+                                </div>
 
-                            {/* Role Badge */}
-                            {board.myRole && board.myRole !== 'owner' && (
-                                <div className="absolute top-4 left-4 z-10">
-                                    <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${board.myRole === 'editor'
-                                        ? 'bg-accent-secondary/20 text-accent-secondary border border-accent-secondary/30'
-                                        : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                                        }`}>
-                                        {board.myRole === 'editor' ? '✏️ Editor' : '👁️ Viewer'}
+                                {/* Delete button - only show for owned boards */}
+                                {board.myRole === 'owner' && (
+                                    <button
+                                        onClick={(e) => handleDeleteBoard(e, board.id, board.title)}
+                                        className="absolute top-4 right-4 p-2 text-slate-500 hover:text-red-400 hover:bg-white/10 rounded-full transition-all opacity-0 group-hover:opacity-100 z-10"
+                                        title="Delete Board"
+                                    >
+                                        <Trash2 size={18} />
+                                    </button>
+                                )}
+
+                                {/* Role Badge */}
+                                {board.myRole && board.myRole !== 'owner' && (
+                                    <div className="absolute top-4 left-4 z-10">
+                                        <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${board.myRole === 'editor'
+                                            ? 'bg-accent-secondary/20 text-accent-secondary border border-accent-secondary/30'
+                                            : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                                            }`}>
+                                            {board.myRole === 'editor' ? '✏️ Editor' : '👁️ Viewer'}
+                                        </span>
+                                    </div>
+                                )}
+
+                                <div>
+                                    <h3 className="text-xl font-bold text-white mb-2 line-clamp-1">{board.title}</h3>
+                                    <div className="flex items-center gap-2 text-xs text-slate-400">
+                                        <Calendar className="w-3 h-3" />
+                                        {board.createdAt?.toDate ? board.createdAt.toDate().toLocaleDateString() : 'Unknown date'}
+                                    </div>
+                                </div>
+
+                                <div className="mt-auto">
+                                    <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-accent-primary/20 text-accent-primary border border-accent-primary/20 group-hover:bg-accent-primary group-hover:text-white transition-colors">
+                                        Open Board
                                     </span>
                                 </div>
-                            )}
-
-                            <div>
-                                <h3 className="text-xl font-bold text-white mb-2 line-clamp-1">{board.title}</h3>
-                                <div className="flex items-center gap-2 text-xs text-slate-400">
-                                    <Calendar className="w-3 h-3" />
-                                    {board.createdAt?.toDate ? board.createdAt.toDate().toLocaleDateString() : 'Unknown date'}
-                                </div>
                             </div>
-
-                            <div className="mt-auto">
-                                <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-accent-primary/20 text-accent-primary border border-accent-primary/20 group-hover:bg-accent-primary group-hover:text-white transition-colors">
-                                    Open Board
-                                </span>
-                            </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
 

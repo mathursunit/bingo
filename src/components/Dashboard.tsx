@@ -23,7 +23,7 @@ export const Dashboard: React.FC = () => {
     // Template Data
     const TEMPLATES = {
         default: {
-            name: "2026 Goals",
+            name: "2026 Goals 🎯",
             items: [
                 "Travel to a new country", "Host a dinner party", "Read 12 books", "Go camping", "Try a new hobby",
                 "Exercise 3x/week for a month", "Save a specific amount", "Visit a museum", "Date night at a fancy place", "Cook a complex meal",
@@ -33,7 +33,7 @@ export const Dashboard: React.FC = () => {
             ]
         },
         fitness: {
-            name: "Fitness Challenge",
+            name: "Fitness Challenge 💪",
             items: [
                 "Run a 5k", "Do 50 pushups in a row", "Try a yoga class", "Drink 3L water for a week", "No sugar for 7 days",
                 "Go for a hike", "Meal prep for a week", "Climb a bouldering wall", "Try Pilates", "Walk 15k steps in a day",
@@ -42,8 +42,68 @@ export const Dashboard: React.FC = () => {
                 "Do 100 squats", "Run a 10k", "Go to the gym 4x in a week", "Stretch daily for a week", "Join a run club"
             ]
         },
+        couples: {
+            name: "Couple Goals ❤️",
+            items: [
+                "Date night (no phones)", "Cook a meal together", "Weekend getaway", "Watch a whole series", "Breakfast in bed",
+                "Go for a long walk", "Plan a future trip", "Give each other massages", "Recreate first date", "Take a dance class",
+                "Stargazing date", "Write love letters", "FREE SPACE", "Visit a winery/brewery", "Do a puzzle together",
+                "Double date", "Sunset picnic", "Bake something sweet", "Volunteer together", "Learn a couple's skill",
+                "Game night", "Make a photo album", "Try a new restaurant", "Surprise gift", "Kiss in the rain"
+            ]
+        },
+        personal: {
+            name: "Personal Growth 🌱",
+            items: [
+                "Read 1 book/month", "Learn a new language", "Start a journal", "Digital detox (24h)", "Meditate daily (1 week)",
+                "Drink 2L water daily", "Wake up at 6am (1 week)", "Declutter a room", "Learn to invest", "Take a solo trip",
+                "Volunteer", "Compliment a stranger", "FREE SPACE", "No social media (weekend)", "Learn an instrument",
+                "Cook a new cuisine", "Write a gratitude list", "Take a cold shower", "Listen to a podcast", "Fix sleep schedule",
+                "Walk 10k steps", "Call an old friend", "Create a vision board", "Save 10% income", "Take a course"
+            ]
+        },
+        knitting: {
+            name: "Knitting Goals 🧶",
+            items: [
+                "Finish a WIP", "Cast on a sweater", "Learn brioche", "Knit socks", "Stash bust project",
+                "Try colorwork", "Knit a hat", "Use luxury yarn", "Fix a mistake", "Knit a gift",
+                "Block a project", "Organize needles", "FREE SPACE", "Try a new fiber", "Knit in public",
+                "Attend a knit night", "Learn magic loop", "Design a pattern", "Teach someone to knit", "Finish a blanket",
+                "Knit a shawl", "Try cables", "Buy souvenir yarn", "Weave in ends immediately", "Knit a gauge swatch"
+            ]
+        },
+        weaving: {
+            name: "Weaving Goals 🧵",
+            items: [
+                "Warp the loom", "Weave a rug", "Try a new structure", "Sample a pattern", "Use handspun yarn",
+                "Finish a scarf", "Hemstitching", "Fix a broken warp", "Weave a towel", "Try tapestry",
+                "Mix fibers", "Organize yarn stash", "FREE SPACE", "Weave a placemat", "Attend a workshop",
+                "Try doublewidth", "Weave transparency", "Calculate warp correctly", "Finish raw edges", "Weave with rags",
+                "Try tablet weaving", "Rigid heddle project", "Floor loom project", "Visit a mill", "Share a project online"
+            ]
+        },
+        spinning: {
+            name: "Spinning Goals 🎡",
+            items: [
+                "Spin 100g fiber", "Ply a yarn", "Try a new breed", "Spin lace weight", "Spin art yarn",
+                "Comb fleece", "Card a batt", "Spin on a drop spindle", "Clean the wheel", "Spin distinct colors",
+                "Skein and wash", "Fractal spin", "FREE SPACE", "Spin silk", "Spin cotton",
+                "Navajo ply", "Spin for a project", "Participate in Tour de Fleece", "Sample a blend", "Teach spinning",
+                "Spin consistent grist", "Dye fiber", "Blend colors on hackle", "Spin exotic fiber", "Fill a bobbin"
+            ]
+        },
+        painting: {
+            name: "Painting Goals 🎨",
+            items: [
+                "Paint a landscape", "Try watercolors", "Paint a portrait", "Mix a new color", "Paint en plein air",
+                "Visit a gallery", "Finish a sketchbook", "Try oils", "Paint a still life", "Use a palette knife",
+                "Paint an animal", "Try abstract", "FREE SPACE", "Clean brushes properly", "Paint on canvas",
+                "Paint on wood", "Follow a tutorial", "Paint a sky", "Try gouache", "Varnish a painting",
+                "Frame a piece", "Paint daily for a week", "Recreate a master", "Paint a self-portrait", "Host a paint night"
+            ]
+        },
         corporate: {
-            name: "Corporate Bingo",
+            name: "Corporate Bingo 💼",
             items: [
                 "\"Circle back\"", "\"Let's take this offline\"", "Meeting that could be an email", "\"Synergy\"", "\"Low hanging fruit\"",
                 "\"Touch base\"", "Someone forgets to mute", "Screen share fails", "\"Can you see my screen?\"", "Awkward silence",
@@ -53,7 +113,7 @@ export const Dashboard: React.FC = () => {
             ]
         },
         travel: {
-            name: "Travel Bucket List",
+            name: "Travel Bucket List ✈️",
             items: [
                 "Visit a new continent", "Go on a solo trip", "See the Northern Lights", "Swim in an ocean", "Road trip across 3 states",
                 "Fly First Class", "Visit a National Park", "Eat street food", "Stay in a hostel", "Learn 'Hello' in 5 languages",

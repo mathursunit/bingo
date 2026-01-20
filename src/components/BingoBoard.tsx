@@ -22,7 +22,7 @@ export const BingoBoard: React.FC = () => {
     // For legacy boards, yearId is set and we pass undefined to useBingo (which uses 'years' collection)
     // For new boards, boardId is set and we pass it to useBingo (which uses 'boards' collection)
     const effectiveBoardId = yearId ? undefined : boardId;
-    const { items, members, loading, toggleItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, addReaction, decrementProgress, inviteUser, removeMember, title, gridSize } = useBingo(effectiveBoardId);
+    const { items, members, loading, toggleItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, addReaction, deletePhoto, decrementProgress, inviteUser, removeMember, title, gridSize } = useBingo(effectiveBoardId);
     const { logout, user } = useAuth();
     const dialog = useDialog();
     const { openSettings } = useSettings();
@@ -43,6 +43,7 @@ export const BingoBoard: React.FC = () => {
     const [editFormStyle, setEditFormStyle] = useState<{ color?: string; bold?: boolean; italic?: boolean; fontSize?: 'sm' | 'base' | 'lg' | 'xl' }>({});
     const [editFormTargetCount, setEditFormTargetCount] = useState<number>(1);
     const [editFormDueDate, setEditFormDueDate] = useState<string>("");
+    const [photoUploadMode, setPhotoUploadMode] = useState<'complete' | 'add'>('complete');
 
     // Walkthrough State
     const [showWalkthrough, setShowWalkthrough] = useState(false);
@@ -180,7 +181,6 @@ export const BingoBoard: React.FC = () => {
     const [viewingItem, setViewingItem] = useState<BingoItem | null>(null);
     const [viewingItemIndex, setViewingItemIndex] = useState<number | null>(null);
     const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
-    const [isAddingPhoto, setIsAddingPhoto] = useState(false);
     const addPhotoInputRef = useRef<HTMLInputElement>(null);
 
     // Memories Album State
@@ -192,6 +192,8 @@ export const BingoBoard: React.FC = () => {
 
     // Lock state logic
     const [logoTapCount, setLogoTapCount] = useState(0);
+
+
 
     // Backdoor unlock logic
     useEffect(() => {
@@ -326,6 +328,13 @@ export const BingoBoard: React.FC = () => {
     // Determine which items to display
     const displayItems = editMode ? draftItems : items;
 
+    // Sync viewingItem with items
+    useEffect(() => {
+        if (viewingItemIndex !== null && displayItems[viewingItemIndex]) {
+            setViewingItem(displayItems[viewingItemIndex]);
+        }
+    }, [displayItems, viewingItemIndex]);
+
     const handleQuickComplete = (index: number) => {
         // Capture state before toggle for Undo
         const item = displayItems[index];
@@ -348,6 +357,24 @@ export const BingoBoard: React.FC = () => {
     return (
         <>
             <div className="min-h-screen bg-transparent text-white p-6 pb-24 relative overflow-x-hidden no-print">
+                <input
+                    type="file"
+                    accept="image/*"
+                    ref={addPhotoInputRef}
+                    className="hidden"
+                    onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file && viewingItemIndex !== null) {
+                            try {
+                                await addPhotoToTile(viewingItemIndex, file);
+                            } catch (e) {
+                                console.error(e);
+                                alert("Failed to add photo");
+                            }
+                            e.target.value = '';
+                        }
+                    }}
+                />
                 <FloatingReactions items={items} />
 
                 <div className="max-w-4xl mx-auto">
@@ -845,7 +872,7 @@ export const BingoBoard: React.FC = () => {
                         )}
                     </AnimatePresence>
 
-                    {/* Completion Confirmation Modal */}
+                    {/* Details / Completion Modal */}
                     <AnimatePresence>
                         {isCompletionModalOpen && completingItemIndex !== null && (
                             <motion.div
@@ -859,7 +886,7 @@ export const BingoBoard: React.FC = () => {
                                     initial={{ scale: 0.9, y: 20 }}
                                     animate={{ scale: 1, y: 0 }}
                                     exit={{ scale: 0.9, y: 20 }}
-                                    className="bg-bg-dark border border-accent-primary/30 p-6 rounded-2xl w-full max-w-sm shadow-2xl"
+                                    className="bg-bg-dark border border-accent-primary/30 p-6 rounded-2xl w-full max-w-sm shadow-2xl max-h-[90vh] overflow-y-auto no-scrollbar"
                                     onClick={e => e.stopPropagation()}
                                 >
                                     {(() => {
@@ -872,13 +899,13 @@ export const BingoBoard: React.FC = () => {
                                         return (
                                             <>
                                                 <h3 className="text-xl font-bold text-white mb-2 text-center">
-                                                    {hasProgress ? 'Add Progress' : 'Complete Task'}
+                                                    {item.isCompleted ? 'Tile Details' : (hasProgress ? 'Add Progress' : 'Complete Task')}
                                                 </h3>
-                                                <p className="text-slate-300 text-sm text-center mb-2 line-clamp-2">
+                                                <p className="text-slate-300 text-sm text-center mb-4 line-clamp-3 italic">
                                                     &ldquo;{item?.text}&rdquo;
                                                 </p>
 
-                                                {/* Progress indicator for multi-count tiles */}
+                                                {/* Progress indicator */}
                                                 {isMultiCount && (
                                                     <div className="text-center mb-4">
                                                         <span className={cn(
@@ -887,6 +914,31 @@ export const BingoBoard: React.FC = () => {
                                                         )}>
                                                             Progress: {currentCount} / {targetCount}
                                                         </span>
+                                                    </div>
+                                                )}
+
+                                                {/* EXISTING PHOTOS */}
+                                                {item.proofPhotos && item.proofPhotos.length > 0 && (
+                                                    <div className="mb-6 bg-black/20 p-3 rounded-xl border border-white/5">
+                                                        <label className="text-xs text-slate-400 mb-2 block font-semibold uppercase tracking-wider">Attached Photos</label>
+                                                        <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+                                                            {item.proofPhotos.map((photo, i) => (
+                                                                <div key={i} className="relative w-20 h-20 flex-shrink-0 group rounded-lg overflow-hidden border border-white/10">
+                                                                    <img src={photo} alt="" className="w-full h-full object-cover" />
+                                                                    <button
+                                                                        onClick={async (e) => {
+                                                                            e.stopPropagation();
+                                                                            if (window.confirm('Delete this photo?')) {
+                                                                                await deletePhoto(completingItemIndex, i);
+                                                                            }
+                                                                        }}
+                                                                        className="absolute top-1 right-1 bg-red-500/90 p-1.5 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-md"
+                                                                    >
+                                                                        <Trash2 size={12} />
+                                                                    </button>
+                                                                </div>
+                                                            ))}
+                                                        </div>
                                                     </div>
                                                 )}
 
@@ -903,27 +955,52 @@ export const BingoBoard: React.FC = () => {
                                                             if (file && completingItemIndex !== null) {
                                                                 setIsUploading(true);
                                                                 try {
-                                                                    await completeWithPhoto(completingItemIndex, file);
+                                                                    if (photoUploadMode === 'complete') {
+                                                                        await completeWithPhoto(completingItemIndex, file);
+                                                                    } else {
+                                                                        await addPhotoToTile(completingItemIndex, file);
+                                                                    }
                                                                     setIsCompletionModalOpen(false);
                                                                     setCompletingItemIndex(null);
                                                                 } catch (err) {
-                                                                    alert('Failed to upload photo. Please try again.');
+                                                                    alert('Failed to upload photo.');
                                                                 } finally {
                                                                     setIsUploading(false);
+                                                                    e.target.value = '';
                                                                 }
                                                             }
                                                         }}
                                                     />
 
+                                                    {/* 1. Add Photo Only */}
                                                     <button
-                                                        onClick={() => fileInputRef.current?.click()}
+                                                        onClick={() => {
+                                                            setPhotoUploadMode('add');
+                                                            setTimeout(() => fileInputRef.current?.click(), 0);
+                                                        }}
                                                         disabled={isUploading}
-                                                        className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2 hover:shadow-amber-500/25 active:scale-95 transition-all disabled:opacity-50"
+                                                        className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2 hover:shadow-blue-500/25 active:scale-95 transition-all disabled:opacity-50"
                                                     >
                                                         <Camera size={20} />
-                                                        {isUploading ? 'Uploading...' : (isMultiCount ? 'Add Photo & +1' : 'Add Photo & Complete')}
+                                                        {isUploading && photoUploadMode === 'add' ? 'Uploading...' : 'Add Photo (Keep Status)'}
                                                     </button>
 
+                                                    {/* 2. Add Photo & Complete (if not completed) */}
+                                                    {!item.isCompleted && (
+                                                        <button
+                                                            onClick={() => {
+                                                                setPhotoUploadMode('complete');
+                                                                setTimeout(() => fileInputRef.current?.click(), 0);
+                                                            }}
+                                                            disabled={isUploading}
+                                                            className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2 hover:shadow-amber-500/25 active:scale-95 transition-all disabled:opacity-50"
+                                                        >
+                                                            <Check size={20} />
+                                                            {isUploading && photoUploadMode === 'complete' ? 'Uploading...' : (isMultiCount ? 'Add Photo & +1' : 'Add Photo & Complete')}
+                                                        </button>
+                                                    )}
+
+                                                    {/* 3. Toggle Status */}
                                                     <button
                                                         onClick={() => {
                                                             toggleItem(completingItemIndex!);
@@ -931,14 +1008,19 @@ export const BingoBoard: React.FC = () => {
                                                             setCompletingItemIndex(null);
                                                         }}
                                                         disabled={isUploading}
-                                                        className="w-full py-3 px-4 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2 hover:shadow-green-500/25 active:scale-95 transition-all disabled:opacity-50"
+                                                        className={cn(
+                                                            "w-full py-3 px-4 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50",
+                                                            item.isCompleted
+                                                                ? "bg-slate-700 hover:bg-slate-600"
+                                                                : "bg-gradient-to-r from-green-600 to-emerald-600 hover:shadow-green-500/25"
+                                                        )}
                                                     >
-                                                        <Check size={20} />
-                                                        {isMultiCount ? `Mark +1 (${currentCount + 1}/${targetCount})` : 'Mark Complete'}
+                                                        {item.isCompleted ? <X size={20} /> : <Check size={20} />}
+                                                        {item.isCompleted ? 'Mark Incomplete' : (isMultiCount ? `Mark +1 (${currentCount + 1}/${targetCount})` : 'Mark Complete')}
                                                     </button>
 
-                                                    {/* Remove Progress button - only show if there's existing progress */}
-                                                    {hasProgress && (
+                                                    {/* Remove Progress (if applicable) */}
+                                                    {hasProgress && !item.isCompleted && (
                                                         <button
                                                             onClick={() => {
                                                                 decrementProgress(completingItemIndex!);
@@ -1073,48 +1155,33 @@ export const BingoBoard: React.FC = () => {
                                     </div>
 
                                     {/* Action Buttons */}
-                                    <div className="mt-4 flex gap-2">
-                                        {/* Add More Photos Button */}
-                                        {viewingItem.proofPhotos.length < 5 && (
-                                            <>
-                                                <input
-                                                    type="file"
-                                                    accept="image/*"
-                                                    capture="environment"
-                                                    ref={addPhotoInputRef}
-                                                    className="hidden"
-                                                    onChange={async (e) => {
-                                                        const file = e.target.files?.[0];
-                                                        if (file && viewingItemIndex !== null && viewingItem) {
-                                                            setIsAddingPhoto(true);
-                                                            try {
-                                                                const newPhotoUrl = await addPhotoToTile(viewingItemIndex, file);
-                                                                // Optimistically update viewingItem with new photo
-                                                                if (newPhotoUrl) {
-                                                                    const updatedPhotos = [...(viewingItem.proofPhotos || []), newPhotoUrl];
-                                                                    setViewingItem({ ...viewingItem, proofPhotos: updatedPhotos });
-                                                                    setCurrentPhotoIndex(updatedPhotos.length - 1);
-                                                                }
-                                                            } catch (err) {
-                                                                alert('Failed to add photo. Max 5 photos allowed.');
-                                                            } finally {
-                                                                setIsAddingPhoto(false);
-                                                                if (addPhotoInputRef.current) addPhotoInputRef.current.value = '';
-                                                            }
-                                                        }
-                                                    }}
-                                                />
-                                                <button
-                                                    onClick={() => addPhotoInputRef.current?.click()}
-                                                    disabled={isAddingPhoto}
-                                                    className="flex-1 py-2 px-4 bg-accent-gold/20 text-accent-gold rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-accent-gold/30 transition-colors disabled:opacity-50"
-                                                >
-                                                    <Plus size={18} />
-                                                    {isAddingPhoto ? 'Adding...' : `Add Photo (${viewingItem.proofPhotos.length}/5)`}
-                                                </button>
-                                            </>
-                                        )}
+                                    <div className="mt-4 flex gap-3 justify-center">
+                                        <button
+                                            onClick={async () => {
+                                                if (window.confirm("Delete this photo?")) {
+                                                    await deletePhoto(viewingItemIndex!, currentPhotoIndex);
+                                                    if (viewingItem?.proofPhotos?.length === 1) {
+                                                        setIsPhotoViewerOpen(false);
+                                                    } else {
+                                                        setCurrentPhotoIndex(0);
+                                                    }
+                                                }
+                                            }}
+                                            className="flex-1 py-3 bg-red-500/10 text-red-400 rounded-xl font-semibold hover:bg-red-500/20 flex items-center justify-center gap-2"
+                                        >
+                                            <Trash2 size={20} />
+                                            Delete Photo
+                                        </button>
+
+                                        <button
+                                            onClick={() => addPhotoInputRef.current?.click()}
+                                            className="flex-1 py-3 bg-white/10 text-white rounded-xl font-semibold hover:bg-white/20 flex items-center justify-center gap-2"
+                                        >
+                                            <Plus size={20} />
+                                            Add Photo
+                                        </button>
                                     </div>
+
 
                                     {/* Mark as In Progress Button */}
                                     <button
@@ -1416,7 +1483,7 @@ export const BingoBoard: React.FC = () => {
                         </div>
                     </div>
                 )}
-            </div>
+            </div >
         </>
     );
 };

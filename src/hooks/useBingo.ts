@@ -164,7 +164,7 @@ export const useBingo = (boardId?: string) => {
                 // Fully reset if count reaches 0
                 item.completedBy = null as any;
                 item.completedAt = null as any;
-                item.proofPhotos = [];
+                // Photos are preserved!
             }
         } else {
             // Increment count (marking as complete)
@@ -210,7 +210,7 @@ export const useBingo = (boardId?: string) => {
             // Fully reset if count reaches 0
             item.completedBy = null as any;
             item.completedAt = null as any;
-            item.proofPhotos = [];
+            // Photos are preserved!
         }
 
         setItems(newItems);
@@ -302,6 +302,30 @@ export const useBingo = (boardId?: string) => {
         } catch (error) {
             console.error("Error adding photo:", error);
             throw error;
+        }
+    };
+
+    const deletePhoto = async (itemIndex: number, photoIndex: number) => {
+        if (!items.length) return;
+
+        const newItems = items.map(item => ({ ...item }));
+        const item = newItems[itemIndex];
+
+        if (!item.proofPhotos) return;
+
+        const newPhotos = [...item.proofPhotos];
+        newPhotos.splice(photoIndex, 1);
+        item.proofPhotos = newPhotos;
+
+        setItems(newItems);
+
+        try {
+            await updateDoc(docRef, {
+                items: newItems,
+                lastUpdated: Timestamp.now()
+            });
+        } catch (error) {
+            console.error("Error deleting photo:", error);
         }
     };
 
@@ -498,5 +522,5 @@ export const useBingo = (boardId?: string) => {
         }
     };
 
-    return { items, members, loading, toggleItem, updateItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, addReaction, decrementProgress, inviteUser, removeMember, title, gridSize };
+    return { items, members, loading, toggleItem, updateItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, deletePhoto, addReaction, decrementProgress, inviteUser, removeMember, title, gridSize };
 };

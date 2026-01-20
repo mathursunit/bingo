@@ -39,6 +39,10 @@ export const Dashboard: React.FC = () => {
 
     // Template Data
     const TEMPLATES = {
+        blank: {
+            name: "Blank Canvas 📝",
+            items: []
+        },
         default: {
             name: "2026 Goals 🎯",
             items: [

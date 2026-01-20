@@ -217,8 +217,8 @@ export const BingoBoard: React.FC = () => {
 
     const handleFinalize = async () => {
         const confirmed = await dialog.confirm(
-            "This will randomly shuffle all tiles (except the center) and LOCK the board.\n\n(Tap the logo 5 times to Undo/Unlock).",
-            { title: 'Jumble & Finalize Board?', confirmText: 'Finalize', type: 'warning' }
+            "This will randomly shuffle all tiles (except the center) and lock the board.\n\n(Tip: Tap the logo 5 times to unlock later)",
+            { title: 'Shuffle & Lock Board?', confirmText: 'Lock It!', type: 'warning' }
         );
         if (confirmed) {
             jumbleAndLock();
@@ -619,7 +619,7 @@ export const BingoBoard: React.FC = () => {
                                             className="flex-1 py-2 px-4 text-xs font-medium text-red-400 hover:text-red-300 transition-colors flex items-center justify-center gap-2 min-w-[100px]"
                                         >
                                             <Shuffle size={12} />
-                                            Jumble & Finalize
+                                            Shuffle & Lock
                                         </button>
                                     </>
                                 )}
@@ -775,7 +775,7 @@ export const BingoBoard: React.FC = () => {
 
                                 <div className="space-y-4 mb-6 pt-4 border-t border-white/10">
                                     <div className="space-y-2">
-                                        <label className="text-sm font-semibold text-slate-300">Target Count</label>
+                                        <label className="text-sm font-semibold text-slate-300">Repeat Goal</label>
                                         <input
                                             type="number"
                                             min="1"
@@ -784,7 +784,7 @@ export const BingoBoard: React.FC = () => {
                                             onChange={(e) => setEditFormTargetCount(parseInt(e.target.value) || 1)}
                                             className="w-full bg-slate-950/50 border border-white/10 rounded-xl p-3 text-white placeholder-slate-500 focus:outline-none focus:border-accent-primary/50 transition-colors"
                                         />
-                                        <p className="text-xs text-slate-500">How many times to complete this?</p>
+                                        <p className="text-xs text-slate-500">How many times should this be completed?</p>
                                     </div>
 
                                     <div className="space-y-2">
@@ -1227,9 +1227,9 @@ export const BingoBoard: React.FC = () => {
                 </div>
 
                 <div className={`grid gap-0 border-2 border-black ${gridSize === 3 ? 'grid-cols-3' :
-                        gridSize === 4 ? 'grid-cols-4' :
-                            gridSize === 5 ? 'grid-cols-5' :
-                                'grid-cols-6'
+                    gridSize === 4 ? 'grid-cols-4' :
+                        gridSize === 5 ? 'grid-cols-5' :
+                            'grid-cols-6'
                     }`}>
                     {items.map((item) => (
                         <div key={item.id} className="aspect-square border border-black p-1.5 flex flex-col justify-between relative overflow-hidden min-h-[80px]">

@@ -10,11 +10,18 @@ export const Login: React.FC = () => {
             <div className="background-animation" />
 
             <div className="glass-panel p-8 max-w-md w-full flex flex-col items-center gap-6 animate-fade-in">
-                <div className="rounded-full bg-accent-primary/20 p-4 mb-2">
-                    <Sparkles className="w-10 h-10 text-accent-gold animate-pulse" />
+                <div className="flex flex-col items-center gap-2 mb-2">
+                    <img
+                        src="/logo.png"
+                        alt="SunSar Bingo"
+                        className="h-24 w-auto object-contain drop-shadow-[0_0_15px_rgba(251,191,36,0.3)]"
+                    />
+                    <div className="rounded-full bg-accent-primary/20 p-2 hidden">
+                        <Sparkles className="w-6 h-6 text-accent-gold animate-pulse" />
+                    </div>
                 </div>
 
-                <h1 className="text-4xl font-heading font-bold text-gradient">
+                <h1 className="text-4xl font-heading font-bold text-gradient sr-only">
                     SunSar Bingo
                 </h1>
 
@@ -31,11 +38,11 @@ export const Login: React.FC = () => {
 
                 <button
                     onClick={signIn}
-                    className="group relative px-8 py-3 bg-white text-bg-dark font-bold rounded-full transition-all hover:scale-105 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)]"
+                    className="group relative px-6 py-3 bg-white text-bg-dark font-bold rounded-full transition-all hover:scale-105 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)]"
                 >
                     <span className="flex items-center gap-2">
                         <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" className="w-5 h-5" />
-                        Sign in with Google
+                        Sign in / Sign up with Google
                     </span>
                 </button>
             </div>

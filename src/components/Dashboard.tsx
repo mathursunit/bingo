@@ -19,6 +19,7 @@ export const Dashboard: React.FC = () => {
     const [boards, setBoards] = useState<BoardSummary[]>([]);
     const [loading, setLoading] = useState(true);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [previewTemplate, setPreviewTemplate] = useState<keyof typeof TEMPLATES | null>(null);
 
     // Template Data
     const TEMPLATES = {
@@ -234,12 +235,19 @@ export const Dashboard: React.FC = () => {
     return (
         <div className="min-h-screen bg-bg-dark text-white p-6 relative">
             <div className="max-w-4xl mx-auto">
-                <header className="flex justify-between items-center mb-10">
-                    <div>
-                        <h1 className="text-3xl font-bold bg-gradient-to-r from-accent-primary to-accent-secondary bg-clip-text text-transparent">
-                            My Boards
-                        </h1>
-                        <p className="text-slate-400 mt-1">Welcome back, {user?.displayName || 'Bingo Player'}</p>
+                <header className="flex flex-col sm:flex-row justify-between items-center mb-10 gap-4">
+                    <div className="flex items-center gap-4">
+                        <img
+                            src="/logo.png"
+                            alt="SunSar Bingo"
+                            className="h-14 w-auto object-contain cursor-pointer active:scale-95 transition-transform"
+                        />
+                        <div>
+                            <h1 className="text-3xl font-bold bg-gradient-to-r from-accent-primary to-accent-secondary bg-clip-text text-transparent">
+                                My Boards
+                            </h1>
+                            <p className="text-slate-400 mt-1 text-sm">Welcome back, {user?.displayName || 'Bingo Player'}</p>
+                        </div>
                     </div>
                     <div className="flex gap-4">
                         <button
@@ -303,26 +311,61 @@ export const Dashboard: React.FC = () => {
             {/* Template Selection Modal */}
             {isCreateModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsCreateModalOpen(false)} />
-                    <div className="relative w-full max-w-2xl bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-                        <div className="p-6 border-b border-white/10 flex justify-between items-center">
-                            <h2 className="text-xl font-bold text-white">Choose a Template</h2>
-                            <button onClick={() => setIsCreateModalOpen(false)} className="text-slate-400 hover:text-white">
+                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => { setIsCreateModalOpen(false); setPreviewTemplate(null); }} />
+                    <div className="relative w-full max-w-2xl bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col max-h-[90vh]">
+                        <div className="p-6 border-b border-white/10 flex justify-between items-center shrink-0">
+                            <h2 className="text-xl font-bold text-white">
+                                {previewTemplate ? TEMPLATES[previewTemplate].name : "Choose a Template"}
+                            </h2>
+                            <button onClick={() => { setIsCreateModalOpen(false); setPreviewTemplate(null); }} className="text-slate-400 hover:text-white">
                                 <Plus className="w-6 h-6 rotate-45" />
                             </button>
                         </div>
 
-                        <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {Object.entries(TEMPLATES).map(([key, template]) => (
-                                <button
-                                    key={key}
-                                    onClick={() => handleCreateBoard(key as keyof typeof TEMPLATES)}
-                                    className="flex flex-col items-start p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-accent-primary/50 transition-all text-left group"
-                                >
-                                    <h3 className="font-bold text-white group-hover:text-accent-primary transition-colors">{template.name}</h3>
-                                    <p className="text-sm text-slate-400 mt-1">Click to create this board</p>
-                                </button>
-                            ))}
+                        <div className="flex-1 overflow-y-auto p-6">
+                            {previewTemplate ? (
+                                <div className="space-y-6">
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                        {/* Show sample items */}
+                                        {TEMPLATES[previewTemplate].items.slice(0, 12).map((item, i) => (
+                                            <div key={i} className="text-xs p-2 rounded bg-white/5 border border-white/5 text-slate-300">
+                                                {item}
+                                            </div>
+                                        ))}
+                                        <div key="more" className="text-xs p-2 rounded bg-white/5 border border-white/5 text-slate-500 italic flex items-center justify-center">
+                                            + {Math.max(0, TEMPLATES[previewTemplate].items.length - 12)} more...
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-3 pt-4">
+                                        <button
+                                            onClick={() => setPreviewTemplate(null)}
+                                            className="flex-1 py-3 rounded-xl font-semibold bg-white/5 text-slate-300 hover:bg-white/10 transition-colors"
+                                        >
+                                            Back
+                                        </button>
+                                        <button
+                                            onClick={() => handleCreateBoard(previewTemplate)}
+                                            className="flex-1 py-3 bg-gradient-to-r from-accent-primary to-accent-secondary rounded-xl font-bold text-white shadow-lg hover:shadow-accent-primary/25 transition-all"
+                                        >
+                                            Create Board
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {Object.entries(TEMPLATES).map(([key, template]) => (
+                                        <button
+                                            key={key}
+                                            onClick={() => setPreviewTemplate(key as keyof typeof TEMPLATES)}
+                                            className="flex flex-col items-start p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-accent-primary/50 transition-all text-left group"
+                                        >
+                                            <h3 className="font-bold text-white group-hover:text-accent-primary transition-colors">{template.name}</h3>
+                                            <p className="text-sm text-slate-400 mt-1">Click to preview</p>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

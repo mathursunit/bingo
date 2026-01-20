@@ -7,6 +7,7 @@ import { BingoBoard } from './components/BingoBoard';
 import { Dashboard } from './components/Dashboard';
 import { DynamicBackground } from './components/DynamicBackground';
 import { HelpPage } from './components/HelpPage';
+import { MigrateLegacy } from './components/admin/MigrateLegacy';
 
 const AppContent = () => {
   const { user, loading } = useAuth();
@@ -25,6 +26,7 @@ const AppContent = () => {
           <Route path="/board/legacy/:yearId" element={<BingoBoard />} />
           <Route path="/board/:boardId" element={<BingoBoard />} />
           <Route path="/help" element={<HelpPage />} />
+          <Route path="/admin/migrate" element={<MigrateLegacy />} />
           {/* Fallback for legacy URL or direct access, though typically redirected */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>

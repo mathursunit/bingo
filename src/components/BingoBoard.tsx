@@ -12,6 +12,7 @@ import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { BingoItem } from '../types';
 import { MemoriesAlbum } from './MemoriesAlbum';
+import { FloatingReactions } from './FloatingReactions';
 
 import { useParams, useNavigate } from 'react-router-dom';
 
@@ -21,7 +22,7 @@ export const BingoBoard: React.FC = () => {
     // For legacy boards, yearId is set and we pass undefined to useBingo (which uses 'years' collection)
     // For new boards, boardId is set and we pass it to useBingo (which uses 'boards' collection)
     const effectiveBoardId = yearId ? undefined : boardId;
-    const { items, members, loading, toggleItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, decrementProgress, inviteUser, removeMember, title, gridSize } = useBingo(effectiveBoardId);
+    const { items, members, loading, toggleItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, addReaction, decrementProgress, inviteUser, removeMember, title, gridSize } = useBingo(effectiveBoardId);
     const { logout, user } = useAuth();
     const dialog = useDialog();
     const { openSettings } = useSettings();
@@ -347,6 +348,7 @@ export const BingoBoard: React.FC = () => {
     return (
         <>
             <div className="min-h-screen bg-transparent text-white p-6 pb-24 relative overflow-x-hidden no-print">
+                <FloatingReactions items={items} />
 
                 <div className="max-w-4xl mx-auto">
                     {/* Navigation Bar - Matches Dashboard */}
@@ -1046,9 +1048,27 @@ export const BingoBoard: React.FC = () => {
                                         {/* Info */}
                                         <div className="p-4 bg-bg-dark/95">
                                             <p className="text-white font-semibold mb-1">{viewingItem.text}</p>
-                                            <p className="text-slate-400 text-xs">
+                                            <p className="text-slate-400 text-xs mb-4">
                                                 Completed by {viewingItem.completedBy} • {formatDate(viewingItem.completedAt)}
                                             </p>
+
+                                            <div className="flex gap-2 justify-center pb-1">
+                                                {['❤️', '🔥', '👏', '🎉', '🤩', '💯'].map(emoji => (
+                                                    <button
+                                                        key={emoji}
+                                                        onClick={() => {
+                                                            if (viewingItemIndex !== null) {
+                                                                addReaction(viewingItemIndex, emoji);
+                                                                playClick();
+                                                            }
+                                                        }}
+                                                        className="text-2xl hover:scale-125 transition-transform p-2 rounded-full hover:bg-white/10 active:scale-95"
+                                                        title="React"
+                                                    >
+                                                        {emoji}
+                                                    </button>
+                                                ))}
+                                            </div>
                                         </div>
                                     </div>
 

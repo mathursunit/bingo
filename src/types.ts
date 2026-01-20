@@ -1,5 +1,12 @@
 import { Timestamp } from "firebase/firestore";
 
+export interface Reaction {
+    emoji: string;
+    by: string; // userId
+    byName?: string; // Cache name for display
+    timestamp: number;
+}
+
 export interface BingoItem {
     id: number;
     text: string;
@@ -17,6 +24,7 @@ export interface BingoItem {
         fontSize?: 'sm' | 'base' | 'lg' | 'xl';
     };
     dueDate?: Timestamp; // Optional due date for the task
+    reactions?: Reaction[];
 }
 
 export interface BingoYear {

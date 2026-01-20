@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { doc, onSnapshot, setDoc, updateDoc, Timestamp, getDoc, deleteField, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
-import { type BingoYear, type BingoItem } from '../types';
+import { type BingoYear, type BingoItem, type Reaction } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { triggerConfetti } from '../utils/confetti';
 import { uploadToCloudinary } from '../lib/cloudinary';
@@ -305,6 +305,39 @@ export const useBingo = (boardId?: string) => {
         }
     };
 
+    const addReaction = async (index: number, emoji: string) => {
+        if (!user) return;
+
+        try {
+            // Optimistic update
+            const newItems = items.map(item => ({ ...item }));
+            const item = newItems[index];
+
+            const reaction: Reaction = {
+                emoji,
+                by: user.uid,
+                byName: user.displayName || user.email?.split('@')[0] || 'Friend',
+                timestamp: Date.now()
+            };
+
+            const existingReactions = item.reactions || [];
+            item.reactions = [...existingReactions, reaction];
+
+            setItems(newItems);
+
+            await updateDoc(docRef, {
+                items: newItems,
+                lastUpdated: Timestamp.now()
+            });
+
+            // Trigger small confetti
+            triggerConfetti(0.2);
+
+        } catch (error) {
+            console.error("Error adding reaction:", error);
+        }
+    };
+
     const updateItem = async (index: number, updates: { text?: string, style?: BingoItem['style'], targetCount?: number }) => {
         // Updated to support targetCount as well, since I added it in previous turns to BingoBoard but maybe didn't strictly update this function signature?
         // Actually BingoBoard uses saveBoard for that.
@@ -465,5 +498,5 @@ export const useBingo = (boardId?: string) => {
         }
     };
 
-    return { items, members, loading, toggleItem, updateItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, decrementProgress, inviteUser, removeMember, title, gridSize };
+    return { items, members, loading, toggleItem, updateItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, addReaction, decrementProgress, inviteUser, removeMember, title, gridSize };
 };

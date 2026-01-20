@@ -4,7 +4,8 @@ import { collection, query, where, getDocs, addDoc, deleteDoc, doc, Timestamp, u
 import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { useDialog } from '../contexts/DialogContext';
-import { Plus, LayoutGrid, Calendar, Trash2, LogOut, Users } from 'lucide-react';
+import { useSettings } from '../contexts/SettingsContext';
+import { Plus, LayoutGrid, Calendar, Trash2, LogOut, Users, Settings } from 'lucide-react';
 
 interface BoardSummary {
     id: string;
@@ -21,6 +22,7 @@ interface BoardSummary {
 export const Dashboard: React.FC = () => {
     const { user, logout } = useAuth();
     const dialog = useDialog();
+    const { openSettings } = useSettings();
     const navigate = useNavigate();
     const [boards, setBoards] = useState<BoardSummary[]>([]);
     const [loading, setLoading] = useState(true);
@@ -385,10 +387,17 @@ export const Dashboard: React.FC = () => {
                             <p className="text-slate-400 mt-1 text-sm">Welcome back, {user?.displayName || 'Bingo Player'}</p>
                         </div>
                     </div>
-                    <div className="flex gap-4">
+                    <div className="flex gap-3 items-center">
+                        <button
+                            onClick={openSettings}
+                            className="p-2.5 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors border border-transparent hover:border-white/10"
+                            title="Settings"
+                        >
+                            <Settings size={20} />
+                        </button>
                         <button
                             onClick={logout}
-                            className="bg-white/5 hover:bg-white/10 px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+                            className="bg-white/5 hover:bg-white/10 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors border border-white/5 hover:border-white/10"
                         >
                             Logout
                         </button>

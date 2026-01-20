@@ -4,8 +4,9 @@ import { db } from '../firebase';
 import { useBingo } from '../hooks/useBingo';
 import { useAuth } from '../contexts/AuthContext';
 import { useDialog } from '../contexts/DialogContext';
+import { useSettings } from '../contexts/SettingsContext';
 import { cn } from '../lib/utils';
-import { Edit2, Check, Award, LogOut, Shuffle, Camera, X, ChevronLeft, ChevronRight, Plus, BookOpen, Printer, LayoutGrid, Share2, Clock, Trash2 } from 'lucide-react';
+import { Edit2, Check, Award, LogOut, Shuffle, Camera, X, ChevronLeft, ChevronRight, Plus, BookOpen, Printer, LayoutGrid, Share2, Clock, Trash2, Settings } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { BingoItem } from '../types';
@@ -22,6 +23,7 @@ export const BingoBoard: React.FC = () => {
     const { items, members, loading, toggleItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, decrementProgress, inviteUser, removeMember } = useBingo(effectiveBoardId);
     const { logout, user } = useAuth();
     const dialog = useDialog();
+    const { openSettings } = useSettings();
     const [editMode, setEditMode] = useState(false);
 
     // Draft State
@@ -359,6 +361,13 @@ export const BingoBoard: React.FC = () => {
                             title="Share Board"
                         >
                             <Share2 size={20} />
+                        </button>
+                        <button
+                            onClick={openSettings}
+                            className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-full"
+                            title="Settings"
+                        >
+                            <Settings size={20} />
                         </button>
                         <motion.div
                             initial={{ scale: 0 }}

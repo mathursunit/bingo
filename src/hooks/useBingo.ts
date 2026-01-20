@@ -330,47 +330,55 @@ export const useBingo = (boardId?: string) => {
         }
     };
 
-    const jumbleAndLock = async () => {
+    const jumbleAndLock = async (shuffle: boolean = true) => {
         const currentItems = [...items];
-        const totalCells = gridSize * gridSize;
-        const centerIndex = gridSize % 2 === 1 ? Math.floor(totalCells / 2) : -1;
+        let newItems: typeof currentItems = currentItems;
 
-        let newItems: typeof currentItems;
+        if (shuffle) {
+            const totalCells = gridSize * gridSize;
+            const centerIndex = gridSize % 2 === 1 ? Math.floor(totalCells / 2) : -1;
 
-        if (centerIndex !== -1) {
-            // Odd grid: preserve center
-            const center = currentItems[centerIndex];
-            const others = [...currentItems.slice(0, centerIndex), ...currentItems.slice(centerIndex + 1)];
+            if (centerIndex !== -1) {
+                // Odd grid: preserve center
+                const center = currentItems[centerIndex];
+                const others = [...currentItems.slice(0, centerIndex), ...currentItems.slice(centerIndex + 1)];
 
-            for (let i = others.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [others[i], others[j]] = [others[j], others[i]];
+                for (let i = others.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [others[i], others[j]] = [others[j], others[i]];
+                }
+
+                newItems = [
+                    ...others.slice(0, centerIndex),
+                    center,
+                    ...others.slice(centerIndex)
+                ];
+            } else {
+                // Even grid: shuffle all
+                newItems = [...currentItems];
+                for (let i = newItems.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [newItems[i], newItems[j]] = [newItems[j], newItems[i]];
+                }
             }
 
-            newItems = [
-                ...others.slice(0, centerIndex),
-                center,
-                ...others.slice(centerIndex)
-            ];
-        } else {
-            // Even grid: shuffle all
-            newItems = [...currentItems];
-            for (let i = newItems.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [newItems[i], newItems[j]] = [newItems[j], newItems[i]];
-            }
+            // Optimistic
+            setItems(newItems);
         }
 
-        // Optimistic
-        setItems(newItems);
         setIsLocked(true);
 
-        await setDoc(docRef, {
+        const updateData: any = {
             isLocked: true,
-            items: newItems,
-            itemsBackup: currentItems,
             lastUpdated: Timestamp.now()
-        }, { merge: true });
+        };
+
+        if (shuffle) {
+            updateData.items = newItems;
+            updateData.itemsBackup = currentItems;
+        }
+
+        await setDoc(docRef, updateData, { merge: true });
     };
 
     const unlockBoard = async () => {

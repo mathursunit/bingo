@@ -7,7 +7,7 @@ import { useDialog } from '../contexts/DialogContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { useSounds } from '../hooks/useSounds';
 import { cn } from '../lib/utils';
-import { Edit2, Check, Award, LogOut, Shuffle, Camera, X, ChevronLeft, ChevronRight, Plus, BookOpen, Printer, LayoutGrid, Share2, Clock, Trash2, Settings } from 'lucide-react';
+import { Edit2, Check, Award, LogOut, Camera, X, ChevronLeft, ChevronRight, Plus, BookOpen, Printer, LayoutGrid, Share2, Clock, Trash2, Settings, Rocket, Lock } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { BingoItem } from '../types';
@@ -34,6 +34,8 @@ export const BingoBoard: React.FC = () => {
     // Modal State
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+    const [isGoLiveModalOpen, setIsGoLiveModalOpen] = useState(false);
+    const [shouldShuffleOnLive, setShouldShuffleOnLive] = useState(false);
     const [memberDetails, setMemberDetails] = useState<{ id: string, name: string, email: string, role: string }[]>([]);
     const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null);
     const [editFormText, setEditFormText] = useState("");
@@ -215,15 +217,23 @@ export const BingoBoard: React.FC = () => {
         setLogoTapCount(prev => prev + 1);
     };
 
-    const handleFinalize = async () => {
-        const confirmed = await dialog.confirm(
-            "This will randomly shuffle all tiles (except the center) and lock the board. You won't be able to edit it after this.",
-            { title: 'Shuffle & Lock Board?', confirmText: 'Lock It!', type: 'warning' }
-        );
-        if (confirmed) {
-            jumbleAndLock();
-            setEditMode(false);
-        }
+    const handleGoLive = () => {
+        // Trigger generic click sound
+        playClick();
+
+        jumbleAndLock(shouldShuffleOnLive);
+
+        // Success effect
+        confetti({
+            particleCount: 150,
+            spread: 60,
+            origin: { y: 0.7 },
+            colors: ['#22c55e', '#ffffff']
+        });
+        playSuccess();
+
+        setIsGoLiveModalOpen(false);
+        setEditMode(false);
     };
 
     const handleDismiss = () => {
@@ -624,11 +634,14 @@ export const BingoBoard: React.FC = () => {
                                                     Edit Board
                                                 </button>
                                                 <button
-                                                    onClick={handleFinalize}
-                                                    className="flex-1 py-2 px-4 text-xs font-medium text-red-400 hover:text-red-300 transition-colors flex items-center justify-center gap-2 min-w-[100px]"
+                                                    onClick={() => {
+                                                        playClick();
+                                                        setIsGoLiveModalOpen(true);
+                                                    }}
+                                                    className="flex-1 py-2 px-4 text-xs font-bold text-white bg-gradient-to-r from-accent-primary to-accent-secondary hover:shadow-lg hover:shadow-accent-primary/20 transition-all rounded-lg flex items-center justify-center gap-2 min-w-[120px]"
                                                 >
-                                                    <Shuffle size={12} />
-                                                    Shuffle & Lock
+                                                    <Rocket size={14} />
+                                                    Go Live 🚀
                                                 </button>
                                             </>
                                         )}
@@ -1325,6 +1338,60 @@ export const BingoBoard: React.FC = () => {
                                     <Plus size={18} />
                                     Invite New User
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Go Live Modal */}
+                {isGoLiveModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsGoLiveModalOpen(false)} />
+                        <div className="relative w-full max-w-sm bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                            <div className="p-6 border-b border-white/10 flex justify-between items-center bg-gradient-to-r from-accent-primary/10 to-accent-secondary/10">
+                                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                                    <Rocket className="w-5 h-5 text-accent-primary" />
+                                    Ready to Go Live?
+                                </h2>
+                                <button onClick={() => setIsGoLiveModalOpen(false)} className="text-slate-400 hover:text-white">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                            <div className="p-6">
+                                <p className="text-slate-300 mb-6 leading-relaxed">
+                                    Going live will <strong>lock the board</strong> for play mode. You won't be able to edit items easily anymore.
+                                </p>
+
+                                <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-6 cursor-pointer hover:bg-white/10 transition-colors"
+                                    onClick={() => setShouldShuffleOnLive(!shouldShuffleOnLive)}>
+                                    <div className="flex items-start gap-3">
+                                        <div className={`mt-1 w-5 h-5 rounded border flex items-center justify-center transition-colors ${shouldShuffleOnLive ? 'bg-accent-primary border-accent-primary' : 'border-slate-500'}`}>
+                                            {shouldShuffleOnLive && <Check size={14} className="text-white" />}
+                                        </div>
+                                        <div>
+                                            <div className="font-semibold text-white">Shuffle Items?</div>
+                                            <div className="text-xs text-slate-400 mt-1">
+                                                Randomize the grid arrangement one last time before locking.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => setIsGoLiveModalOpen(false)}
+                                        className="flex-1 py-3 bg-slate-800 text-slate-300 font-bold rounded-xl hover:bg-slate-700 transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleGoLive}
+                                        className="flex-1 py-3 bg-gradient-to-r from-accent-primary to-accent-secondary text-white font-bold rounded-xl hover:shadow-lg hover:shadow-accent-primary/20 transition-all flex items-center justify-center gap-2"
+                                    >
+                                        <Lock size={16} />
+                                        Lock & Play
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

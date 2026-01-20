@@ -372,37 +372,40 @@ export const Dashboard: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-bg-dark text-white p-6 relative">
-            <div className="max-w-4xl mx-auto">
-                <header className="flex flex-col sm:flex-row justify-between items-center mb-10 gap-4">
-                    <div className="flex items-center gap-4">
-                        <img
-                            src="/logo.png"
-                            alt="SunSar Bingo"
-                            className="h-14 w-auto object-contain cursor-pointer active:scale-95 transition-transform"
-                        />
-                        <div>
-                            <h1 className="text-3xl font-bold bg-gradient-to-r from-accent-primary to-accent-secondary bg-clip-text text-transparent">
-                                My Boards
-                            </h1>
-                            <p className="text-slate-400 mt-1 text-sm">Welcome back, {user?.displayName || 'Bingo Player'}</p>
-                        </div>
-                    </div>
-                    <div className="flex gap-3 items-center">
+            <div className="max-w-6xl mx-auto">
+                {/* Navigation Bar */}
+                <header className="flex justify-between items-center mb-12 py-2">
+                    <img
+                        src="/logo.png"
+                        alt="SunSar Bingo"
+                        className="h-10 sm:h-12 w-auto object-contain cursor-pointer active:scale-95 transition-transform"
+                    />
+                    <div className="flex gap-2 items-center">
                         <button
                             onClick={openSettings}
-                            className="p-2.5 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors border border-transparent hover:border-white/10"
+                            className="p-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-full transition-colors"
                             title="Settings"
                         >
                             <Settings size={20} />
                         </button>
                         <button
                             onClick={logout}
-                            className="bg-white/5 hover:bg-white/10 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors border border-white/5 hover:border-white/10"
+                            className="bg-white/5 hover:bg-white/10 px-4 py-2 rounded-xl text-sm font-semibold transition-colors border border-white/10 hover:border-white/20"
                         >
                             Logout
                         </button>
                     </div>
                 </header>
+
+                {/* Hero / Greeting Section */}
+                <div className="mb-10">
+                    <h1 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight">
+                        My <span className="bg-gradient-to-r from-accent-primary to-accent-secondary bg-clip-text text-transparent italic">Boards</span>
+                    </h1>
+                    <p className="text-slate-400 mt-2 text-base sm:text-lg">
+                        Welcome back, <span className="text-accent-primary font-medium">{user?.displayName?.split(' ')[0] || 'Bingo Player'}</span>
+                    </p>
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {/* Create New Card */}
@@ -431,41 +434,45 @@ export const Dashboard: React.FC = () => {
                                 }}
                                 className="group relative h-48 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-white/10 hover:border-accent-primary/50 p-6 flex flex-col justify-between cursor-pointer transition-all hover:translate-y-[-4px] hover:shadow-xl overflow-hidden active:scale-[0.99]"
                             >
-                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity pointer-events-none">
-                                    <LayoutGrid className="w-24 h-24" />
+                                {/* Action Buttons Container */}
+                                <div className="absolute top-4 right-4 flex gap-2 z-20">
+                                    <button
+                                        onClick={(e) => handleDeleteBoard(e, board.id, board.title)}
+                                        className="p-2 text-slate-500 hover:text-red-400 hover:bg-white/10 rounded-full transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                        title="Delete Board"
+                                    >
+                                        <Trash2 size={18} />
+                                    </button>
                                 </div>
 
-                                {/* Delete button for owned boards */}
-                                <button
-                                    onClick={(e) => handleDeleteBoard(e, board.id, board.title)}
-                                    className="absolute top-4 right-4 p-2 text-slate-500 hover:text-red-400 hover:bg-white/10 rounded-full transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 z-20"
-                                    title="Delete Board"
-                                >
-                                    <Trash2 size={18} />
-                                </button>
+                                {/* Content Stack */}
+                                <div className="relative z-10 flex flex-col h-full">
+                                    <div className="flex-1">
+                                        {/* Badge Area */}
+                                        <div className="h-7 mb-2">
+                                            {board.sharedCount && board.sharedCount > 0 && (
+                                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                                                    <Users size={10} />
+                                                    Shared with {board.sharedCount}
+                                                </span>
+                                            )}
+                                        </div>
 
-                                {/* Shared badge for owned boards */}
-                                {board.sharedCount && board.sharedCount > 0 && (
-                                    <div className="absolute top-4 left-4 z-10 pointer-events-none">
-                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-500/20 text-green-400 border border-green-500/30">
-                                            <Users size={10} />
-                                            Shared with {board.sharedCount}
+                                        <h3 className="text-xl font-bold text-white mb-1.5 line-clamp-2 pr-8 group-hover:text-accent-primary transition-colors">
+                                            {board.title}
+                                        </h3>
+
+                                        <div className="flex items-center gap-2 text-xs text-slate-400">
+                                            <Calendar className="w-3.5 h-3.5" />
+                                            {board.createdAt?.toDate ? board.createdAt.toDate().toLocaleDateString() : 'Unknown date'}
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-4">
+                                        <span className="inline-block px-4 py-1.5 rounded-xl text-xs font-bold bg-accent-primary/10 text-accent-primary border border-accent-primary/20 group-hover:bg-accent-primary group-hover:text-white transition-all shadow-sm">
+                                            Open Board
                                         </span>
                                     </div>
-                                )}
-
-                                <div>
-                                    <h3 className="text-xl font-bold text-white mb-2 line-clamp-1 group-active:scale-[0.98] transition-transform">{board.title}</h3>
-                                    <div className="flex items-center gap-2 text-xs text-slate-400">
-                                        <Calendar className="w-3 h-3" />
-                                        {board.createdAt?.toDate ? board.createdAt.toDate().toLocaleDateString() : 'Unknown date'}
-                                    </div>
-                                </div>
-
-                                <div className="mt-auto">
-                                    <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-accent-primary/20 text-accent-primary border border-accent-primary/20 group-hover:bg-accent-primary group-hover:text-white transition-colors">
-                                        Open Board
-                                    </span>
                                 </div>
                             </div>
                         );
@@ -502,42 +509,49 @@ export const Dashboard: React.FC = () => {
                                             <LayoutGrid className="w-24 h-24" />
                                         </div>
 
-                                        {/* Leave button for shared boards */}
-                                        <button
-                                            onClick={(e) => handleLeaveBoard(e, board.id, board.title)}
-                                            className="absolute top-4 right-4 p-2 text-slate-500 hover:text-amber-400 hover:bg-white/10 rounded-full transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 z-20"
-                                            title="Leave Board"
-                                        >
-                                            <LogOut size={18} />
-                                        </button>
-
-                                        {/* Role Badge */}
-                                        <div className="absolute top-4 left-4 z-10 pointer-events-none">
-                                            <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${board.myRole === 'editor'
-                                                ? 'bg-accent-secondary/20 text-accent-secondary border border-accent-secondary/30'
-                                                : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                                                }`}>
-                                                {board.myRole === 'editor' ? '✏️ Editor' : '👁️ Viewer'}
-                                            </span>
+                                        {/* Action Buttons Container */}
+                                        <div className="absolute top-4 right-4 flex gap-2 z-20">
+                                            <button
+                                                onClick={(e) => handleLeaveBoard(e, board.id, board.title)}
+                                                className="p-2 text-slate-500 hover:text-amber-400 hover:bg-white/10 rounded-full transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                                title="Leave Board"
+                                            >
+                                                <LogOut size={18} />
+                                            </button>
                                         </div>
 
-                                        <div className="mt-6">
-                                            <h3 className="text-xl font-bold text-white mb-1 line-clamp-1">{board.title}</h3>
-                                            {board.ownerName && (
-                                                <div className="text-xs text-slate-500 mb-1">
-                                                    Shared by <span className="text-slate-400">{board.ownerName}</span>
+                                        {/* Content Stack */}
+                                        <div className="relative z-10 flex flex-col h-full">
+                                            <div className="flex-1">
+                                                {/* Badge Area */}
+                                                <div className="h-7 mb-2">
+                                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${board.myRole === 'editor'
+                                                        ? 'bg-accent-secondary/20 text-accent-secondary border border-accent-secondary/30'
+                                                        : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                                                        }`}>
+                                                        {board.myRole === 'editor' ? '✏️ Editor' : '👁️ Viewer'}
+                                                    </span>
                                                 </div>
-                                            )}
-                                            <div className="flex items-center gap-2 text-xs text-slate-400">
-                                                <Calendar className="w-3 h-3" />
-                                                {board.createdAt?.toDate ? board.createdAt.toDate().toLocaleDateString() : 'Unknown date'}
-                                            </div>
-                                        </div>
 
-                                        <div className="mt-auto">
-                                            <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-accent-secondary/20 text-accent-secondary border border-accent-secondary/20 group-hover:bg-accent-secondary group-hover:text-white transition-colors">
-                                                Open Board
-                                            </span>
+                                                <h3 className="text-xl font-bold text-white mb-1 line-clamp-1 pr-8">
+                                                    {board.title}
+                                                </h3>
+                                                {board.ownerName && (
+                                                    <div className="text-xs text-slate-500 mb-1.5">
+                                                        Shared by <span className="text-slate-400">{board.ownerName}</span>
+                                                    </div>
+                                                )}
+                                                <div className="flex items-center gap-2 text-xs text-slate-400">
+                                                    <Calendar className="w-3.5 h-3.5" />
+                                                    {board.createdAt?.toDate ? board.createdAt.toDate().toLocaleDateString() : 'Unknown date'}
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-4">
+                                                <span className="inline-block px-4 py-1.5 rounded-xl text-xs font-bold bg-accent-secondary/10 text-accent-secondary border border-accent-secondary/20 group-hover:bg-accent-secondary group-hover:text-white transition-all shadow-sm">
+                                                    Open Board
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                 );

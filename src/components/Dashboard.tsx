@@ -134,50 +134,55 @@ export const Dashboard: React.FC = () => {
 
         const fetchBoards = async () => {
             try {
-                // Fetch boards where I am the owner
+                console.log('Fetching boards for user:', user.uid, user.email);
+
+                // Fetch boards where I am the owner (by ownerId field)
                 const ownedQuery = query(
                     collection(db, 'boards'),
                     where('ownerId', '==', user.uid)
                 );
                 const ownedSnapshot = await getDocs(ownedQuery);
+                console.log('Owned boards found:', ownedSnapshot.docs.length);
+
                 const ownedBoards: BoardSummary[] = ownedSnapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data(),
                     myRole: 'owner' as const
                 } as BoardSummary));
 
-                // Fetch boards where I am a member (shared with me)
-                // Firestore doesn't support querying map keys directly, so we need a different approach
-                // We'll query for boards where members.<uid> exists by using the array approach
-                // Alternative: Query all boards and filter client-side (not ideal for large datasets)
-                // For now, we'll attempt a workaround using the membersList array if it exists
-
-                // Actually, Firestore supports: where(`members.${uid}`, '!=', null) but it requires an index
-                // Let's use a simpler approach: where(`members.${user.uid}`, 'in', ['editor', 'viewer'])
-                const sharedQuery = query(
-                    collection(db, 'boards'),
-                    where(`members.${user.uid}`, 'in', ['editor', 'viewer'])
-                );
-
+                // Also query for boards where I am 'owner' in members map (for backwards compatibility)
+                // AND boards where I am editor/viewer
                 let sharedBoards: BoardSummary[] = [];
                 try {
+                    const sharedQuery = query(
+                        collection(db, 'boards'),
+                        where(`members.${user.uid}`, 'in', ['owner', 'editor', 'viewer'])
+                    );
                     const sharedSnapshot = await getDocs(sharedQuery);
+                    console.log('Boards with membership found:', sharedSnapshot.docs.length);
+
+                    // Filter out boards we already have from the ownerId query
+                    const ownedIds = new Set(ownedBoards.map(b => b.id));
+
                     sharedBoards = sharedSnapshot.docs
-                        .filter(doc => doc.data().ownerId !== user.uid) // Exclude owned boards
+                        .filter(doc => !ownedIds.has(doc.id)) // Avoid duplicates
                         .map(doc => {
                             const data = doc.data();
+                            const role = data.members?.[user.uid];
                             return {
                                 id: doc.id,
                                 ...data,
-                                myRole: data.members?.[user.uid] as 'editor' | 'viewer'
+                                myRole: role === 'owner' ? 'owner' : role as 'editor' | 'viewer'
                             } as BoardSummary;
                         });
                 } catch (e) {
-                    // Query might fail if index doesn't exist, that's okay
+                    // Query might fail if index doesn't exist
                     console.log('Shared boards query failed (index may be missing):', e);
                 }
 
-                setBoards([...ownedBoards, ...sharedBoards]);
+                const allBoards = [...ownedBoards, ...sharedBoards];
+                console.log('Total boards to display:', allBoards.length);
+                setBoards(allBoards);
             } catch (error) {
                 console.error("Error fetching boards:", error);
             } finally {
@@ -340,8 +345,8 @@ export const Dashboard: React.FC = () => {
                             {board.myRole && board.myRole !== 'owner' && (
                                 <div className="absolute top-4 left-4 z-10">
                                     <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${board.myRole === 'editor'
-                                            ? 'bg-accent-secondary/20 text-accent-secondary border border-accent-secondary/30'
-                                            : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                                        ? 'bg-accent-secondary/20 text-accent-secondary border border-accent-secondary/30'
+                                        : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
                                         }`}>
                                         {board.myRole === 'editor' ? '✏️ Editor' : '👁️ Viewer'}
                                     </span>

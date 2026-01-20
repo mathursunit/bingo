@@ -160,9 +160,8 @@ export const MigrateLegacy = () => {
             await import('firebase/firestore').then(fs => {
                 fs.updateDoc(boardRef, {
                     [`members.${user.uid}`]: 'editor',
-                    [`members.${saraUid}`]: 'owner' // Ensure check
-                    // We DO NOT change ownerId because that might be blocked by rules.
-                    // The UI should rely on the members map.
+                    [`members.${saraUid}`]: 'owner',
+                    ownerId: saraUid // Attempt to fix "Shared by..." display
                 });
             });
 

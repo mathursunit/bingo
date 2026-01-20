@@ -5,7 +5,7 @@ import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { useDialog } from '../contexts/DialogContext';
 import { useSettings } from '../contexts/SettingsContext';
-import { Plus, LayoutGrid, Calendar, Trash2, LogOut, Users, Settings } from 'lucide-react';
+import { Plus, LayoutGrid, Calendar, Trash2, LogOut, Users, Settings, HelpCircle } from 'lucide-react';
 
 interface BoardSummary {
     id: string;
@@ -399,6 +399,13 @@ export const Dashboard: React.FC = () => {
                         className="h-10 sm:h-12 w-auto object-contain cursor-pointer active:scale-95 transition-transform"
                     />
                     <div className="flex gap-2 items-center">
+                        <button
+                            onClick={() => navigate('/help')}
+                            className="p-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-full transition-colors"
+                            title="Help Guide"
+                        >
+                            <HelpCircle size={20} />
+                        </button>
                         <button
                             onClick={openSettings}
                             className="p-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-full transition-colors"

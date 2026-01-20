@@ -311,13 +311,13 @@ export const Dashboard: React.FC = () => {
             {/* Template Selection Modal */}
             {isCreateModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => { setIsCreateModalOpen(false); setPreviewTemplate(null); }} />
+                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => { if (previewTemplate) setPreviewTemplate(null); else setIsCreateModalOpen(false); }} />
                     <div className="relative w-full max-w-2xl bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col max-h-[90vh]">
                         <div className="p-6 border-b border-white/10 flex justify-between items-center shrink-0">
                             <h2 className="text-xl font-bold text-white">
                                 {previewTemplate ? TEMPLATES[previewTemplate].name : "Choose a Template"}
                             </h2>
-                            <button onClick={() => { setIsCreateModalOpen(false); setPreviewTemplate(null); }} className="text-slate-400 hover:text-white">
+                            <button onClick={() => { if (previewTemplate) setPreviewTemplate(null); else setIsCreateModalOpen(false); }} className="text-slate-400 hover:text-white">
                                 <Plus className="w-6 h-6 rotate-45" />
                             </button>
                         </div>

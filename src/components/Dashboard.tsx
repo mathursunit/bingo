@@ -325,15 +325,27 @@ export const Dashboard: React.FC = () => {
                         <div className="flex-1 overflow-y-auto p-6">
                             {previewTemplate ? (
                                 <div className="space-y-6">
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                        {/* Show sample items */}
-                                        {TEMPLATES[previewTemplate].items.slice(0, 12).map((item, i) => (
-                                            <div key={i} className="text-xs p-2 rounded bg-white/5 border border-white/5 text-slate-300">
-                                                {item}
-                                            </div>
-                                        ))}
-                                        <div key="more" className="text-xs p-2 rounded bg-white/5 border border-white/5 text-slate-500 italic flex items-center justify-center">
-                                            + {Math.max(0, TEMPLATES[previewTemplate].items.length - 12)} more...
+                                    <div className="flex justify-center mb-6">
+                                        <div className="aspect-square w-full max-w-[320px] grid grid-cols-5 gap-1.5 p-2 bg-slate-950/50 rounded-xl border border-white/10">
+                                            {TEMPLATES[previewTemplate].items.slice(0, 25).map((item, i) => {
+                                                const isCenter = i === 12;
+                                                const isFreeSpace = item.trim().toUpperCase() === "FREE SPACE" || isCenter;
+
+                                                return (
+                                                    <div
+                                                        key={i}
+                                                        className={`
+                                                            relative rounded flex items-center justify-center p-0.5 text-center select-none overflow-hidden 
+                                                            text-[6px] sm:text-[8px] leading-tight font-medium border shadow-sm
+                                                            ${isFreeSpace
+                                                                ? 'bg-gradient-to-br from-accent-gold/20 to-accent-secondary/20 border-accent-gold/50 text-accent-gold font-bold'
+                                                                : 'bg-white/5 border-white/10 text-slate-300'}
+                                                        `}
+                                                    >
+                                                        {isFreeSpace ? "FREE" : item}
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
                                     </div>
 

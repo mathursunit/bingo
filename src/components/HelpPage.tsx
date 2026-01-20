@@ -41,7 +41,7 @@ export const HelpPage = () => {
     const navigate = useNavigate();
 
     return (
-        <div className="min-h-screen bg-bg-dark text-white p-6 relative overflow-x-hidden">
+        <div className="min-h-screen bg-transparent text-white p-6 relative overflow-x-hidden">
             {/* Header */}
             <div className="max-w-4xl mx-auto">
                 <motion.button

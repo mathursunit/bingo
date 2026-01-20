@@ -389,7 +389,7 @@ export const Dashboard: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-bg-dark text-white p-6 relative">
+        <div className="min-h-screen bg-transparent text-white p-6 relative">
             <div className="max-w-6xl mx-auto">
                 {/* Navigation Bar */}
                 <header className="flex justify-between items-center mb-12 py-2">

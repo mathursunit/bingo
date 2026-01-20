@@ -133,8 +133,9 @@
 @layer base {
   body {
     @apply bg-bg-dark text-white font-body min-h-screen overflow-x-hidden;
-    background-color: var(--theme-bg-base);
-    transition: background-color 0.5s ease, color 0.5s ease;
+    /* Background handled by DynamicBackground component */
+    background-color: transparent;
+    transition: color 0.5s ease;
   }
 }
 

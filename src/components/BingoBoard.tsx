@@ -336,8 +336,7 @@ export const BingoBoard: React.FC = () => {
 
     return (
         <>
-            <div className="min-h-screen bg-bg-dark text-white p-6 pb-24 relative overflow-x-hidden no-print">
-                <div className="background-animation" />
+            <div className="min-h-screen bg-transparent text-white p-6 pb-24 relative overflow-x-hidden no-print">
 
                 <div className="max-w-4xl mx-auto">
                     {/* Navigation Bar - Matches Dashboard */}

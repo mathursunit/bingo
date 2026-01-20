@@ -14,7 +14,7 @@ export const Login: React.FC = () => {
                     <img
                         src="/logo.png"
                         alt="SunSar Bingo"
-                        className="h-24 w-auto object-contain drop-shadow-[0_0_15px_rgba(251,191,36,0.3)] mix-blend-screen"
+                        className="h-24 w-auto object-contain drop-shadow-[0_0_15px_rgba(251,191,36,0.3)]"
                     />
                     <div className="rounded-full bg-accent-primary/20 p-2 hidden">
                         <Sparkles className="w-6 h-6 text-accent-gold animate-pulse" />

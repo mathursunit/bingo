@@ -329,7 +329,7 @@ export const BingoBoard: React.FC = () => {
                             animate={{ opacity: 1, x: 0 }}
                             src="/logo.png"
                             alt="SunSar Bingo"
-                            className="h-14 sm:h-16 w-auto object-contain cursor-pointer active:scale-95 transition-transform mix-blend-screen"
+                            className="h-14 sm:h-16 w-auto object-contain cursor-pointer active:scale-95 transition-transform"
                             onClick={handleLogoTap}
                         />
                         <motion.div
@@ -426,7 +426,7 @@ export const BingoBoard: React.FC = () => {
                                 }}
                                 className={cn(
                                     "relative rounded-lg flex items-center justify-center p-1 cursor-pointer select-none border backdrop-blur-sm overflow-hidden",
-                                    "font-hand text-[11px] sm:text-sm font-medium leading-tight select-none",
+                                    "text-[11px] sm:text-sm font-medium leading-tight select-none",
                                     item.isCompleted ? "text-white scale-110 font-semibold" : "text-slate-300",
                                     "bg-bg-card/90 border-white/20 shadow-md hover:border-white/40 hover:bg-bg-card/95 transition-all duration-200",
                                     item.isCompleted && !item.isFreeSpace && "bg-gradient-to-br from-accent-primary/30 to-accent-secondary/30 border-accent-primary/50 shadow-[0_0_15px_rgba(139,92,246,0.15)]",
@@ -447,7 +447,7 @@ export const BingoBoard: React.FC = () => {
                                     >
                                         <span className={cn(
                                             "leading-tight break-words w-full",
-                                            item.isFreeSpace ? "text-lg font-bold text-accent-gold" : "font-hand font-semibold line-clamp-3 sm:line-clamp-4",
+                                            item.isFreeSpace ? "text-lg font-bold text-accent-gold" : "font-semibold line-clamp-3 sm:line-clamp-4",
                                             item.isCompleted && !item.isFreeSpace && "text-white"
                                         )}
                                             style={!item.isFreeSpace && !item.isCompleted ? {

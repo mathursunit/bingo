@@ -378,7 +378,7 @@ export const Dashboard: React.FC = () => {
                         <img
                             src="/logo.png"
                             alt="SunSar Bingo"
-                            className="h-14 w-auto object-contain cursor-pointer active:scale-95 transition-transform mix-blend-screen"
+                            className="h-14 w-auto object-contain cursor-pointer active:scale-95 transition-transform"
                         />
                         <div>
                             <h1 className="text-3xl font-bold bg-gradient-to-r from-accent-primary to-accent-secondary bg-clip-text text-transparent">

@@ -16,7 +16,7 @@ export const MemoriesAlbum: React.FC<MemoriesAlbumProps> = ({ items, isOpen, onC
     const memories = useMemo(() => {
         return items
             .map((item, originalIndex) => ({ ...item, originalIndex }))
-            .filter(item => item.isCompleted && item.proofPhotos && item.proofPhotos.length > 0)
+            .filter(item => item.proofPhotos && item.proofPhotos.length > 0)
             .sort((a, b) => {
                 const dateA = a.completedAt?.toDate?.() || new Date(0);
                 const dateB = b.completedAt?.toDate?.() || new Date(0);
@@ -132,18 +132,20 @@ export const MemoriesAlbum: React.FC<MemoriesAlbumProps> = ({ items, isOpen, onC
                                             {/* Info */}
                                             <div className="p-4">
                                                 <h3 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
-                                                    <span className="text-accent-gold">✓</span>
+                                                    <span className="text-accent-gold">{memory.isCompleted ? '✓' : '📷'}</span>
                                                     {memory.text}
                                                 </h3>
                                                 <div className="flex items-center gap-4 text-sm text-slate-400">
                                                     <span className="flex items-center gap-1">
                                                         <User size={14} />
-                                                        {memory.completedBy}
+                                                        {memory.isCompleted ? memory.completedBy : 'In Progress'}
                                                     </span>
-                                                    <span className="flex items-center gap-1">
-                                                        <Calendar size={14} />
-                                                        {formatDate(memory.completedAt)}
-                                                    </span>
+                                                    {memory.isCompleted && (
+                                                        <span className="flex items-center gap-1">
+                                                            <Calendar size={14} />
+                                                            {formatDate(memory.completedAt)}
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </div>
                                         </motion.div>

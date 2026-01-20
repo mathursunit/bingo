@@ -547,6 +547,13 @@ export const BingoBoard: React.FC = () => {
                                             </div>
                                         </div>
 
+                                        {/* Photo Indicator */}
+                                        {item.proofPhotos && item.proofPhotos.length > 0 && (
+                                            <div className="absolute top-1 right-1 z-20 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" title="Has photos">
+                                                <Camera size={gridSize >= 5 ? 10 : 14} className="opacity-90" />
+                                            </div>
+                                        )}
+
                                         {/* Due Date Indicator */}
                                         {item.dueDate && !item.isCompleted && !isLocked && (
                                             <div className={cn(

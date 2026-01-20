@@ -5,6 +5,7 @@ import { SettingsProvider } from './contexts/SettingsContext';
 import { Login } from './components/Login';
 import { BingoBoard } from './components/BingoBoard';
 import { Dashboard } from './components/Dashboard';
+import { DynamicBackground } from './components/DynamicBackground';
 
 const AppContent = () => {
   const { user, loading } = useAuth();
@@ -14,16 +15,19 @@ const AppContent = () => {
   if (!user) return <Login />;
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/board/legacy/:yearId" element={<BingoBoard />} />
-        <Route path="/board/:boardId" element={<BingoBoard />} />
-        {/* Fallback for legacy URL or direct access, though typically redirected */}
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
-    </BrowserRouter>
+    <>
+      <DynamicBackground />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/board/legacy/:yearId" element={<BingoBoard />} />
+          <Route path="/board/:boardId" element={<BingoBoard />} />
+          {/* Fallback for legacy URL or direct access, though typically redirected */}
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </>
   );
 }
 

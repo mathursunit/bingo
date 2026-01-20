@@ -211,6 +211,57 @@
   }
 }
 
+/* Floating animation for ambient glows */
+@keyframes float-slow {
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  25% {
+    transform: translate(5%, 3%) scale(1.05);
+  }
+
+  50% {
+    transform: translate(-3%, 5%) scale(0.95);
+  }
+
+  75% {
+    transform: translate(4%, -2%) scale(1.02);
+  }
+}
+
+@keyframes float-slower {
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  33% {
+    transform: translate(-4%, 4%) scale(1.03);
+  }
+
+  66% {
+    transform: translate(3%, -3%) scale(0.97);
+  }
+}
+
+.animate-float-slow {
+  animation: float-slow 25s ease-in-out infinite;
+}
+
+.animate-float-slower {
+  animation: float-slower 35s ease-in-out infinite;
+}
+
+/* Reduced motion support */
+.reduce-motion .animate-float-slow,
+.reduce-motion .animate-float-slower {
+  animation: none;
+}
+
 @media print {
   @page {
     size: portrait;

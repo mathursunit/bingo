@@ -5,6 +5,7 @@ import { useBingo } from '../hooks/useBingo';
 import { useAuth } from '../contexts/AuthContext';
 import { useDialog } from '../contexts/DialogContext';
 import { useSettings } from '../contexts/SettingsContext';
+import { useSounds } from '../hooks/useSounds';
 import { cn } from '../lib/utils';
 import { Edit2, Check, Award, LogOut, Shuffle, Camera, X, ChevronLeft, ChevronRight, Plus, BookOpen, Printer, LayoutGrid, Share2, Clock, Trash2, Settings } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -24,6 +25,7 @@ export const BingoBoard: React.FC = () => {
     const { logout, user } = useAuth();
     const dialog = useDialog();
     const { openSettings } = useSettings();
+    const { playClick, playSuccess, playBingo, playWhoosh } = useSounds();
     const [editMode, setEditMode] = useState(false);
 
     // Draft State
@@ -236,6 +238,15 @@ export const BingoBoard: React.FC = () => {
         }
     }, [hasWon, loading]);
 
+    // Play celebration sound on bingo win
+    const prevHasWonRef = useRef(hasWon);
+    React.useEffect(() => {
+        if (hasWon && !prevHasWonRef.current && !loading) {
+            playBingo();
+        }
+        prevHasWonRef.current = hasWon;
+    }, [hasWon, loading, playBingo]);
+
     // Open Modal
     const openEditModal = (index: number) => {
         const currentList = editMode ? draftItems : items;
@@ -308,6 +319,13 @@ export const BingoBoard: React.FC = () => {
         // Capture state before toggle for Undo
         const item = displayItems[index];
         setUndoState({ index, wasCompleted: item.isCompleted });
+
+        // Play appropriate sound
+        if (item.isCompleted) {
+            playClick(); // Un-completing
+        } else {
+            playSuccess(); // Completing
+        }
 
         toggleItem(index);
 
@@ -427,6 +445,7 @@ export const BingoBoard: React.FC = () => {
                                         }
                                     } else {
                                         // Open completion modal for incomplete items
+                                        playWhoosh();
                                         setCompletingItemIndex(index);
                                         setIsCompletionModalOpen(true);
                                     }

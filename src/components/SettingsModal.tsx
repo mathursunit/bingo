@@ -148,16 +148,18 @@ export const SettingsModal: React.FC = () => {
                             {/* Motion Section */}
                             <section>
                                 <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-                                    <Zap className="w-4 h-4" /> Accessibility
+                                    <Zap className="w-4 h-4" /> Experience
                                 </h3>
-                                <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10">
+
+                                {/* Animation Toggle */}
+                                <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10 mb-3">
                                     <div className="flex items-center gap-3">
                                         <div className={cn("p-2 rounded-lg", settings.enableAnimation ? "bg-accent-primary/20 text-accent-primary" : "bg-slate-700 text-slate-400")}>
                                             <Zap size={20} />
                                         </div>
                                         <div>
-                                            <div className="font-medium text-white">Background Animation</div>
-                                            <div className="text-xs text-slate-400">Glowing blobs and floating particles</div>
+                                            <div className="font-medium text-white">Live Backgrounds</div>
+                                            <div className="text-xs text-slate-400">Dynamic particles and ambient effects</div>
                                         </div>
                                     </div>
 
@@ -169,6 +171,33 @@ export const SettingsModal: React.FC = () => {
                                             className="sr-only peer"
                                         />
                                         <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-accent-primary rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent-primary"></div>
+                                    </label>
+                                </div>
+
+                                {/* Sound Toggle */}
+                                <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10">
+                                    <div className="flex items-center gap-3">
+                                        <div className={cn("p-2 rounded-lg", settings.enableSound ? "bg-emerald-500/20 text-emerald-400" : "bg-slate-700 text-slate-400")}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                                                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                                                <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <div className="font-medium text-white">Sound Effects</div>
+                                            <div className="text-xs text-slate-400">Satisfying clicks and celebrations</div>
+                                        </div>
+                                    </div>
+
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={settings.enableSound}
+                                            onChange={(e) => updateSettings({ enableSound: e.target.checked }, false)}
+                                            className="sr-only peer"
+                                        />
+                                        <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-500 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
                                     </label>
                                 </div>
                             </section>

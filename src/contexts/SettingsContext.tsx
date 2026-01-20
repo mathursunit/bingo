@@ -9,12 +9,14 @@ export interface Settings {
     theme: string; // 'dawn' (default), 'midnight', 'forest', 'ocean', 'sunset'
     font: string; // 'outfit' (default), 'inter', 'playfair', 'mono', 'comic'
     enableAnimation: boolean;
+    enableSound: boolean;
 }
 
 const defaultSettings: Settings = {
     theme: 'dawn',
     font: 'outfit',
-    enableAnimation: true
+    enableAnimation: true,
+    enableSound: true
 };
 
 interface SettingsContextType {

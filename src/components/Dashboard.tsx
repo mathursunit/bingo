@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, query, where, getDocs, addDoc, deleteDoc, doc, Timestamp, updateDoc, deleteField } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, deleteDoc, doc, Timestamp, updateDoc, deleteField, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { useDialog } from '../contexts/DialogContext';
@@ -13,6 +13,7 @@ interface BoardSummary {
     createdAt: any;
     isLocked?: boolean;
     ownerId?: string;
+    ownerName?: string;
     myRole?: 'owner' | 'editor' | 'viewer';
 }
 
@@ -210,8 +211,35 @@ export const Dashboard: React.FC = () => {
                 }
 
                 const allBoards = Array.from(allBoardsMap.values());
-                console.log('Total boards to display:', allBoards.length, allBoards.map(b => b.title));
-                setBoards(allBoards);
+
+                // Fetch owner names for shared boards
+                const sharedBoards = allBoards.filter(b => b.myRole !== 'owner' && b.ownerId);
+                const ownerIds = [...new Set(sharedBoards.map(b => b.ownerId!))];
+
+                // Lookup owner names from users collection
+                const ownerNames: Record<string, string> = {};
+                for (const ownerId of ownerIds) {
+                    try {
+                        const userDoc = await getDoc(doc(db, 'users', ownerId));
+                        if (userDoc.exists()) {
+                            const userData = userDoc.data();
+                            ownerNames[ownerId] = userData.displayName || userData.email || 'Unknown';
+                        }
+                    } catch (e) {
+                        console.log('Could not fetch owner info for:', ownerId);
+                    }
+                }
+
+                // Update boards with owner names
+                const boardsWithOwners = allBoards.map(board => {
+                    if (board.myRole !== 'owner' && board.ownerId && ownerNames[board.ownerId]) {
+                        return { ...board, ownerName: ownerNames[board.ownerId] };
+                    }
+                    return board;
+                });
+
+                console.log('Total boards to display:', boardsWithOwners.length, boardsWithOwners.map(b => b.title));
+                setBoards(boardsWithOwners);
             } catch (error) {
                 console.error("Error fetching boards:", error);
             } finally {
@@ -461,7 +489,12 @@ export const Dashboard: React.FC = () => {
                                         </div>
 
                                         <div className="mt-6">
-                                            <h3 className="text-xl font-bold text-white mb-2 line-clamp-1">{board.title}</h3>
+                                            <h3 className="text-xl font-bold text-white mb-1 line-clamp-1">{board.title}</h3>
+                                            {board.ownerName && (
+                                                <div className="text-xs text-slate-500 mb-1">
+                                                    Shared by <span className="text-slate-400">{board.ownerName}</span>
+                                                </div>
+                                            )}
                                             <div className="flex items-center gap-2 text-xs text-slate-400">
                                                 <Calendar className="w-3 h-3" />
                                                 {board.createdAt?.toDate ? board.createdAt.toDate().toLocaleDateString() : 'Unknown date'}

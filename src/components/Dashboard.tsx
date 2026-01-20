@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, query, where, getDocs, addDoc, deleteDoc, doc, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, deleteDoc, doc, Timestamp, updateDoc, deleteField } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { useDialog } from '../contexts/DialogContext';
-import { Plus, LayoutGrid, Calendar, Trash2 } from 'lucide-react';
+import { Plus, LayoutGrid, Calendar, Trash2, LogOut } from 'lucide-react';
 
 interface BoardSummary {
     id: string;
@@ -309,6 +309,31 @@ export const Dashboard: React.FC = () => {
         }
     };
 
+    const handleLeaveBoard = async (e: React.MouseEvent, boardId: string, boardTitle: string) => {
+        e.stopPropagation(); // Prevent opening the board
+
+        if (!user) return;
+
+        const confirmed = await dialog.confirm(
+            `You will no longer have access to "${boardTitle}".\n\nYou can ask the owner to re-share it if needed.`,
+            { title: 'Leave Board?', confirmText: 'Leave', type: 'warning' }
+        );
+
+        if (confirmed) {
+            try {
+                // Remove user from the board's members map
+                await updateDoc(doc(db, 'boards', boardId), {
+                    [`members.${user.uid}`]: deleteField()
+                });
+                setBoards(prev => prev.filter(b => b.id !== boardId));
+                await dialog.alert('You have left the board.', { title: 'Left Board', type: 'success' });
+            } catch (error) {
+                console.error("Error leaving board:", error);
+                await dialog.alert('Failed to leave board. Please try again.', { title: 'Error', type: 'error' });
+            }
+        }
+    };
+
     return (
         <div className="min-h-screen bg-bg-dark text-white p-6 relative">
             <div className="max-w-4xl mx-auto">
@@ -416,11 +441,20 @@ export const Dashboard: React.FC = () => {
                                             <LayoutGrid className="w-24 h-24" />
                                         </div>
 
+                                        {/* Leave button for shared boards */}
+                                        <button
+                                            onClick={(e) => handleLeaveBoard(e, board.id, board.title)}
+                                            className="absolute top-4 right-4 p-2 text-slate-500 hover:text-amber-400 hover:bg-white/10 rounded-full transition-all opacity-0 group-hover:opacity-100 z-10"
+                                            title="Leave Board"
+                                        >
+                                            <LogOut size={18} />
+                                        </button>
+
                                         {/* Role Badge */}
                                         <div className="absolute top-4 left-4 z-10">
                                             <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${board.myRole === 'editor'
-                                                    ? 'bg-accent-secondary/20 text-accent-secondary border border-accent-secondary/30'
-                                                    : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                                                ? 'bg-accent-secondary/20 text-accent-secondary border border-accent-secondary/30'
+                                                : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
                                                 }`}>
                                                 {board.myRole === 'editor' ? '✏️ Editor' : '👁️ Viewer'}
                                             </span>

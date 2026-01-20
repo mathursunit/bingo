@@ -25,6 +25,8 @@ export interface BingoYear {
     isLocked?: boolean;
     items: BingoItem[];
     lastUpdated?: Timestamp;
+    ownerId?: string;
+    members?: Record<string, 'owner' | 'editor' | 'viewer'>;
 }
 
 export interface UserProfile {

@@ -20,6 +20,7 @@ const INITIAL_ITEMS: string[] = [
 export const useBingo = (boardId?: string) => {
     const { user } = useAuth();
     const [items, setItems] = useState<BingoItem[]>([]);
+    const [members, setMembers] = useState<Record<string, 'owner' | 'editor' | 'viewer'>>({});
     const [loading, setLoading] = useState(true);
     const [hasWon, setHasWon] = useState(false);
     const [isLocked, setIsLocked] = useState(false);
@@ -125,6 +126,7 @@ export const useBingo = (boardId?: string) => {
             if (docSnap.exists()) {
                 const data = docSnap.data() as BingoYear;
                 setItems(data.items || []);
+                setMembers(data.members || {});
                 setIsLocked(data.isLocked || false);
                 checkWin(data.items || []);
             } else {
@@ -427,5 +429,17 @@ export const useBingo = (boardId?: string) => {
         }
     };
 
-    return { items, loading, toggleItem, updateItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, decrementProgress, inviteUser };
+    const removeMember = async (uid: string) => {
+        try {
+            await updateDoc(docRef, {
+                [`members.${uid}`]: deleteField()
+            });
+            return { success: true };
+        } catch (error) {
+            console.error("Error removing member:", error);
+            return { success: false, error };
+        }
+    };
+
+    return { items, members, loading, toggleItem, updateItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, decrementProgress, inviteUser, removeMember };
 };

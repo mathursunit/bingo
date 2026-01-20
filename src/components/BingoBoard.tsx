@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 import { useBingo } from '../hooks/useBingo';
 import { useAuth } from '../contexts/AuthContext';
 import { useDialog } from '../contexts/DialogContext';
 import { cn } from '../lib/utils';
-import { Edit2, Check, Award, LogOut, Shuffle, Camera, X, ChevronLeft, ChevronRight, Plus, BookOpen, Printer, LayoutGrid, Share2, Clock } from 'lucide-react';
+import { Edit2, Check, Award, LogOut, Shuffle, Camera, X, ChevronLeft, ChevronRight, Plus, BookOpen, Printer, LayoutGrid, Share2, Clock, Trash2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { BingoItem } from '../types';
@@ -17,7 +19,7 @@ export const BingoBoard: React.FC = () => {
     // For legacy boards, yearId is set and we pass undefined to useBingo (which uses 'years' collection)
     // For new boards, boardId is set and we pass it to useBingo (which uses 'boards' collection)
     const effectiveBoardId = yearId ? undefined : boardId;
-    const { items, loading, toggleItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, decrementProgress, inviteUser } = useBingo(effectiveBoardId);
+    const { items, members, loading, toggleItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, decrementProgress, inviteUser, removeMember } = useBingo(effectiveBoardId);
     const { logout, user } = useAuth();
     const dialog = useDialog();
     const [editMode, setEditMode] = useState(false);
@@ -27,6 +29,8 @@ export const BingoBoard: React.FC = () => {
 
     // Modal State
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+    const [memberDetails, setMemberDetails] = useState<{ id: string, name: string, email: string, role: string }[]>([]);
     const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null);
     const [editFormText, setEditFormText] = useState("");
     const [editFormStyle, setEditFormStyle] = useState<{ color?: string; bold?: boolean; italic?: boolean; fontSize?: 'sm' | 'base' | 'lg' | 'xl' }>({});
@@ -47,6 +51,103 @@ export const BingoBoard: React.FC = () => {
             setShowWalkthrough(true);
         }
     }, [loading, items]);
+
+    // Fetch member details when share modal opens
+    useEffect(() => {
+        const fetchMembers = async () => {
+            if (isShareModalOpen && members) {
+                const details = [];
+                for (const [uid, role] of Object.entries(members)) {
+                    if (role === 'owner') continue; // Skip owner
+                    try {
+                        const userDoc = await getDoc(doc(db, 'users', uid));
+                        if (userDoc.exists()) {
+                            const data = userDoc.data();
+                            details.push({
+                                id: uid,
+                                name: data.displayName || 'Unknown',
+                                email: data.email || 'No email',
+                                role
+                            });
+                        }
+                    } catch (e) {
+                        console.error("Error fetching user:", e);
+                    }
+                }
+                setMemberDetails(details);
+            }
+        };
+        fetchMembers();
+    }, [isShareModalOpen, members]);
+
+    const handleRemoveMember = async (uid: string, name: string) => {
+        const confirmed = await dialog.confirm(
+            `Are you sure you want to remove ${name} from this board?`,
+            { title: 'Remove Member', type: 'error', confirmText: 'Remove' }
+        );
+
+        if (confirmed) {
+            const result = await removeMember(uid);
+            if (result.success) {
+                setMemberDetails(prev => prev.filter(m => m.id !== uid));
+                await dialog.alert(`${name} has been removed.`, { type: 'success' });
+            } else {
+                await dialog.alert('Failed to remove member.', { type: 'error' });
+            }
+        }
+    };
+
+    const handleInviteClick = async () => {
+        const shareResult = await dialog.sharePrompt(
+            "Enter their email address to invite them to this board.",
+            { title: 'Invite User' }
+        );
+
+        if (shareResult) {
+            const result = await inviteUser(shareResult.email, shareResult.role);
+            if (result.type === 'success') {
+                await dialog.alert(result.message, { title: 'Success!', type: 'success' });
+                // Members list will update automatically via useBingo effect -> setMembers -> fetchMembers
+            } else if (result.type === 'not_found') {
+                const sendEmail = await dialog.confirm(
+                    `"${shareResult.email}" hasn't signed up yet.\n\nWould you like to send them an email invitation to join SunSar Bingo?`,
+                    { title: 'User Not Found', confirmText: 'Send Invite Email', type: 'info' }
+                );
+                if (sendEmail) {
+                    try {
+                        const { sendInviteEmail, openMailtoFallback } = await import('../lib/emailService');
+                        const emailResult = await sendInviteEmail({
+                            recipientEmail: shareResult.email,
+                            senderName: user?.displayName || user?.email || 'A friend',
+                        });
+
+                        if (emailResult.success) {
+                            await dialog.alert(
+                                `Invitation sent to ${shareResult.email}! They'll receive an email with instructions to join.`,
+                                { title: 'Invitation Sent!', type: 'success' }
+                            );
+                        } else {
+                            openMailtoFallback(shareResult.email, user?.displayName || 'A friend');
+                            await dialog.alert(
+                                "Your email app should open with a pre-filled invitation. Send it to invite your friend!",
+                                { title: 'Email Ready', type: 'info' }
+                            );
+                        }
+                    } catch (err) {
+                        const subject = encodeURIComponent("Join me on SunSar Bingo!");
+                        const body = encodeURIComponent(`Hey! Come join me on SunSar Bingo to track our 2026 goals together.\n\nSign up here: ${window.location.origin}`);
+                        window.open(`mailto:${shareResult.email}?subject=${subject}&body=${body}`);
+                        await dialog.alert(
+                            "Your email app should open with a pre-filled invitation. Send it to invite your friend!",
+                            { title: 'Email Ready', type: 'info' }
+                        );
+                    }
+                }
+            } else {
+                await dialog.alert(result.message, { title: 'Error', type: 'error' });
+            }
+        }
+    };
 
     const handleNextStep = () => {
         if (walkthroughStep < 2) {
@@ -186,6 +287,61 @@ export const BingoBoard: React.FC = () => {
                 <div className="w-12 h-12 border-4 border-accent-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                 <p>Loading Board...</p>
             </div>
+            {/* Share Modal */}
+            {isShareModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsShareModalOpen(false)} />
+                    <div className="relative w-full max-w-md bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                        <div className="p-6 border-b border-white/10 flex justify-between items-center">
+                            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                                <Share2 className="w-5 h-5 text-accent-primary" />
+                                Shared With
+                            </h2>
+                            <button onClick={() => setIsShareModalOpen(false)} className="text-slate-400 hover:text-white">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="p-6">
+                            {memberDetails.length === 0 ? (
+                                <div className="text-center text-slate-400 py-8">
+                                    <p>This board hasn't been shared yet.</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-4 mb-6">
+                                    {memberDetails.map(member => (
+                                        <div key={member.id} className="flex items-center justify-between bg-white/5 p-3 rounded-xl border border-white/5">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-white">
+                                                    {member.name.charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <div className="text-sm font-semibold text-white">{member.name}</div>
+                                                    <div className="text-xs text-slate-400">{member.email} • {member.role}</div>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => handleRemoveMember(member.id, member.name)}
+                                                className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                                title="Remove User"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            <button
+                                onClick={handleInviteClick}
+                                className="w-full py-3 bg-gradient-to-r from-accent-primary to-accent-secondary rounded-xl font-bold text-white shadow-lg hover:shadow-accent-primary/25 transition-all flex items-center justify-center gap-2"
+                            >
+                                <Plus size={18} />
+                                Invite New User
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 
@@ -253,59 +409,7 @@ export const BingoBoard: React.FC = () => {
                             <LayoutGrid size={20} />
                         </button>
                         <button
-                            onClick={async () => {
-                                const shareResult = await dialog.sharePrompt(
-                                    "Enter their email address to invite them to this board.",
-                                    { title: 'Share Board' }
-                                );
-
-                                if (shareResult) {
-                                    const result = await inviteUser(shareResult.email, shareResult.role);
-                                    if (result.type === 'success') {
-                                        await dialog.alert(result.message, { title: 'Success!', type: 'success' });
-                                    } else if (result.type === 'not_found') {
-                                        const sendEmail = await dialog.confirm(
-                                            `"${shareResult.email}" hasn't signed up yet.\n\nWould you like to send them an email invitation to join SunSar Bingo?`,
-                                            { title: 'User Not Found', confirmText: 'Send Invite Email', type: 'info' }
-                                        );
-                                        if (sendEmail) {
-                                            // Try to send via Firebase Cloud Function, fallback to mailto
-                                            try {
-                                                const { sendInviteEmail, openMailtoFallback } = await import('../lib/emailService');
-                                                const emailResult = await sendInviteEmail({
-                                                    recipientEmail: shareResult.email,
-                                                    senderName: user?.displayName || user?.email || 'A friend',
-                                                });
-
-                                                if (emailResult.success) {
-                                                    await dialog.alert(
-                                                        `Invitation sent to ${shareResult.email}! They'll receive an email with instructions to join.`,
-                                                        { title: 'Invitation Sent!', type: 'success' }
-                                                    );
-                                                } else {
-                                                    // Fallback to mailto
-                                                    openMailtoFallback(shareResult.email, user?.displayName || 'A friend');
-                                                    await dialog.alert(
-                                                        "Your email app should open with a pre-filled invitation. Send it to invite your friend!",
-                                                        { title: 'Email Ready', type: 'info' }
-                                                    );
-                                                }
-                                            } catch (err) {
-                                                // Cloud function not available, use mailto fallback
-                                                const subject = encodeURIComponent("Join me on SunSar Bingo!");
-                                                const body = encodeURIComponent(`Hey! Come join me on SunSar Bingo to track our 2026 goals together.\n\nSign up here: ${window.location.origin}`);
-                                                window.open(`mailto:${shareResult.email}?subject=${subject}&body=${body}`);
-                                                await dialog.alert(
-                                                    "Your email app should open with a pre-filled invitation. Send it to invite your friend!",
-                                                    { title: 'Email Ready', type: 'info' }
-                                                );
-                                            }
-                                        }
-                                    } else {
-                                        await dialog.alert(result.message, { title: 'Error', type: 'error' });
-                                    }
-                                }
-                            }}
+                            onClick={() => setIsShareModalOpen(true)}
                             className="text-slate-400 hover:text-accent-primary transition-colors p-2 hover:bg-white/5 rounded-full"
                             title="Share Board"
                         >

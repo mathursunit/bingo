@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useBingo } from '../hooks/useBingo';
 import { useAuth } from '../contexts/AuthContext';
 import { cn } from '../lib/utils';
-import { Edit2, Check, Award, LogOut, Shuffle, Camera, X, ChevronLeft, ChevronRight, Plus, BookOpen, Printer, LayoutGrid, Share2 } from 'lucide-react';
+import { Edit2, Check, Award, LogOut, Shuffle, Camera, X, ChevronLeft, ChevronRight, Plus, BookOpen, Printer, LayoutGrid, Share2, Clock } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { BingoItem } from '../types';
@@ -26,8 +26,37 @@ export const BingoBoard: React.FC = () => {
     const [editFormText, setEditFormText] = useState("");
     const [editFormStyle, setEditFormStyle] = useState<{ color?: string; bold?: boolean; italic?: boolean; fontSize?: 'sm' | 'base' | 'lg' | 'xl' }>({});
     const [editFormTargetCount, setEditFormTargetCount] = useState<number>(1);
+    const [editFormDueDate, setEditFormDueDate] = useState<string>("");
 
-    // Completion Modal State
+    // Walkthrough State
+    const [showWalkthrough, setShowWalkthrough] = useState(false);
+    const [walkthroughStep, setWalkthroughStep] = useState(0);
+
+    // Undo State
+    const [undoState, setUndoState] = useState<{ index: number, wasCompleted: boolean } | null>(null);
+    const [showUndoToast, setShowUndoToast] = useState(false);
+
+    useEffect(() => {
+        const hasSeenWalkthrough = localStorage.getItem('hasSeenWalkthrough');
+        if (!hasSeenWalkthrough && !loading && items.length > 0) {
+            setShowWalkthrough(true);
+        }
+    }, [loading, items]);
+
+    const handleNextStep = () => {
+        if (walkthroughStep < 2) {
+            setWalkthroughStep(prev => prev + 1);
+        } else {
+            setShowWalkthrough(false);
+            localStorage.setItem('hasSeenWalkthrough', 'true');
+        }
+    };
+
+    // ... (rest of state items: completion modal, photo viewer, memories, etc)
+
+
+
+    // ... (render)
     const [isCompletionModalOpen, setIsCompletionModalOpen] = useState(false);
     const [completingItemIndex, setCompletingItemIndex] = useState<number | null>(null);
     const [isUploading, setIsUploading] = useState(false);
@@ -102,6 +131,20 @@ export const BingoBoard: React.FC = () => {
         setEditFormText(currentList[index].text);
         setEditFormStyle(currentList[index].style || { color: '#ffffff', fontSize: 'base', bold: false, italic: false });
         setEditFormTargetCount(currentList[index].targetCount || 1);
+
+        // Handle due date
+        if (currentList[index].dueDate) {
+            const val = currentList[index].dueDate as any;
+            const date = typeof val.toDate === 'function' ? val.toDate() : new Date(val);
+            // Format to YYYY-MM-DD
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            setEditFormDueDate(`${year}-${month}-${day}`);
+        } else {
+            setEditFormDueDate("");
+        }
+
         setIsEditModalOpen(true);
     };
 
@@ -109,12 +152,18 @@ export const BingoBoard: React.FC = () => {
     const handleSaveEdit = () => {
         if (editingItemIndex === null) return;
 
+        let newDueDate: any = undefined;
+        if (editFormDueDate) {
+            newDueDate = new Date(editFormDueDate + "T12:00:00");
+        }
+
         const newDrafts = [...draftItems];
         newDrafts[editingItemIndex] = {
             ...newDrafts[editingItemIndex],
             text: editFormText,
             style: editFormStyle,
-            targetCount: editFormTargetCount
+            targetCount: editFormTargetCount,
+            dueDate: newDueDate
         };
         setDraftItems(newDrafts);
 
@@ -142,6 +191,18 @@ export const BingoBoard: React.FC = () => {
 
     // Determine which items to display
     const displayItems = editMode ? draftItems : items;
+
+    const handleQuickComplete = (index: number) => {
+        // Capture state before toggle for Undo
+        const item = displayItems[index];
+        setUndoState({ index, wasCompleted: item.isCompleted });
+
+        toggleItem(index);
+
+        // Show Undo Toast
+        setShowUndoToast(true);
+        setTimeout(() => setShowUndoToast(false), 3000);
+    };
 
     return (
         <>
@@ -252,7 +313,7 @@ export const BingoBoard: React.FC = () => {
                                             setCurrentPhotoIndex(0);
                                             setIsPhotoViewerOpen(true);
                                         } else {
-                                            toggleItem(index);
+                                            handleQuickComplete(index);
                                         }
                                     } else {
                                         // Open completion modal for incomplete items
@@ -298,26 +359,40 @@ export const BingoBoard: React.FC = () => {
                                     </div>
                                 </div>
 
-                                {item.isCompleted && !item.isFreeSpace && !editMode && (
-                                    <>
-                                        <motion.div
-                                            initial={{ scale: 0 }}
-                                            animate={{ scale: 1 }}
-                                            className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20"
-                                        >
-                                            <Check className="w-12 h-12 text-white" />
-                                        </motion.div>
-                                        <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-accent-primary rounded-full shadow-[0_0_5px_rgba(139,92,246,0.8)]"></div>
-                                        {item.proofPhotos && item.proofPhotos.length > 0 && (
-                                            <div className="absolute bottom-0.5 left-0.5 p-0.5 bg-accent-gold/80 rounded-sm flex items-center gap-0.5">
-                                                <Camera className="w-2.5 h-2.5 text-black" />
-                                                {item.proofPhotos.length > 1 && (
-                                                    <span className="text-[8px] font-bold text-black">{item.proofPhotos.length}</span>
-                                                )}
-                                            </div>
-                                        )}
-                                    </>
+                                {/* Due Date Indicator */}
+                                {item.dueDate && !item.isCompleted && !isLocked && (
+                                    <div className={cn(
+                                        "flex items-center gap-1 mt-1 text-[10px] font-medium absolute bottom-1 right-1 px-1 rounded bg-black/40 backdrop-blur-sm",
+                                        ((item.dueDate as any).toDate ? (item.dueDate as any).toDate() : new Date(item.dueDate as any)) < new Date() ? "text-red-400" : "text-slate-400"
+                                    )}>
+                                        <Clock size={8} />
+                                        <span>{((item.dueDate as any).toDate ? (item.dueDate as any).toDate() : new Date(item.dueDate as any)).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                                    </div>
                                 )}
+
+
+                                {
+                                    item.isCompleted && !item.isFreeSpace && !editMode && (
+                                        <>
+                                            <motion.div
+                                                initial={{ scale: 0 }}
+                                                animate={{ scale: 1 }}
+                                                className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20"
+                                            >
+                                                <Check className="w-12 h-12 text-white" />
+                                            </motion.div>
+                                            <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-accent-primary rounded-full shadow-[0_0_5px_rgba(139,92,246,0.8)]"></div>
+                                            {item.proofPhotos && item.proofPhotos.length > 0 && (
+                                                <div className="absolute bottom-0.5 left-0.5 p-0.5 bg-accent-gold/80 rounded-sm flex items-center gap-0.5">
+                                                    <Camera className="w-2.5 h-2.5 text-black" />
+                                                    {item.proofPhotos.length > 1 && (
+                                                        <span className="text-[8px] font-bold text-black">{item.proofPhotos.length}</span>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </>
+                                    )
+                                }
 
                                 {/* Progress indicator for multi-count tiles (e.g., "1/2") */}
                                 {!item.isFreeSpace && !editMode && (item.targetCount || 1) > 1 && (
@@ -558,29 +633,32 @@ export const BingoBoard: React.FC = () => {
                                     </div>
                                 </div>
 
-                                {/* Repeat Count */}
-                                <div className="mb-6">
-                                    <label className="text-xs text-slate-400 mb-2 block">Times to Complete</label>
-                                    <div className="flex gap-2 bg-black/20 rounded-lg p-1">
-                                        {[1, 2, 3, 4].map((count) => (
-                                            <button
-                                                key={count}
-                                                onClick={() => setEditFormTargetCount(count)}
-                                                className={cn(
-                                                    "flex-1 py-2 text-sm font-bold rounded transition-colors",
-                                                    editFormTargetCount === count
-                                                        ? "bg-accent-primary text-white"
-                                                        : "text-slate-400 hover:text-white"
-                                                )}
-                                            >
-                                                {count}x
-                                            </button>
-                                        ))}
+                                <div className="space-y-4 mb-6 pt-4 border-t border-white/10">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-semibold text-slate-300">Target Count</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max="100"
+                                            value={editFormTargetCount}
+                                            onChange={(e) => setEditFormTargetCount(parseInt(e.target.value) || 1)}
+                                            className="w-full bg-slate-950/50 border border-white/10 rounded-xl p-3 text-white placeholder-slate-500 focus:outline-none focus:border-accent-primary/50 transition-colors"
+                                        />
+                                        <p className="text-xs text-slate-500">How many times to complete this?</p>
                                     </div>
-                                    {editFormTargetCount > 1 && (
-                                        <p className="text-[10px] text-slate-500 mt-1">This task must be completed {editFormTargetCount} times to count as done.</p>
-                                    )}
+
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-semibold text-slate-300">Due Date (Optional)</label>
+                                        <input
+                                            type="date"
+                                            value={editFormDueDate}
+                                            onChange={(e) => setEditFormDueDate(e.target.value)}
+                                            className="w-full bg-slate-950/50 border border-white/10 rounded-xl p-3 text-white placeholder-slate-500 focus:outline-none focus:border-accent-primary/50 transition-colors [color-scheme:dark]"
+                                        />
+                                    </div>
                                 </div>
+
+
 
                                 {/* Actions */}
                                 <div className="flex gap-3">
@@ -868,6 +946,127 @@ export const BingoBoard: React.FC = () => {
                                 >
                                     Mark as In Progress
                                 </button>
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Undo Toast */}
+                <AnimatePresence>
+                    {showUndoToast && undoState && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 50 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 50 }}
+                            className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-slate-900 border border-white/20 text-white px-6 py-3 rounded-full shadow-2xl z-50 flex items-center gap-4"
+                        >
+                            <span>Marked as {undoState.wasCompleted ? "incomplete" : "complete"}</span>
+                            <button
+                                onClick={() => {
+                                    toggleItem(undoState.index);
+                                    setShowUndoToast(false);
+                                }}
+                                className="font-bold text-accent-primary hover:text-white transition-colors"
+                            >
+                                Undo
+                            </button>
+                            <button onClick={() => setShowUndoToast(false)} className="text-slate-400 hover:text-white">
+                                <X size={16} />
+                            </button>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+                {/* Walkthrough Overlay */}
+                <AnimatePresence>
+                    {showWalkthrough && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm"
+                        >
+                            <motion.div
+                                initial={{ scale: 0.9, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                className="bg-slate-900 border border-white/20 rounded-3xl p-8 max-w-sm w-full shadow-2xl relative overflow-hidden"
+                            >
+                                {/* Decorative Elements */}
+                                <div className="absolute top-0 right-0 p-8 opacity-20 pointer-events-none">
+                                    <Award className="w-32 h-32 text-accent-gold rotate-12" />
+                                </div>
+
+                                <div className="relative z-10 text-center">
+                                    <h3 className="text-2xl font-bold text-white mb-2">Welcome! 👋</h3>
+                                    <p className="text-slate-400 mb-8 h-12">
+                                        {walkthroughStep === 0 && "Tap any tile to mark it as complete."}
+                                        {walkthroughStep === 1 && "Start 'Edit Mode' to add your own tasks."}
+                                        {walkthroughStep === 2 && "Invite friends to play together!"}
+                                    </p>
+
+                                    <div className="flex justify-center mb-8">
+                                        <div className="w-32 h-32 bg-black/40 rounded-2xl border border-white/10 flex items-center justify-center relative">
+                                            <AnimatePresence mode="wait">
+                                                {walkthroughStep === 0 && (
+                                                    <motion.div
+                                                        key="step0"
+                                                        initial={{ opacity: 0, scale: 0.8 }}
+                                                        animate={{ opacity: 1, scale: 1 }}
+                                                        exit={{ opacity: 0, scale: 0.8 }}
+                                                        className="absolute inset-0 flex items-center justify-center"
+                                                    >
+                                                        <div className="w-16 h-16 bg-accent-primary/20 rounded-lg border border-accent-primary flex items-center justify-center">
+                                                            <Check className="w-8 h-8 text-white" />
+                                                        </div>
+                                                        <motion.div
+                                                            animate={{ scale: [1, 1.2, 1], opacity: [0, 1, 0] }}
+                                                            transition={{ repeat: Infinity, duration: 1.5 }}
+                                                            className="absolute w-20 h-20 rounded-full border-2 border-white/50"
+                                                        />
+                                                    </motion.div>
+                                                )}
+                                                {walkthroughStep === 1 && (
+                                                    <motion.div
+                                                        key="step1"
+                                                        initial={{ opacity: 0, scale: 0.8 }}
+                                                        animate={{ opacity: 1, scale: 1 }}
+                                                        exit={{ opacity: 0, scale: 0.8 }}
+                                                    >
+                                                        <Edit2 className="w-12 h-12 text-blue-400" />
+                                                    </motion.div>
+                                                )}
+                                                {walkthroughStep === 2 && (
+                                                    <motion.div
+                                                        key="step2"
+                                                        initial={{ opacity: 0, scale: 0.8 }}
+                                                        animate={{ opacity: 1, scale: 1 }}
+                                                        exit={{ opacity: 0, scale: 0.8 }}
+                                                    >
+                                                        <Share2 className="w-12 h-12 text-green-400" />
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-2 justify-center mb-6">
+                                        {[0, 1, 2].map(i => (
+                                            <div
+                                                key={i}
+                                                className={cn(
+                                                    "w-2 h-2 rounded-full transition-colors",
+                                                    i === walkthroughStep ? "bg-white" : "bg-white/20"
+                                                )}
+                                            />
+                                        ))}
+                                    </div>
+
+                                    <button
+                                        onClick={handleNextStep}
+                                        className="w-full py-3 bg-white text-black font-bold rounded-xl hover:bg-slate-200 transition-colors"
+                                    >
+                                        {walkthroughStep === 2 ? "Let's Play!" : "Next"}
+                                    </button>
+                                </div>
                             </motion.div>
                         </motion.div>
                     )}

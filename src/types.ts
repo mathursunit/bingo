@@ -16,6 +16,7 @@ export interface BingoItem {
         italic?: boolean;
         fontSize?: 'sm' | 'base' | 'lg' | 'xl';
     };
+    dueDate?: Timestamp; // Optional due date for the task
 }
 
 export interface BingoYear {

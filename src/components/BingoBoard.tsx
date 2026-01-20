@@ -21,7 +21,7 @@ export const BingoBoard: React.FC = () => {
     // For legacy boards, yearId is set and we pass undefined to useBingo (which uses 'years' collection)
     // For new boards, boardId is set and we pass it to useBingo (which uses 'boards' collection)
     const effectiveBoardId = yearId ? undefined : boardId;
-    const { items, members, loading, toggleItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, decrementProgress, inviteUser, removeMember, title } = useBingo(effectiveBoardId);
+    const { items, members, loading, toggleItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, decrementProgress, inviteUser, removeMember, title, gridSize } = useBingo(effectiveBoardId);
     const { logout, user } = useAuth();
     const dialog = useDialog();
     const { openSettings } = useSettings();
@@ -418,7 +418,13 @@ export const BingoBoard: React.FC = () => {
 
                 {/* The Grid */}
                 <div className="w-full max-w-[500px] aspect-square relative mb-6">
-                    <div className="grid grid-cols-5 grid-rows-5 gap-1.5 sm:gap-2 w-full h-full">
+                    <div className={cn(
+                        "grid gap-1.5 sm:gap-2 w-full h-full",
+                        gridSize === 3 && "grid-cols-3 grid-rows-3",
+                        gridSize === 4 && "grid-cols-4 grid-rows-4",
+                        gridSize === 5 && "grid-cols-5 grid-rows-5",
+                        gridSize === 6 && "grid-cols-6 grid-rows-6",
+                    )}>
                         {displayItems.map((item, index) => (
                             <motion.div
                                 key={item.id}
@@ -452,7 +458,12 @@ export const BingoBoard: React.FC = () => {
                                 }}
                                 className={cn(
                                     "relative rounded-lg flex items-center justify-center p-1 cursor-pointer select-none border backdrop-blur-sm overflow-hidden",
-                                    "text-[11px] sm:text-sm font-medium leading-tight select-none",
+                                    // Dynamic text size based on grid
+                                    gridSize === 3 && "text-sm sm:text-base",
+                                    gridSize === 4 && "text-xs sm:text-sm",
+                                    gridSize === 5 && "text-[11px] sm:text-sm",
+                                    gridSize === 6 && "text-[9px] sm:text-xs",
+                                    "font-medium leading-tight select-none",
                                     item.isCompleted ? "text-white scale-110 font-semibold" : "text-slate-300",
                                     "bg-bg-card/90 border-white/20 shadow-md hover:border-white/40 hover:bg-bg-card/95 transition-all duration-200",
                                     item.isCompleted && !item.isFreeSpace && "bg-gradient-to-br from-accent-primary/30 to-accent-secondary/30 border-accent-primary/50 shadow-[0_0_15px_rgba(139,92,246,0.15)]",
@@ -1207,18 +1218,22 @@ export const BingoBoard: React.FC = () => {
                 <div className="flex justify-between items-end mb-4 border-b-2 border-black pb-2">
                     <div className="flex items-center gap-3">
                         <img src="/logo.png" className="h-12 w-auto" alt="Logo" />
-                        <h1 className="text-2xl font-bold">2026 Edition</h1>
+                        <h1 className="text-2xl font-bold">{title || '2026 Edition'}</h1>
                     </div>
                     <div className="text-right">
-                        <p className="text-xs uppercase tracking-widest mb-0.5">Status Report</p>
-                        <p className="text-xl font-bold">{bingoCount} / 12 Bingos</p>
+                        <p className="text-xs uppercase tracking-widest mb-0.5">Status Report ({gridSize}×{gridSize})</p>
+                        <p className="text-xl font-bold">{bingoCount} / {gridSize * 2 + 2} Bingos</p>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-5 gap-0 border-2 border-black">
-                    {items.slice(0, 25).map((item) => (
-                        <div key={item.id} className="aspect-square border border-black p-1.5 flex flex-col justify-between relative overflow-hidden min-h-[100px]">
-                            <div className="text-[11px] font-bold leading-tight z-10">{item.text}</div>
+                <div className={`grid gap-0 border-2 border-black ${gridSize === 3 ? 'grid-cols-3' :
+                        gridSize === 4 ? 'grid-cols-4' :
+                            gridSize === 5 ? 'grid-cols-5' :
+                                'grid-cols-6'
+                    }`}>
+                    {items.map((item) => (
+                        <div key={item.id} className="aspect-square border border-black p-1.5 flex flex-col justify-between relative overflow-hidden min-h-[80px]">
+                            <div className={`font-bold leading-tight z-10 ${gridSize >= 5 ? 'text-[10px]' : 'text-[11px]'}`}>{item.text}</div>
                             {item.isCompleted && !item.isFreeSpace && (
                                 <div className="mt-0.5 relative z-10">
                                     <div className="text-[7px] uppercase font-bold text-slate-700">Completed by:</div>

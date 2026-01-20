@@ -22,6 +22,7 @@ export interface BingoItem {
 export interface BingoYear {
     id: string;
     title?: string;
+    gridSize?: number; // 3, 4, 5, or 6 (default: 5)
     isActive: boolean;
     isLocked?: boolean;
     items: BingoItem[];

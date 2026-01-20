@@ -28,6 +28,14 @@ export const Dashboard: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [previewTemplate, setPreviewTemplate] = useState<keyof typeof TEMPLATES | null>(null);
+    const [selectedGridSize, setSelectedGridSize] = useState<number>(5);
+
+    const GRID_SIZE_OPTIONS = [
+        { size: 3, label: '3×3', description: 'Quick (9 tiles)', icon: '⚡' },
+        { size: 4, label: '4×4', description: 'Compact (16 tiles)', icon: '📝' },
+        { size: 5, label: '5×5', description: 'Classic (25 tiles)', icon: '⭐' },
+        { size: 6, label: '6×6', description: 'Extended (36 tiles)', icon: '🚀' },
+    ];
 
     // Template Data
     const TEMPLATES = {
@@ -262,6 +270,11 @@ export const Dashboard: React.FC = () => {
         if (!user) return;
 
         const template = TEMPLATES[templateKey];
+        const gridSize = selectedGridSize;
+        const totalCells = gridSize * gridSize;
+        const centerIndex = gridSize % 2 === 1 ? Math.floor(totalCells / 2) : -1; // Only odd grids have center
+        const itemsNeeded = gridSize % 2 === 1 ? totalCells - 1 : totalCells; // Account for free space
+
         const title = await dialog.prompt(
             "What would you like to call this board?",
             { title: 'Board Title', inputDefaultValue: template.name, confirmText: 'Create' }
@@ -275,16 +288,18 @@ export const Dashboard: React.FC = () => {
             // Shuffle
             const shuffled = [...rawItems].sort(() => 0.5 - Math.random());
 
-            // Pad if necessary
-            while (shuffled.length < 24) shuffled.push("Bonus Task ✨");
+            // Pad if necessary (cycle through items if not enough)
+            while (shuffled.length < itemsNeeded) {
+                shuffled.push(rawItems[shuffled.length % rawItems.length] || `Goal ${shuffled.length + 1}`);
+            }
 
             const newItems = [];
             let itemIndex = 0;
-            for (let i = 0; i < 25; i++) {
-                if (i === 12) {
+            for (let i = 0; i < totalCells; i++) {
+                if (i === centerIndex && gridSize % 2 === 1) {
                     newItems.push({
                         id: i,
-                        text: "FREE SPACE ✨",
+                        text: "FREE ✨",
                         isCompleted: true,
                         isFreeSpace: true,
                         completedBy: 'System'
@@ -304,6 +319,7 @@ export const Dashboard: React.FC = () => {
 
             const docRef = await addDoc(collection(db, 'boards'), {
                 title,
+                gridSize,
                 ownerId: user.uid,
                 members: { [user.uid]: 'owner' },
                 items: newItems,
@@ -318,6 +334,8 @@ export const Dashboard: React.FC = () => {
             await dialog.alert("Failed to create board. Please try again.", { title: 'Error', type: 'error' });
         } finally {
             setIsCreateModalOpen(false);
+            setPreviewTemplate(null);
+            setSelectedGridSize(5); // Reset to default
         }
     };
 
@@ -578,27 +596,63 @@ export const Dashboard: React.FC = () => {
                         <div className="flex-1 overflow-y-auto p-6">
                             {previewTemplate ? (
                                 <div className="space-y-6">
-                                    <div className="flex justify-center mb-6">
-                                        <div className="aspect-square w-full max-w-[420px] grid grid-cols-5 gap-2 p-3 bg-slate-950/50 rounded-xl border border-white/10">
-                                            {TEMPLATES[previewTemplate].items.slice(0, 25).map((item, i) => {
-                                                const isCenter = i === 12;
-                                                const isFreeSpace = item.trim().toUpperCase() === "FREE SPACE" || isCenter;
+                                    {/* Grid Size Selector */}
+                                    <div className="mb-4">
+                                        <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Grid Size</h3>
+                                        <div className="grid grid-cols-4 gap-2">
+                                            {GRID_SIZE_OPTIONS.map(({ size, label, icon }) => (
+                                                <button
+                                                    key={size}
+                                                    onClick={() => setSelectedGridSize(size)}
+                                                    className={`p-3 rounded-xl border text-center transition-all ${selectedGridSize === size
+                                                        ? 'bg-accent-primary/20 border-accent-primary text-white'
+                                                        : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10 hover:text-white'
+                                                        }`}
+                                                >
+                                                    <span className="text-lg block">{icon}</span>
+                                                    <span className="font-bold text-sm">{label}</span>
+                                                    <span className="text-[10px] block opacity-70">{size * size} tiles</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
 
-                                                return (
-                                                    <div
-                                                        key={i}
-                                                        className={`
-                                                            relative rounded-lg flex items-center justify-center p-1 text-center select-none overflow-hidden 
-                                                            text-[8px] sm:text-[10px] leading-tight font-medium border shadow-sm
-                                                            ${isFreeSpace
-                                                                ? 'bg-gradient-to-br from-accent-gold/20 to-accent-secondary/20 border-accent-gold/50 text-accent-gold font-bold'
-                                                                : 'bg-white/5 border-white/10 text-slate-300'}
-                                                        `}
-                                                    >
-                                                        {isFreeSpace ? "FREE" : item}
-                                                    </div>
-                                                );
-                                            })}
+                                    {/* Preview Grid */}
+                                    <div className="flex justify-center">
+                                        <div
+                                            className={`aspect-square w-full max-w-[380px] grid gap-1.5 p-3 bg-slate-950/50 rounded-xl border border-white/10 ${selectedGridSize === 3 ? 'grid-cols-3' :
+                                                selectedGridSize === 4 ? 'grid-cols-4' :
+                                                    selectedGridSize === 5 ? 'grid-cols-5' :
+                                                        'grid-cols-6'
+                                                }`}
+                                        >
+                                            {(() => {
+                                                const totalCells = selectedGridSize * selectedGridSize;
+                                                const centerIndex = selectedGridSize % 2 === 1 ? Math.floor(totalCells / 2) : -1;
+                                                const rawItems = TEMPLATES[previewTemplate].items.filter(i => i.trim().toUpperCase() !== "FREE SPACE");
+
+                                                return Array.from({ length: totalCells }, (_, i) => {
+                                                    const isFreeSpace = i === centerIndex && selectedGridSize % 2 === 1;
+                                                    const itemIndex = i < centerIndex || centerIndex === -1 ? i : i - 1;
+                                                    const text = isFreeSpace ? "FREE" : (rawItems[itemIndex % rawItems.length] || `Goal ${i + 1}`);
+
+                                                    return (
+                                                        <div
+                                                            key={i}
+                                                            className={`
+                                                                relative rounded-lg flex items-center justify-center p-1 text-center select-none overflow-hidden 
+                                                                ${selectedGridSize <= 4 ? 'text-[9px] sm:text-[11px]' : 'text-[7px] sm:text-[9px]'}
+                                                                leading-tight font-medium border shadow-sm
+                                                                ${isFreeSpace
+                                                                    ? 'bg-gradient-to-br from-accent-gold/20 to-accent-secondary/20 border-accent-gold/50 text-accent-gold font-bold'
+                                                                    : 'bg-white/5 border-white/10 text-slate-300'}
+                                                            `}
+                                                        >
+                                                            <span className="line-clamp-2">{text}</span>
+                                                        </div>
+                                                    );
+                                                });
+                                            })()}
                                         </div>
                                     </div>
 
@@ -613,7 +667,7 @@ export const Dashboard: React.FC = () => {
                                             onClick={() => handleCreateBoard(previewTemplate)}
                                             className="flex-1 py-3 bg-gradient-to-r from-accent-primary to-accent-secondary rounded-xl font-bold text-white shadow-lg hover:shadow-accent-primary/25 transition-all"
                                         >
-                                            Create Board
+                                            Create {selectedGridSize}×{selectedGridSize} Board
                                         </button>
                                     </div>
                                 </div>

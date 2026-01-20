@@ -7,7 +7,7 @@ import { triggerConfetti } from '../utils/confetti';
 import { uploadToCloudinary } from '../lib/cloudinary';
 
 const YEAR_DOC_ID = '2026';
-const TOTAL_CELLS = 25;
+const DEFAULT_GRID_SIZE = 5;
 
 const INITIAL_ITEMS: string[] = [
     "Travel to a new country", "Host a dinner party", "Read 12 books", "Go camping", "Try a new hobby",
@@ -25,6 +25,7 @@ export const useBingo = (boardId?: string) => {
     const [hasWon, setHasWon] = useState(false);
     const [isLocked, setIsLocked] = useState(false);
     const [title, setTitle] = useState('');
+    const [gridSize, setGridSize] = useState<number>(DEFAULT_GRID_SIZE);
 
     // Dynamic Doc Ref
     const docRef = useMemo(() => {
@@ -32,66 +33,62 @@ export const useBingo = (boardId?: string) => {
         return doc(db, 'years', YEAR_DOC_ID);
     }, [boardId]);
 
-    const checkWin = (currentItems: BingoItem[]) => {
+    const checkWin = (currentItems: BingoItem[], size: number) => {
         if (!currentItems.length) return;
 
-        const size = 5;
-        const grid = [];
+        const grid: BingoItem[][] = [];
         for (let i = 0; i < size; i++) {
             grid.push(currentItems.slice(i * size, (i + 1) * size));
         }
 
+        let won = false;
+
         // Check rows
         for (let i = 0; i < size; i++) {
-            if (grid[i].every(cell => cell.isCompleted)) {
-                if (!hasWon) {
-                    setHasWon(true);
-                    triggerConfetti(2);
-                }
-                return;
+            if (grid[i] && grid[i].every(cell => cell.isCompleted)) {
+                won = true;
+                break;
             }
         }
 
         // Check columns
-        for (let i = 0; i < size; i++) {
-            if (grid.map(row => row[i]).every(cell => cell.isCompleted)) {
-                if (!hasWon) {
-                    setHasWon(true);
-                    triggerConfetti(2);
+        if (!won) {
+            for (let i = 0; i < size; i++) {
+                if (grid.map(row => row[i]).every(cell => cell && cell.isCompleted)) {
+                    won = true;
+                    break;
                 }
-                return;
             }
         }
 
         // Check diagonals
-        if (grid.map((row, i) => row[i]).every(cell => cell.isCompleted)) {
-            if (!hasWon) {
-                setHasWon(true);
-                triggerConfetti(2);
-            }
-            return;
+        if (!won && grid.map((row, i) => row[i]).every(cell => cell && cell.isCompleted)) {
+            won = true;
         }
-        if (grid.map((row, i) => row[size - 1 - i]).every(cell => cell.isCompleted)) {
-            if (!hasWon) {
-                setHasWon(true);
-                triggerConfetti(2);
-            }
-            return;
+        if (!won && grid.map((row, i) => row[size - 1 - i]).every(cell => cell && cell.isCompleted)) {
+            won = true;
         }
 
-        setHasWon(false);
+        if (won && !hasWon) {
+            setHasWon(true);
+            triggerConfetti(2);
+        } else if (!won) {
+            setHasWon(false);
+        }
     };
 
-    const initializeBoard = async () => {
+    const initializeBoard = async (size: number = DEFAULT_GRID_SIZE) => {
+        const totalCells = size * size;
+        const centerIndex = size % 2 === 1 ? Math.floor(totalCells / 2) : -1; // Only odd grids have center
         const shuffled = [...INITIAL_ITEMS].sort(() => 0.5 - Math.random());
         const newItems: BingoItem[] = [];
         let itemIndex = 0;
 
-        for (let i = 0; i < TOTAL_CELLS; i++) {
-            if (i === 12) {
+        for (let i = 0; i < totalCells; i++) {
+            if (i === centerIndex && size % 2 === 1) {
                 newItems.push({
                     id: i,
-                    text: "2026 ✨",
+                    text: "FREE ✨",
                     isCompleted: true,
                     isFreeSpace: true,
                     completedBy: 'System'
@@ -99,7 +96,7 @@ export const useBingo = (boardId?: string) => {
             } else {
                 newItems.push({
                     id: i,
-                    text: shuffled[itemIndex],
+                    text: shuffled[itemIndex % shuffled.length] || `Goal ${i + 1}`,
                     isCompleted: false,
                     isFreeSpace: false,
                     targetCount: 1,
@@ -111,6 +108,7 @@ export const useBingo = (boardId?: string) => {
 
         await setDoc(docRef, {
             year: 2026,
+            gridSize: size,
             items: newItems,
             isLocked: false,
             createdAt: Timestamp.now(),
@@ -126,11 +124,13 @@ export const useBingo = (boardId?: string) => {
         const unsubscribe = onSnapshot(docRef, (docSnap) => {
             if (docSnap.exists()) {
                 const data = docSnap.data() as BingoYear;
+                const size = data.gridSize || DEFAULT_GRID_SIZE;
+                setGridSize(size);
                 setItems(data.items || []);
                 setMembers(data.members || {});
                 setIsLocked(data.isLocked || false);
                 setTitle(data.title || '');
-                checkWin(data.items || []);
+                checkWin(data.items || [], size);
             } else {
                 // Initialize if document doesn't exist
                 initializeBoard();
@@ -177,7 +177,7 @@ export const useBingo = (boardId?: string) => {
         }
 
         setItems(newItems);
-        checkWin(newItems);
+        checkWin(newItems, gridSize);
 
         try {
             await updateDoc(docRef, {
@@ -214,7 +214,7 @@ export const useBingo = (boardId?: string) => {
         }
 
         setItems(newItems);
-        checkWin(newItems);
+        checkWin(newItems, gridSize);
 
         try {
             await updateDoc(docRef, {
@@ -253,7 +253,7 @@ export const useBingo = (boardId?: string) => {
             item.proofPhotos = [...existingPhotos, photoUrl];
 
             setItems(newItems);
-            checkWin(newItems);
+            checkWin(newItems, gridSize);
             triggerConfetti(1); // Bigger confetti for photo proof!
 
             await updateDoc(docRef, {
@@ -332,20 +332,34 @@ export const useBingo = (boardId?: string) => {
 
     const jumbleAndLock = async () => {
         const currentItems = [...items];
+        const totalCells = gridSize * gridSize;
+        const centerIndex = gridSize % 2 === 1 ? Math.floor(totalCells / 2) : -1;
 
-        const center = currentItems[12];
-        const others = [...currentItems.slice(0, 12), ...currentItems.slice(13)];
+        let newItems: typeof currentItems;
 
-        for (let i = others.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [others[i], others[j]] = [others[j], others[i]];
+        if (centerIndex !== -1) {
+            // Odd grid: preserve center
+            const center = currentItems[centerIndex];
+            const others = [...currentItems.slice(0, centerIndex), ...currentItems.slice(centerIndex + 1)];
+
+            for (let i = others.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [others[i], others[j]] = [others[j], others[i]];
+            }
+
+            newItems = [
+                ...others.slice(0, centerIndex),
+                center,
+                ...others.slice(centerIndex)
+            ];
+        } else {
+            // Even grid: shuffle all
+            newItems = [...currentItems];
+            for (let i = newItems.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newItems[i], newItems[j]] = [newItems[j], newItems[i]];
+            }
         }
-
-        const newItems = [
-            ...others.slice(0, 12),
-            center,
-            ...others.slice(12)
-        ];
 
         // Optimistic
         setItems(newItems);
@@ -443,5 +457,5 @@ export const useBingo = (boardId?: string) => {
         }
     };
 
-    return { items, members, loading, toggleItem, updateItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, decrementProgress, inviteUser, removeMember, title };
+    return { items, members, loading, toggleItem, updateItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, decrementProgress, inviteUser, removeMember, title, gridSize };
 };

@@ -111,6 +111,72 @@ export const MigrateLegacy = () => {
         }
     };
 
+    const runPermissionFix = async () => {
+        if (!user) return;
+        setStatus('running');
+        setLogs([]);
+        log("Starting permission fix...");
+
+        try {
+            // 1. Find the board
+            log("Finding the '2026 Bingo' board...");
+            // Query for board created by this user with title "2026 Bingo"
+            const boardsQuery = query(
+                collection(db, 'boards'),
+                where('title', '==', '2026 Bingo'),
+                where(`members.${user.uid}`, '==', 'owner')
+            );
+            const snapshot = await getDocs(boardsQuery);
+
+            if (snapshot.empty) {
+                throw new Error("Could not find the '2026 Bingo' board where you are an owner.");
+            }
+
+            // Get the most recent one if multiple
+            const boardDoc = snapshot.docs[0]; // Assuming the first one is the target or only one
+            const boardId = boardDoc.id;
+            log(`Found board: ${boardId}`);
+
+            // 2. Resolve Users Again (to be safe)
+            const saraEmail = 'sarawbush@gmail.com';
+
+
+            // We need Sara's UID to ensure she remains owner
+            const saraQuery = query(collection(db, 'users'), where('email', '==', saraEmail));
+            const saraSnap = await getDocs(saraQuery);
+            const saraUid = saraSnap.docs[0]?.id;
+
+            if (!saraUid) throw new Error("Could not find Sara's UID");
+
+            // 3. Update Permissions
+            log(`Downgrading ${user.email} to 'editor'...`);
+            log(`Ensuring ${saraEmail} is 'owner'...`);
+
+            const boardRef = doc(db, 'boards', boardId);
+
+            // We use updateDoc. 
+            // Note: If security rules block changing 'members' for specific keys, this might fail,
+            // but usually owners can modify members.
+            await import('firebase/firestore').then(fs => {
+                fs.updateDoc(boardRef, {
+                    [`members.${user.uid}`]: 'editor',
+                    [`members.${saraUid}`]: 'owner' // Ensure check
+                    // We DO NOT change ownerId because that might be blocked by rules.
+                    // The UI should rely on the members map.
+                });
+            });
+
+            log("SUCCESS! Permissions updated.");
+            setStatus('success');
+            setNewBoardId(boardId);
+
+        } catch (error: any) {
+            console.error(error);
+            log(`ERROR: ${error.message}`);
+            setStatus('error');
+        }
+    };
+
     return (
         <div className="min-h-screen bg-bg-dark text-white p-6">
             <div className="max-w-2xl mx-auto">
@@ -125,12 +191,12 @@ export const MigrateLegacy = () => {
                 <div className="bg-slate-900 border border-white/10 rounded-2xl p-8 shadow-xl">
                     <h1 className="text-3xl font-bold mb-2">Legacy Migration Tool</h1>
                     <p className="text-slate-400 mb-8">
-                        Migrate 'years/2026' &rarr; New Shared Board (Sara: Owner, Sunit: Editor)
+                        Tools to manage the 2026 Board migration.
                     </p>
 
                     <div className="bg-black/30 rounded-xl p-4 mb-8 font-mono text-sm max-h-64 overflow-y-auto border border-white/5">
                         {logs.length === 0 ? (
-                            <span className="text-slate-600">Waiting to start...</span>
+                            <span className="text-slate-600">Waiting for command...</span>
                         ) : (
                             logs.map((L, i) => <div key={i} className="mb-1">{L}</div>)
                         )}
@@ -142,29 +208,56 @@ export const MigrateLegacy = () => {
                     </div>
 
                     {status === 'success' ? (
-                        <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4 flex flex-col gap-4 text-center">
-                            <div className="flex items-center justify-center gap-2 text-green-400 font-bold text-lg">
-                                <CheckCircle /> Migration Complete
+                        <div className="space-y-4">
+                            <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4 flex flex-col gap-4 text-center">
+                                <div className="flex items-center justify-center gap-2 text-green-400 font-bold text-lg">
+                                    <CheckCircle /> Operation Complete
+                                </div>
+                                <button
+                                    onClick={() => navigate(`/board/${newBoardId}`)}
+                                    className="bg-green-500 text-white font-bold py-3 px-6 rounded-xl hover:bg-green-400 transition-colors"
+                                >
+                                    Open Board
+                                </button>
                             </div>
                             <button
-                                onClick={() => navigate(`/board/${newBoardId}`)}
-                                className="bg-green-500 text-white font-bold py-3 px-6 rounded-xl hover:bg-green-400 transition-colors"
+                                onClick={() => setStatus('idle')}
+                                className="w-full py-3 text-slate-400 hover:text-white"
                             >
-                                Open New Board
+                                Run functionality again
                             </button>
                         </div>
                     ) : (
-                        <button
-                            onClick={runMigration}
-                            disabled={status === 'running'}
-                            className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all ${status === 'running'
-                                ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                                : 'bg-gradient-to-r from-accent-primary to-accent-secondary text-white hover:shadow-lg hover:shadow-accent-primary/20'
-                                }`}
-                        >
-                            {status === 'running' ? 'Migrating...' : 'Start Migration'}
-                            {!status && <Play size={20} />}
-                        </button>
+                        <div className="space-y-4">
+                            <button
+                                onClick={runMigration}
+                                disabled={status === 'running'}
+                                className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all ${status === 'running'
+                                    ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                                    : 'bg-gradient-to-r from-accent-primary to-accent-secondary text-white hover:shadow-lg hover:shadow-accent-primary/20'
+                                    }`}
+                            >
+                                {status === 'running' ? 'Migrating...' : 'Start New Migration'}
+                                {!status && <Play size={20} />}
+                            </button>
+
+                            <div className="relative">
+                                <div className="absolute inset-0 flex items-center">
+                                    <div className="w-full border-t border-white/10"></div>
+                                </div>
+                                <div className="relative flex justify-center text-xs uppercase">
+                                    <span className="bg-slate-900 px-2 text-slate-500">Or Fix Existing</span>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={runPermissionFix}
+                                disabled={status === 'running'}
+                                className="w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all border border-amber-500/30 text-amber-500 hover:bg-amber-500/10"
+                            >
+                                Downgrade Me to Editor
+                            </button>
+                        </div>
                     )}
 
                     {status === 'error' && (

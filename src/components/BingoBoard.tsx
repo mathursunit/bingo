@@ -307,6 +307,16 @@ export const BingoBoard: React.FC = () => {
         setEditingItemIndex(null);
     };
 
+    // Determine which items to display
+    const displayItems = editMode ? draftItems : items;
+
+    // Sync viewingItem with items
+    useEffect(() => {
+        if (viewingItemIndex !== null && displayItems?.[viewingItemIndex]) {
+            setViewingItem(displayItems[viewingItemIndex]);
+        }
+    }, [displayItems, viewingItemIndex]);
+
     if (loading) return (
         <div className="flex h-screen items-center justify-center text-accent-primary animate-pulse">
             <div className="text-center">
@@ -325,15 +335,7 @@ export const BingoBoard: React.FC = () => {
         return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
 
-    // Determine which items to display
-    const displayItems = editMode ? draftItems : items;
 
-    // Sync viewingItem with items
-    useEffect(() => {
-        if (viewingItemIndex !== null && displayItems[viewingItemIndex]) {
-            setViewingItem(displayItems[viewingItemIndex]);
-        }
-    }, [displayItems, viewingItemIndex]);
 
     const handleQuickComplete = (index: number) => {
         // Capture state before toggle for Undo

@@ -332,13 +332,7 @@ export const BingoBoard: React.FC = () => {
                             className="h-14 sm:h-16 w-auto object-contain cursor-pointer active:scale-95 transition-transform"
                             onClick={handleLogoTap}
                         />
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="text-[9px] font-bold text-accent-gold uppercase tracking-wider bg-accent-gold/10 px-2 py-0.5 rounded-full border border-accent-gold/20"
-                        >
-                            2026
-                        </motion.div>
+
                     </div>
                     <div className="flex items-center gap-3">
                         <button
@@ -377,7 +371,7 @@ export const BingoBoard: React.FC = () => {
                             <img
                                 src={user?.photoURL || ''}
                                 alt="User"
-                                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-glass-border group-hover:border-accent-primary transition-colors"
+                                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-glass-border group-hover:border-accent-primary transition-colors object-cover shrink-0"
                             />
                             <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-bg-dark"></div>
                         </motion.div>

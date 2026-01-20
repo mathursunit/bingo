@@ -400,14 +400,13 @@ export const useBingo = (boardId?: string) => {
         }
     };
 
-    const inviteUser = async (email: string) => {
+    const inviteUser = async (email: string): Promise<{ success: boolean; type: 'success' | 'not_found' | 'error'; message: string }> => {
         try {
             const q = query(collection(db, 'users'), where('email', '==', email));
             const snapshot = await getDocs(q);
 
             if (snapshot.empty) {
-                alert('User not found! Ask them to sign up first.');
-                return;
+                return { success: false, type: 'not_found', message: 'User not found' };
             }
 
             const userToAdd = snapshot.docs[0];
@@ -417,10 +416,14 @@ export const useBingo = (boardId?: string) => {
                 [`members.${uid}`]: 'editor'
             });
 
-            alert(`Added ${userToAdd.data().displayName || email} to the board!`);
+            return {
+                success: true,
+                type: 'success',
+                message: `Added ${userToAdd.data().displayName || email} to the board!`
+            };
         } catch (error) {
             console.error("Error inviting user:", error);
-            throw error;
+            return { success: false, type: 'error', message: 'Failed to invite user' };
         }
     };
 

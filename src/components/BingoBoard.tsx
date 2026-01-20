@@ -185,7 +185,20 @@ export const BingoBoard: React.FC = () => {
                         <button
                             onClick={async () => {
                                 const email = prompt("Enter email to invite:");
-                                if (email) await inviteUser(email);
+                                if (email) {
+                                    const result = await inviteUser(email);
+                                    if (result.type === 'success') {
+                                        alert(result.message);
+                                    } else if (result.type === 'not_found') {
+                                        if (confirm("User not found!\n\nWould you like to send them an email invitation to join?")) {
+                                            const subject = encodeURIComponent("Join me on SunSar Bingo!");
+                                            const body = encodeURIComponent(`Hey! come join me on SunSar Bingo to track our 2026 goals together.\n\nSign up here: ${window.location.origin}`);
+                                            window.open(`mailto:${email}?subject=${subject}&body=${body}`);
+                                        }
+                                    } else {
+                                        alert(result.message);
+                                    }
+                                }
                             }}
                             className="text-slate-400 hover:text-accent-primary transition-colors p-2 hover:bg-white/5 rounded-full"
                             title="Share Board"

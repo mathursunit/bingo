@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, query, where, getDocs, addDoc, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, deleteDoc, doc, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
-import { Plus, LayoutGrid, Calendar } from 'lucide-react';
+import { Plus, LayoutGrid, Calendar, Trash2 } from 'lucide-react';
 
 interface BoardSummary {
     id: string;
@@ -217,6 +217,20 @@ export const Dashboard: React.FC = () => {
         return <div className="min-h-screen bg-bg-dark flex items-center justify-center text-white">Loading Dashboard...</div>;
     }
 
+    const handleDeleteBoard = async (e: React.MouseEvent, boardId: string, boardTitle: string) => {
+        e.stopPropagation(); // Prevent opening the board
+
+        if (confirm(`Are you sure you want to delete the board "${boardTitle}"?\n\nThis action cannot be undone.`)) {
+            try {
+                await deleteDoc(doc(db, 'boards', boardId));
+                setBoards(prev => prev.filter(b => b.id !== boardId));
+            } catch (error) {
+                console.error("Error deleting board:", error);
+                alert("Failed to delete board");
+            }
+        }
+    };
+
     return (
         <div className="min-h-screen bg-bg-dark text-white p-6 relative">
             <div className="max-w-4xl mx-auto">
@@ -259,6 +273,14 @@ export const Dashboard: React.FC = () => {
                             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                                 <LayoutGrid className="w-24 h-24" />
                             </div>
+
+                            <button
+                                onClick={(e) => handleDeleteBoard(e, board.id, board.title)}
+                                className="absolute top-4 right-4 p-2 text-slate-500 hover:text-red-400 hover:bg-white/10 rounded-full transition-all opacity-0 group-hover:opacity-100 z-10"
+                                title="Delete Board"
+                            >
+                                <Trash2 size={18} />
+                            </button>
 
                             <div>
                                 <h3 className="text-xl font-bold text-white mb-2 line-clamp-1">{board.title}</h3>

@@ -32,6 +32,14 @@ export const DynamicBackground: React.FC = () => {
                     bgGradient: 'radial-gradient(ellipse at 50% 0%, #0a1628 0%, #020617 50%, #000 100%)',
                     shootingStars: true,
                 };
+            case 'cosmic':
+                return {
+                    type: 'stars',
+                    particleCount: 200, // More stars
+                    baseColor: 'rgba(139, 92, 246, ', // Violet stars
+                    bgGradient: 'radial-gradient(ellipse at 50% 0%, #1e1b4b 0%, #0f172a 40%, #020617 100%)', // Deep Indigo to Slate
+                    shootingStars: true,
+                };
             case 'forest':
                 return {
                     type: 'leaves',
@@ -179,19 +187,21 @@ export const DynamicBackground: React.FC = () => {
             <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden">
                 <div
                     className={`absolute w-[600px] h-[600px] rounded-full blur-[120px] animate-float-slow ${settings.theme === 'midnight' ? 'bg-blue-500/10' :
-                        settings.theme === 'forest' ? 'bg-green-500/10' :
-                            settings.theme === 'ocean' ? 'bg-cyan-500/10' :
-                                settings.theme === 'sunset' ? 'bg-orange-500/10' :
-                                    'bg-purple-500/10'
+                        settings.theme === 'cosmic' ? 'bg-violet-600/20' :
+                            settings.theme === 'forest' ? 'bg-green-500/10' :
+                                settings.theme === 'ocean' ? 'bg-cyan-500/10' :
+                                    settings.theme === 'sunset' ? 'bg-orange-500/10' :
+                                        'bg-purple-500/10'
                         }`}
                     style={{ top: '-15%', left: '-10%' }}
                 />
                 <div
                     className={`absolute w-[500px] h-[500px] rounded-full blur-[100px] animate-float-slower ${settings.theme === 'midnight' ? 'bg-indigo-500/10' :
-                        settings.theme === 'forest' ? 'bg-emerald-500/10' :
-                            settings.theme === 'ocean' ? 'bg-teal-500/10' :
-                                settings.theme === 'sunset' ? 'bg-rose-500/10' :
-                                    'bg-pink-500/10'
+                        settings.theme === 'cosmic' ? 'bg-pink-600/20' :
+                            settings.theme === 'forest' ? 'bg-emerald-500/10' :
+                                settings.theme === 'ocean' ? 'bg-teal-500/10' :
+                                    settings.theme === 'sunset' ? 'bg-rose-500/10' :
+                                        'bg-pink-500/10'
                         }`}
                     style={{ bottom: '-10%', right: '-5%' }}
                 />

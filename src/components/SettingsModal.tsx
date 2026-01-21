@@ -30,6 +30,7 @@ export const SettingsModal: React.FC = () => {
 
     const themes = [
         { id: 'dawn', name: 'Dawn', color: 'bg-[#0f111a] from-violet-500/20 to-pink-500/20' },
+        { id: 'cosmic', name: 'Cosmic', color: 'bg-[#0f172a] from-violet-600/20 to-pink-600/20' },
         { id: 'midnight', name: 'Midnight', color: 'bg-[#020617] from-sky-500/20 to-indigo-500/20' },
         { id: 'forest', name: 'Forest', color: 'bg-[#052e16] from-green-500/20 to-emerald-500/20' },
         { id: 'ocean', name: 'Ocean', color: 'bg-[#083344] from-cyan-500/20 to-teal-500/20' },

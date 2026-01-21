@@ -1,29 +1,50 @@
 /* visualPolish.css */
 
-/* High-Fidelity Mockup Theme */
+/* Defaults (Fallback for other themes to support new component structure) */
 :root {
-    /* Colors */
     --bg-dark: #0f172a;
-    /* Slate 900 base */
-    --accent-primary: #8b5cf6;
-    /* Violet 500 */
-    --accent-secondary: #ec4899;
-    /* Pink 500 */
-    --accent-gold: #f59e0b;
-    /* Amber 500 */
+    /* Default slate base */
 
-    /* Glassmorphism */
+    /* Default Card Style (Simple Translucent) */
+    --gradient-card: rgba(0, 0, 0, 0.2);
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.05);
+    --glass-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --backdrop-blur: 0px;
+
+    /* Default Create Card */
+    --create-card-border: 2px dashed rgba(255, 255, 255, 0.1);
+    --create-card-bg: rgba(255, 255, 255, 0.02);
+}
+
+/* 
+   COSMIC THEME - High Fidelity Glassmorphism 
+   Matches the detailed Mockups 
+*/
+.theme-cosmic {
+    /* Base Colors - Deep Slate/Purple */
+    --bg-dark: #0f172a;
+    --theme-accent-primary: #8b5cf6;
+    /* Violet 500 */
+    --theme-accent-secondary: #ec4899;
+    /* Pink 500 */
+
+    /* Glass Vars */
     --glass-bg: rgba(255, 255, 255, 0.03);
     --glass-border: rgba(255, 255, 255, 0.08);
     --glass-highlight: rgba(255, 255, 255, 0.15);
     --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
     --backdrop-blur: 16px;
 
-    /* Gradients */
+    /* Specific Gradients */
+    --gradient-card: linear-gradient(180deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.6) 100%);
     --gradient-brand: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
     --gradient-create: linear-gradient(135deg, rgba(79, 70, 229, 0.6) 0%, rgba(236, 72, 153, 0.6) 100%);
     --gradient-gold: linear-gradient(135deg, #fcd34d 0%, #fbbf24 50%, #d97706 100%);
-    --gradient-card: linear-gradient(180deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.6) 100%);
+
+    /* Override Create Card to be Glassy instead of Dashed */
+    --create-card-border: 1px solid rgba(255, 255, 255, 0.2);
+    --create-card-bg: linear-gradient(145deg, rgba(99, 102, 241, 0.1), rgba(236, 72, 153, 0.1));
 }
 
 /* Base Styles */
@@ -31,45 +52,40 @@ body {
     background-color: var(--bg-dark);
     color: #f8fafc;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    -webkit-font-smoothing: antialiased;
-}
-
-/* Glass Card Utility */
-.glass-panel {
-    background: var(--glass-bg);
-    backdrop-filter: blur(var(--backdrop-blur));
-    -webkit-backdrop-filter: blur(var(--backdrop-blur));
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--glass-shadow);
-    border-radius: 1.5rem;
-    /* 24px */
+    transition: background-color 0.5s ease;
 }
 
 /* Dashboard Card */
 .dashboard-card {
     background: var(--gradient-card);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(var(--backdrop-blur));
+    -webkit-backdrop-filter: blur(var(--backdrop-blur));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Cosmic specific card tweaks */
+.theme-cosmic .dashboard-card {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    /* Top highlight */
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
 }
 
 .dashboard-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.6);
     border-color: rgba(255, 255, 255, 0.15);
 }
 
-/* Create New Board Card - Special Style */
+/* Create New Board Card */
 .create-card {
-    background: linear-gradient(145deg, rgba(99, 102, 241, 0.1), rgba(236, 72, 153, 0.1));
-    border: 1px dashed rgba(255, 255, 255, 0.2);
+    background: var(--create-card-bg);
+    border: var(--create-card-border);
     position: relative;
     overflow: hidden;
 }
 
-.create-card::before {
+.theme-cosmic .create-card::before {
     content: '';
     position: absolute;
     inset: 0;
@@ -79,41 +95,49 @@ body {
     z-index: 0;
 }
 
-.create-card:hover::before {
+.theme-cosmic .create-card:hover::before {
     opacity: 0.1;
 }
 
 .create-card:hover {
-    border-color: rgba(255, 255, 255, 0.4);
     transform: translateY(-4px);
 }
 
 /* Bingo Tile - Base */
 .bingo-tile {
-    background: rgba(30, 41, 59, 0.6);
-    backdrop-filter: blur(8px);
+    background: rgba(30, 41, 59, 0.4);
+    /* Default tile bg */
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     transition: all 0.2s ease;
     border-radius: 12px;
 }
 
+.theme-cosmic .bingo-tile {
+    background: rgba(30, 41, 59, 0.6);
+    backdrop-filter: blur(8px);
+}
+
 /* Bingo Tile - Active/Hover */
 .bingo-tile:hover {
     background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.3);
-    box-shadow: 0 0 15px rgba(255, 255, 255, 0.15);
     transform: scale(1.02);
 }
 
 /* Bingo Tile - Completed */
 .bingo-tile.completed {
+    /* Default completed: just accent color */
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.theme-cosmic .bingo-tile.completed {
     background: linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(245, 158, 11, 0.3) 100%);
     border-color: rgba(251, 191, 36, 0.5);
     box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
 }
 
-.bingo-tile.completed h3 {
+.theme-cosmic .bingo-tile.completed h3 {
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 

@@ -997,7 +997,6 @@ export const BingoBoard: React.FC = () => {
                                                     <input
                                                         type="file"
                                                         accept="image/*"
-                                                        capture="environment"
                                                         ref={fileInputRef}
                                                         className="hidden"
                                                         onChange={async (e) => {

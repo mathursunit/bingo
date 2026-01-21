@@ -26,15 +26,10 @@ export const BingoBoard: React.FC = () => {
     const { items, members, loading, toggleItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, addReaction, deletePhoto, decrementProgress, inviteUser, removeMember, title, gridSize } = useBingo(effectiveBoardId);
     const { logout, user } = useAuth();
     const dialog = useDialog();
-    const { openSettings } = useSettings();
+    const { openSettings, settings, updateSettings } = useSettings();
     const { playClick, playSuccess, playBingo, playWhoosh } = useSounds();
     const [editMode, setEditMode] = useState(false);
-    // Theme handling (light/dark)
-    const [theme, setTheme] = useState(localStorage.getItem('theme') ?? 'light');
-    useEffect(() => {
-        document.documentElement.dataset.theme = theme;
-        localStorage.setItem('theme', theme);
-    }, [theme]);
+
 
     // Draft State
     const [draftItems, setDraftItems] = useState<BingoItem[]>([]);
@@ -420,11 +415,16 @@ export const BingoBoard: React.FC = () => {
                                 <Share2 size={20} />
                             </button>
                             <button
-                                onClick={() => setTheme(prev => prev === 'light' ? 'dark' : 'light')}
+                                onClick={() => {
+                                    const themes = ['dawn', 'midnight', 'forest', 'ocean', 'sunset'];
+                                    const currentIndex = themes.indexOf(settings.theme);
+                                    const nextIndex = (currentIndex + 1) % themes.length;
+                                    updateSettings({ theme: themes[nextIndex] });
+                                }}
                                 className="p-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-full transition-colors"
-                                title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+                                title={`Theme: ${settings.theme} (click to change)`}
                             >
-                                {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+                                {settings.theme === 'dawn' ? <Sun size={20} /> : <Moon size={20} />}
                             </button>
                             <button
                                 onClick={openSettings}

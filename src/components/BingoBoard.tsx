@@ -89,6 +89,7 @@ export const BingoBoard: React.FC = () => {
     const [editFormStyle, setEditFormStyle] = useState<{ color?: string; bold?: boolean; italic?: boolean; fontSize?: 'sm' | 'base' | 'lg' | 'xl' }>({});
     const [editFormTargetCount, setEditFormTargetCount] = useState<number>(1);
     const [editFormDueDate, setEditFormDueDate] = useState<string>("");
+    const [editFormIsFreeSpace, setEditFormIsFreeSpace] = useState(false);
     const [photoUploadMode, setPhotoUploadMode] = useState<'complete' | 'add'>('complete');
 
     // Walkthrough State
@@ -327,6 +328,8 @@ export const BingoBoard: React.FC = () => {
             setEditFormDueDate("");
         }
 
+        setEditFormIsFreeSpace(!!currentList[index].isFreeSpace);
+
         setIsEditModalOpen(true);
     };
 
@@ -345,7 +348,10 @@ export const BingoBoard: React.FC = () => {
             text: editFormText,
             style: editFormStyle,
             targetCount: editFormTargetCount,
-            dueDate: newDueDate
+            dueDate: newDueDate,
+            isFreeSpace: editFormIsFreeSpace,
+            // If marking as free space, effectively completed for bingo logic (handled in useBingo checkWin)
+            isCompleted: (newDrafts[editingItemIndex].isCompleted) || editFormIsFreeSpace // Keep completed if free
         };
         setLocalItems(newDrafts);
         saveBoard(newDrafts); // Save immediately on modal close
@@ -626,10 +632,7 @@ export const BingoBoard: React.FC = () => {
                                                         gridSize === 6 && "text-[9px] sm:text-xs",
                                                         "font-medium leading-tight select-none",
                                                         item.isCompleted ? "completed text-white scale-[1.02] font-semibold" : "text-slate-300",
-
-                                                        // Free space overrides
-                                                        item.isFreeSpace && "bg-gradient-to-br from-accent-gold/20 to-accent-secondary/20 border-accent-gold/50 text-accent-gold font-bold shadow-[0_0_15px_rgba(245,158,11,0.2)]",
-
+                                                        item.isFreeSpace && "bg-gradient-to-br from-green-500/20 to-emerald-600/20 border-green-500/50 text-green-400 font-bold shadow-[0_0_15px_rgba(34,197,94,0.2)]", // Traffic Green Style
                                                         editMode && "border-dashed border-slate-500 opacity-80"
                                                     )
                                                     }>
@@ -660,12 +663,17 @@ export const BingoBoard: React.FC = () => {
                                                         </div>
                                                     </div>
 
-                                                    {/* Photo Indicator */}
-                                                    {item.proofPhotos && item.proofPhotos.length > 0 && (
-                                                        <div className="absolute top-1 right-1 z-20 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" title="Has photos">
-                                                            <Camera size={gridSize >= 5 ? 10 : 14} className="opacity-90" />
+                                                    {/* Decor */}
+                                                    {item.isFreeSpace && (
+                                                        <div className="absolute top-1 left-1 z-20">
+                                                            <div className="flex gap-[2px] bg-black/60 backdrop-blur-[1px] rounded-full p-[2px] border border-white/10 scale-75 origin-top-left">
+                                                                <div className="w-1.5 h-1.5 rounded-full bg-red-900/40" />
+                                                                <div className="w-1.5 h-1.5 rounded-full bg-yellow-900/40" />
+                                                                <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_6px_#22c55e]" />
+                                                            </div>
                                                         </div>
                                                     )}
+                                                    {item.proofPhotos && item.proofPhotos.length > 0 && <div className="absolute top-1 right-1 z-20 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]"><Camera size={gridSize >= 5 ? 10 : 14} className="opacity-90" /></div>}
 
                                                     {/* Due Date Indicator */}
                                                     {item.dueDate && !item.isCompleted && !isLocked && (
@@ -909,9 +917,37 @@ export const BingoBoard: React.FC = () => {
 
                                     {/* Text Input */}
                                     <div className="mb-4">
+                                        <div className="flex items-center gap-3 mb-3 bg-white/5 p-3 rounded-xl border border-white/5">
+                                            <label className="flex items-center gap-2 cursor-pointer flex-1">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={editFormIsFreeSpace}
+                                                    onChange={(e) => {
+                                                        const checked = e.target.checked;
+                                                        setEditFormIsFreeSpace(checked);
+                                                        if (checked) {
+                                                            setEditFormText("FREE!");
+                                                        }
+                                                    }}
+                                                    className="w-4 h-4 rounded border-gray-500 bg-black/50 text-accent-primary focus:ring-accent-primary"
+                                                />
+                                                <span className={cn("text-sm font-bold transition-colors", editFormIsFreeSpace ? "text-accent-primary" : "text-slate-300")}>
+                                                    Flag as FREE Space 🚦
+                                                </span>
+                                            </label>
+                                            {editFormIsFreeSpace && (
+                                                <div className="flex gap-1 bg-black/80 rounded-full p-1 px-1.5 border border-white/20">
+                                                    <div className="w-2 h-2 rounded-full bg-red-900/30" />
+                                                    <div className="w-2 h-2 rounded-full bg-yellow-900/30" />
+                                                    <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]" />
+                                                </div>
+                                            )}
+                                        </div>
+
                                         <label className="text-xs text-slate-400 mb-1 block">Text Content</label>
                                         <textarea
-                                            className="w-full bg-black/20 text-white rounded-lg p-3 border border-white/10 focus:border-accent-primary outline-none min-h-[80px]"
+                                            className={cn("w-full bg-black/20 text-white rounded-lg p-3 border border-white/10 focus:border-accent-primary outline-none min-h-[80px]", editFormIsFreeSpace && "opacity-50 cursor-not-allowed")}
+                                            disabled={editFormIsFreeSpace}
                                             value={editFormText}
                                             onChange={(e) => setEditFormText(e.target.value)}
                                             placeholder="Enter bingo task..."
@@ -919,81 +955,84 @@ export const BingoBoard: React.FC = () => {
                                     </div>
 
                                     {/* Styling Controls */}
-                                    <div className="mb-6 space-y-3">
-                                        <div>
-                                            <label className="text-xs text-slate-400 mb-1 block">Color</label>
-                                            <div className="flex gap-2 flex-wrap">
-                                                {['#ffffff', '#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#ec4899', '#a855f7'].map(color => (
-                                                    <button
-                                                        key={color}
-                                                        className={cn("w-6 h-6 rounded-full border border-white/10 transition-transform active:scale-90", editFormStyle.color === color && "ring-2 ring-white scale-110")}
-                                                        style={{ backgroundColor: color }}
-                                                        onClick={() => setEditFormStyle(prev => ({ ...prev, color }))}
-                                                    />
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        <div className="flex gap-4">
-                                            <div className="flex-1">
-                                                <label className="text-xs text-slate-400 mb-1 block">Size</label>
-                                                <div className="flex bg-black/20 rounded-lg p-1">
-                                                    {['sm', 'base', 'lg', 'xl'].map((size) => (
+                                    {/* Styling Controls & Options Wrapper */}
+                                    <div className={cn("transition-opacity duration-300", editFormIsFreeSpace && "opacity-30 pointer-events-none")}>
+                                        <div className="mb-6 space-y-3">
+                                            <div>
+                                                <label className="text-xs text-slate-400 mb-1 block">Color</label>
+                                                <div className="flex gap-2 flex-wrap">
+                                                    {['#ffffff', '#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#ec4899', '#a855f7'].map(color => (
                                                         <button
-                                                            key={size}
-                                                            onClick={() => setEditFormStyle(prev => ({ ...prev, fontSize: size as any }))}
-                                                            className={cn(
-                                                                "flex-1 py-1 text-[10px] font-bold rounded transition-colors uppercase",
-                                                                (editFormStyle.fontSize || 'base') === size ? "bg-accent-primary text-white" : "text-slate-400 hover:text-white"
-                                                            )}
-                                                        >
-                                                            {size === 'base' ? 'M' : size}
-                                                        </button>
+                                                            key={color}
+                                                            className={cn("w-6 h-6 rounded-full border border-white/10 transition-transform active:scale-90", editFormStyle.color === color && "ring-2 ring-white scale-110")}
+                                                            style={{ backgroundColor: color }}
+                                                            onClick={() => setEditFormStyle(prev => ({ ...prev, color }))}
+                                                        />
                                                     ))}
                                                 </div>
                                             </div>
-                                            <div>
-                                                <label className="text-xs text-slate-400 mb-1 block">Style</label>
-                                                <div className="flex gap-1 bg-black/20 rounded-lg p-1">
-                                                    <button
-                                                        onClick={() => setEditFormStyle(prev => ({ ...prev, bold: !prev.bold }))}
-                                                        className={cn("w-8 h-full rounded flex items-center justify-center font-bold transition-colors", editFormStyle.bold ? "bg-white text-black" : "text-slate-400 hover:text-white")}
-                                                    >
-                                                        B
-                                                    </button>
-                                                    <button
-                                                        onClick={() => setEditFormStyle(prev => ({ ...prev, italic: !prev.italic }))}
-                                                        className={cn("w-8 h-full rounded flex items-center justify-center italic transition-colors font-serif", editFormStyle.italic ? "bg-white text-black" : "text-slate-400 hover:text-white")}
-                                                    >
-                                                        I
-                                                    </button>
+
+                                            <div className="flex gap-4">
+                                                <div className="flex-1">
+                                                    <label className="text-xs text-slate-400 mb-1 block">Size</label>
+                                                    <div className="flex bg-black/20 rounded-lg p-1">
+                                                        {['sm', 'base', 'lg', 'xl'].map((size) => (
+                                                            <button
+                                                                key={size}
+                                                                onClick={() => setEditFormStyle(prev => ({ ...prev, fontSize: size as any }))}
+                                                                className={cn(
+                                                                    "flex-1 py-1 text-[10px] font-bold rounded transition-colors uppercase",
+                                                                    (editFormStyle.fontSize || 'base') === size ? "bg-accent-primary text-white" : "text-slate-400 hover:text-white"
+                                                                )}
+                                                            >
+                                                                {size === 'base' ? 'M' : size}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label className="text-xs text-slate-400 mb-1 block">Style</label>
+                                                    <div className="flex gap-1 bg-black/20 rounded-lg p-1">
+                                                        <button
+                                                            onClick={() => setEditFormStyle(prev => ({ ...prev, bold: !prev.bold }))}
+                                                            className={cn("w-8 h-full rounded flex items-center justify-center font-bold transition-colors", editFormStyle.bold ? "bg-white text-black" : "text-slate-400 hover:text-white")}
+                                                        >
+                                                            B
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setEditFormStyle(prev => ({ ...prev, italic: !prev.italic }))}
+                                                            className={cn("w-8 h-full rounded flex items-center justify-center italic transition-colors font-serif", editFormStyle.italic ? "bg-white text-black" : "text-slate-400 hover:text-white")}
+                                                        >
+                                                            I
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    <div className="space-y-4 mb-6 pt-4 border-t border-white/10">
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-semibold text-slate-300">Repeat Goal</label>
-                                            <input
-                                                type="number"
-                                                min="1"
-                                                max="100"
-                                                value={editFormTargetCount}
-                                                onChange={(e) => setEditFormTargetCount(parseInt(e.target.value) || 1)}
-                                                className="w-full bg-slate-950/50 border border-white/10 rounded-xl p-3 text-white placeholder-slate-500 focus:outline-none focus:border-accent-primary/50 transition-colors"
-                                            />
-                                            <p className="text-xs text-slate-500">How many times should this be completed?</p>
-                                        </div>
+                                        <div className="space-y-4 mb-6 pt-4 border-t border-white/10">
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-semibold text-slate-300">Repeat Goal</label>
+                                                <input
+                                                    type="number"
+                                                    min="1"
+                                                    max="100"
+                                                    value={editFormTargetCount}
+                                                    onChange={(e) => setEditFormTargetCount(parseInt(e.target.value) || 1)}
+                                                    className="w-full bg-slate-950/50 border border-white/10 rounded-xl p-3 text-white placeholder-slate-500 focus:outline-none focus:border-accent-primary/50 transition-colors"
+                                                />
+                                                <p className="text-xs text-slate-500">How many times should this be completed?</p>
+                                            </div>
 
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-semibold text-slate-300">Due Date (Optional)</label>
-                                            <input
-                                                type="date"
-                                                value={editFormDueDate}
-                                                onChange={(e) => setEditFormDueDate(e.target.value)}
-                                                className="w-full bg-slate-950/50 border border-white/10 rounded-xl p-3 text-white placeholder-slate-500 focus:outline-none focus:border-accent-primary/50 transition-colors [color-scheme:dark]"
-                                            />
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-semibold text-slate-300">Due Date (Optional)</label>
+                                                <input
+                                                    type="date"
+                                                    value={editFormDueDate}
+                                                    onChange={(e) => setEditFormDueDate(e.target.value)}
+                                                    className="w-full bg-slate-950/50 border border-white/10 rounded-xl p-3 text-white placeholder-slate-500 focus:outline-none focus:border-accent-primary/50 transition-colors [color-scheme:dark]"
+                                                />
+                                            </div>
                                         </div>
                                     </div>
 

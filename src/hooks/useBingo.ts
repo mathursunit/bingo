@@ -45,7 +45,7 @@ export const useBingo = (boardId?: string) => {
 
         // Check rows
         for (let i = 0; i < size; i++) {
-            if (grid[i] && grid[i].every(cell => cell.isCompleted)) {
+            if (grid[i] && grid[i].every(cell => cell.isCompleted || cell.isFreeSpace)) {
                 won = true;
                 break;
             }
@@ -54,7 +54,7 @@ export const useBingo = (boardId?: string) => {
         // Check columns
         if (!won) {
             for (let i = 0; i < size; i++) {
-                if (grid.map(row => row[i]).every(cell => cell && cell.isCompleted)) {
+                if (grid.map(row => row[i]).every(cell => cell && (cell.isCompleted || cell.isFreeSpace))) {
                     won = true;
                     break;
                 }
@@ -62,10 +62,10 @@ export const useBingo = (boardId?: string) => {
         }
 
         // Check diagonals
-        if (!won && grid.map((row, i) => row[i]).every(cell => cell && cell.isCompleted)) {
+        if (!won && grid.map((row, i) => row[i]).every(cell => cell && (cell.isCompleted || cell.isFreeSpace))) {
             won = true;
         }
-        if (!won && grid.map((row, i) => row[size - 1 - i]).every(cell => cell && cell.isCompleted)) {
+        if (!won && grid.map((row, i) => row[size - 1 - i]).every(cell => cell && (cell.isCompleted || cell.isFreeSpace))) {
             won = true;
         }
 
@@ -467,7 +467,7 @@ export const useBingo = (boardId?: string) => {
             [0, 6, 12, 18, 24], [4, 8, 12, 16, 20]
         ];
         // Check positions
-        const completedPositions = new Set(items.map((item, index) => item.isCompleted ? index : -1));
+        const completedPositions = new Set(items.map((item, index) => (item.isCompleted || item.isFreeSpace) ? index : -1));
         return wins.reduce((acc, line) => line.every(i => completedPositions.has(i)) ? acc + 1 : acc, 0);
     }, [items]);
 

@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { NoiseOverlay } from './components/ui/NoiseOverlay';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { DialogProvider } from './contexts/DialogContext';
 import { SettingsProvider } from './contexts/SettingsContext';
@@ -16,6 +17,7 @@ const AppContent = () => {
   return (
     <>
       <DynamicBackground />
+      <NoiseOverlay />
       <BrowserRouter>
         <Routes>
           {/* Public Routes */}

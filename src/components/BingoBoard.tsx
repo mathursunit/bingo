@@ -507,22 +507,35 @@ export const BingoBoard: React.FC = () => {
                     {/* Centered Grid Container */}
                     <div className="flex justify-center mb-6">
                         <div className="w-full max-w-[520px] aspect-square relative">
-                            <div className={cn(
-                                "grid gap-1.5 sm:gap-2 w-full h-full",
-                                gridSize === 3 && "grid-cols-3 grid-rows-3",
-                                gridSize === 4 && "grid-cols-4 grid-rows-4",
-                                gridSize === 5 && "grid-cols-5 grid-rows-5",
-                                gridSize === 6 && "grid-cols-6 grid-rows-6",
-                            )}>
+                            <div
+                                className={cn(
+                                    "grid gap-1.5 sm:gap-2 w-full h-full",
+                                    gridSize === 3 && "grid-cols-3 grid-rows-3",
+                                    gridSize === 4 && "grid-cols-4 grid-rows-4",
+                                    gridSize === 5 && "grid-cols-5 grid-rows-5",
+                                    gridSize === 6 && "grid-cols-6 grid-rows-6",
+                                )}
+                                style={{ perspective: '1000px' }}
+                            >
                                 {displayItems.map((item, index) => (
                                     <motion.div
                                         key={item.id}
                                         title={item.isCompleted ? `Completed by ${item.completedBy || 'Someone'} on ${formatDate(item.completedAt)}` : undefined}
                                         layout
-                                        initial={{ opacity: 0, scale: 0.8 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        transition={{ delay: index * 0.02 }}
-                                        whileTap={{ scale: 0.95 }}
+                                        initial={{ opacity: 0, scale: 0.8, rotateX: -90 }}
+                                        animate={{ opacity: 1, scale: 1, rotateX: 0 }}
+                                        transition={{
+                                            type: "spring",
+                                            stiffness: 260,
+                                            damping: 20,
+                                            delay: index * 0.03
+                                        }}
+                                        whileHover={{
+                                            scale: 1.05,
+                                            zIndex: 10,
+                                            boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.3), 0 8px 10px -6px rgb(0 0 0 / 0.3)"
+                                        }}
+                                        whileTap={{ scale: 0.9, rotateX: 15 }}
                                         onClick={() => {
                                             if (editMode) return;
                                             // if (isLocked) return; // Allow marking even when locked

@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useDialog } from '../contexts/DialogContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { Plus, LayoutGrid, Calendar, Trash2, LogOut, Users, Settings, HelpCircle, Pencil, Check, X } from 'lucide-react';
+import { Skeleton } from '../components/ui/Skeleton';
 
 interface BoardSummary {
     id: string;
@@ -409,7 +410,34 @@ export const Dashboard: React.FC = () => {
     };
 
     if (loading) {
-        return <div className="min-h-screen bg-bg-dark flex items-center justify-center text-white">Loading Dashboard...</div>;
+        return (
+            <div className="min-h-screen bg-transparent p-6 relative">
+                <div className="max-w-6xl mx-auto">
+                    {/* Header Skeleton */}
+                    <header className="flex justify-between items-center mb-12 py-2">
+                        <Skeleton className="h-10 w-32 md:w-40" />
+                        <div className="flex gap-2 items-center">
+                            <Skeleton className="w-10 h-10 rounded-full" />
+                            <Skeleton className="w-10 h-10 rounded-full" />
+                            <Skeleton className="w-20 h-10 rounded-xl" />
+                        </div>
+                    </header>
+
+                    {/* Hero Skeleton */}
+                    <div className="mb-10">
+                        <Skeleton className="h-12 w-64 mb-3 rounded-lg" />
+                        <Skeleton className="h-6 w-48 rounded-md" />
+                    </div>
+
+                    {/* Grid Skeleton */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {Array.from({ length: 6 }).map((_, i) => (
+                            <Skeleton key={i} className="h-48 rounded-2xl" />
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     const handleDeleteBoard = async (e: React.MouseEvent, boardId: string, boardTitle: string) => {

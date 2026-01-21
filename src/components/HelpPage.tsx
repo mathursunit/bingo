@@ -1,12 +1,12 @@
 
 import { motion } from 'framer-motion';
 import {
-    ArrowLeft, CheckSquare, Share2, Camera, BookOpen,
+    ArrowLeft, CheckSquare, Share2, BookOpen,
     Plus, UserPlus, Trophy
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-const WalkthroughStep = ({ number, title, text, imagePlaceholder }: { number: number, title: string, text: string, imagePlaceholder?: string }) => (
+const WalkthroughStep = ({ number, title, text, imageSrc }: { number: number, title: string, text: string, imageSrc?: string }) => (
     <div className="relative pl-8 border-l border-white/10 pb-8 last:pb-0 last:border-l-0">
         <div className="absolute -left-4 top-0 w-8 h-8 rounded-full bg-slate-900 border border-accent-primary text-accent-primary font-bold flex items-center justify-center text-sm shadow-[0_0_10px_rgba(139,92,246,0.2)]">
             {number}
@@ -15,19 +15,14 @@ const WalkthroughStep = ({ number, title, text, imagePlaceholder }: { number: nu
             <h4 className="text-lg font-bold text-white">{title}</h4>
             <p className="text-slate-400 text-sm mt-1">{text}</p>
         </div>
-        {imagePlaceholder && (
-            <div className="mt-4 rounded-xl overflow-hidden border border-white/10 shadow-2xl bg-black/40 group relative">
-                <div className="aspect-[16/9] flex items-center justify-center text-slate-500 bg-slate-800/50">
-                    <div className="text-center p-4">
-                        <Camera size={32} className="mx-auto mb-2 opacity-50" />
-                        <span className="text-xs uppercase tracking-wider font-semibold opacity-70">{imagePlaceholder}</span>
-                    </div>
-                </div>
-                {/* Overlay for "Click to Enlarge" simulation */}
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <span className="text-white text-sm font-medium">Screenshot Placeholder</span>
-                </div>
-            </div>
+        {imageSrc && (
+            <motion.div
+                whileHover={{ scale: 1.02 }}
+                className="mt-4 rounded-xl overflow-hidden border border-white/10 shadow-2xl bg-black/40 group relative"
+            >
+                <img src={imageSrc} alt={title} className="w-full h-auto object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+            </motion.div>
         )}
     </div>
 );
@@ -94,25 +89,23 @@ export const HelpPage = () => {
                                 number={1}
                                 title="Start from Dashboard"
                                 text="Click the 'Create Board' button on your dashboard. You can choose to start fresh or use a template (like 'Self Care' or 'Travel')."
-                                imagePlaceholder="Dashboard view with 'Create Board' button highlighted"
+                                imageSrc="/assets/help/dashboard.png"
                             />
                             <WalkthroughStep
                                 number={2}
                                 title="Customize Setup"
                                 text="Give your board a name (e.g., '2026 Goals') and choose a Grid Size. 3x3 is great for quick games, while 5x5 is the classic challenge."
-                                imagePlaceholder="Create Board Modal showing Title and Grid inputs"
                             />
                             <WalkthroughStep
                                 number={3}
                                 title="Fill Your Tiles"
                                 text="The most fun part! Fill in each tile with a specific goal. You can drag to reorder or click 'Shuffle' to mix them up."
-                                imagePlaceholder="Board Editor View with inputs for each tile"
+                                imageSrc="/assets/help/grid.png"
                             />
                             <WalkthroughStep
                                 number={4}
                                 title="Lock & Play"
                                 text="When you're happy, click 'Go Live'. This locks the grid structure so you can start marking progress."
-                                imagePlaceholder="'Go Live' confirmation modal"
                             />
                         </div>
                     </motion.div>
@@ -135,19 +128,17 @@ export const HelpPage = () => {
                                 number={1}
                                 title="Tap to Interact"
                                 text="Tap any tile on your board. If it's a '1-time' goal, you can complete it instantly. For multi-count goals (e.g., 'Read 5 Books'), you can add progress."
-                                imagePlaceholder="Live Board view with a finger tapping a tile"
                             />
                             <WalkthroughStep
                                 number={2}
                                 title="Add Photo Proof"
                                 text="Don't just say you did it—prove it! Upload photos directly to the tile. This is great for memories later."
-                                imagePlaceholder="Tile Details Modal showing 'Add Photo' button"
+                                imageSrc="/assets/help/modal.png"
                             />
                             <WalkthroughStep
                                 number={3}
                                 title="Win with Bingo!"
                                 text="Complete a full row, column, or diagonal to get a BINGO! Watch out for the confetti celebration."
-                                imagePlaceholder="Board showing a winning diagonal line with confetti"
                             />
                         </div>
                     </motion.div>

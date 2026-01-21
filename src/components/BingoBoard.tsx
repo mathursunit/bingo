@@ -973,8 +973,33 @@ export const BingoBoard: React.FC = () => {
                                                         <label className="text-xs text-slate-400 mb-2 block font-semibold uppercase tracking-wider">Attached Photos</label>
                                                         <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
                                                             {item.proofPhotos.map((photo, i) => (
-                                                                <div key={i} className="relative w-20 h-20 flex-shrink-0 group rounded-lg overflow-hidden border border-white/10">
-                                                                    <img src={photo} alt="" className="w-full h-full object-cover" />
+                                                                <div
+                                                                    key={i}
+                                                                    className="relative w-20 h-20 flex-shrink-0 group rounded-lg overflow-hidden border border-white/10 touch-none select-none"
+                                                                    onContextMenu={(e) => e.preventDefault()}
+                                                                    onTouchStart={(e) => {
+                                                                        const target = e.currentTarget;
+                                                                        const timer = setTimeout(() => {
+                                                                            // Trigger vibration if supported
+                                                                            if (navigator.vibrate) navigator.vibrate(50);
+                                                                            if (window.confirm('Delete this photo?')) {
+                                                                                deletePhoto(completingItemIndex, i);
+                                                                            }
+                                                                        }, 800);
+                                                                        target.dataset.timer = String(timer);
+                                                                    }}
+                                                                    onTouchEnd={(e) => {
+                                                                        const timer = Number(e.currentTarget.dataset.timer);
+                                                                        if (timer) clearTimeout(timer);
+                                                                        e.currentTarget.dataset.timer = '';
+                                                                    }}
+                                                                    onTouchMove={(e) => {
+                                                                        const timer = Number(e.currentTarget.dataset.timer);
+                                                                        if (timer) clearTimeout(timer);
+                                                                        e.currentTarget.dataset.timer = '';
+                                                                    }}
+                                                                >
+                                                                    <img src={photo} alt="" className="w-full h-full object-cover pointer-events-none" />
                                                                     <button
                                                                         onClick={async (e) => {
                                                                             e.stopPropagation();

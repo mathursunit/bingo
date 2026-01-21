@@ -23,12 +23,14 @@ export const BingoBoard: React.FC = () => {
     // For legacy boards, yearId is set and we pass undefined to useBingo (which uses 'years' collection)
     // For new boards, boardId is set and we pass it to useBingo (which uses 'boards' collection)
     const effectiveBoardId = yearId ? undefined : boardId;
-    const { items, members, loading, toggleItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, addReaction, deletePhoto, decrementProgress, inviteUser, removeMember, title, gridSize } = useBingo(effectiveBoardId);
+    const { items, members, loading, toggleItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, addReaction, deletePhoto, decrementProgress, inviteUser, removeMember, title, gridSize, updateTitle } = useBingo(effectiveBoardId);
     const { logout, user } = useAuth();
     const dialog = useDialog();
     const { openSettings, settings, updateSettings } = useSettings();
     const { playClick, playSuccess, playBingo, playWhoosh } = useSounds();
     const [editMode, setEditMode] = useState(false);
+    const [isEditingTitle, setIsEditingTitle] = useState(false);
+    const [editingTitleValue, setEditingTitleValue] = useState('');
 
 
     // Draft State
@@ -392,6 +394,51 @@ export const BingoBoard: React.FC = () => {
                             className="h-10 sm:h-12 w-auto object-contain cursor-pointer active:scale-95 transition-transform"
                             onClick={handleLogoTap}
                         />
+                        {/* Editable Board Title - Compact in header */}
+                        <div className="flex-1 mx-4 min-w-0">
+                            {isEditingTitle ? (
+                                <input
+                                    type="text"
+                                    value={editingTitleValue}
+                                    onChange={(e) => setEditingTitleValue(e.target.value)}
+                                    onBlur={() => {
+                                        if (editingTitleValue.trim()) {
+                                            updateTitle(editingTitleValue.trim());
+                                        }
+                                        setIsEditingTitle(false);
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            if (editingTitleValue.trim()) {
+                                                updateTitle(editingTitleValue.trim());
+                                            }
+                                            setIsEditingTitle(false);
+                                        } else if (e.key === 'Escape') {
+                                            setIsEditingTitle(false);
+                                        }
+                                    }}
+                                    autoFocus
+                                    className="bg-transparent border-b-2 border-accent-primary text-white text-lg sm:text-xl font-bold outline-none w-full max-w-[200px]"
+                                />
+                            ) : (
+                                <button
+                                    onClick={() => {
+                                        setEditingTitleValue(title || 'My Bingo');
+                                        setIsEditingTitle(true);
+                                    }}
+                                    className="text-white text-lg sm:text-xl font-bold truncate max-w-[200px] hover:text-accent-primary transition-colors flex items-center gap-1 group"
+                                    title="Click to edit board name"
+                                >
+                                    <span className="bg-gradient-to-r from-accent-primary to-accent-secondary bg-clip-text text-transparent truncate">
+                                        {title || 'My Bingo'}
+                                    </span>
+                                    <Edit2 size={14} className="opacity-0 group-hover:opacity-70 transition-opacity flex-shrink-0" />
+                                </button>
+                            )}
+                            <p className="text-slate-500 text-xs mt-0.5">
+                                {gridSize}×{gridSize} • {items.filter(i => i.isCompleted && !i.isFreeSpace).length}/{items.filter(i => !i.isFreeSpace).length}
+                            </p>
+                        </div>
                         <div className="flex items-center gap-1 sm:gap-2">
                             <button
                                 onClick={() => setIsMemoriesOpen(true)}
@@ -455,27 +502,7 @@ export const BingoBoard: React.FC = () => {
                         </div>
                     </header>
 
-                    {/* Hero / Title Section - Matches Dashboard style */}
-                    <div className="mb-10">
-                        <motion.h1
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight"
-                        >
-                            {title ? (
-                                <span className="bg-gradient-to-r from-accent-primary to-accent-secondary bg-clip-text text-transparent">{title}</span>
-                            ) : (
-                                <>My <span className="bg-gradient-to-r from-accent-primary to-accent-secondary bg-clip-text text-transparent italic">Bingo</span></>
-                            )}
-                        </motion.h1>
-                        <p className="text-slate-400 mt-2 text-base flex items-center gap-2">
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white/5 rounded-full text-sm border border-white/10">
-                                {gridSize}×{gridSize} Grid
-                            </span>
-                            <span>•</span>
-                            <span>{items.filter(i => i.isCompleted).length}/{items.length} completed</span>
-                        </p>
-                    </div>
+
 
                     {/* Centered Grid Container */}
                     <div className="flex justify-center mb-6">

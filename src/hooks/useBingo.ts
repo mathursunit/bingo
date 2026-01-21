@@ -522,5 +522,17 @@ export const useBingo = (boardId?: string) => {
         }
     };
 
-    return { items, members, loading, toggleItem, updateItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, deletePhoto, addReaction, decrementProgress, inviteUser, removeMember, title, gridSize };
+    const updateTitle = async (newTitle: string) => {
+        try {
+            await updateDoc(docRef, {
+                title: newTitle,
+                lastUpdated: Timestamp.now()
+            });
+            setTitle(newTitle);
+        } catch (error) {
+            console.error("Error updating title:", error);
+        }
+    };
+
+    return { items, members, loading, toggleItem, updateItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, deletePhoto, addReaction, decrementProgress, inviteUser, removeMember, title, gridSize, updateTitle };
 };

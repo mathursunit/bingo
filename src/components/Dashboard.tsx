@@ -505,12 +505,12 @@ export const Dashboard: React.FC = () => {
                     {/* Create New Card */}
                     <button
                         onClick={() => setIsCreateModalOpen(true)}
-                        className="group relative flex flex-col items-center justify-center h-48 rounded-2xl border-2 border-dashed border-slate-700 bg-white/5 hover:bg-white/10 hover:border-accent-primary transition-all cursor-pointer"
+                        className="create-card group relative flex flex-col items-center justify-center h-48 rounded-2xl transition-all cursor-pointer shadow-2xl"
                     >
-                        <div className="w-12 h-12 rounded-full bg-accent-primary/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                            <Plus className="w-6 h-6 text-accent-primary" />
+                        <div className="relative z-10 w-14 h-14 rounded-full bg-gradient-to-br from-accent-primary to-accent-secondary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(139,92,246,0.5)]">
+                            <Plus className="w-7 h-7 text-white" />
                         </div>
-                        <span className="font-semibold text-slate-300 group-hover:text-white">Create New Board</span>
+                        <span className="relative z-10 font-bold text-lg text-white group-hover:text-white transition-colors tracking-wide">Create New Board</span>
                     </button>
 
                     {/* My Boards - boards I own */}
@@ -526,7 +526,7 @@ export const Dashboard: React.FC = () => {
                                     console.log('Navigating to board:', boardPath);
                                     navigate(boardPath);
                                 }}
-                                className="group relative h-48 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-white/10 hover:border-accent-primary/50 p-6 flex flex-col justify-between cursor-pointer transition-all hover:translate-y-[-4px] hover:shadow-xl overflow-hidden active:scale-[0.99]"
+                                className="dashboard-card group relative h-48 rounded-2xl p-6 flex flex-col justify-between cursor-pointer overflow-hidden active:scale-[0.99]"
                             >
                                 {/* Action Buttons Container */}
                                 <div className="absolute top-4 right-4 flex gap-2 z-20">
@@ -622,7 +622,7 @@ export const Dashboard: React.FC = () => {
                                             console.log('Navigating to shared board:', boardPath);
                                             navigate(boardPath);
                                         }}
-                                        className="group relative h-48 rounded-2xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-white/10 hover:border-accent-secondary/50 p-6 flex flex-col justify-between cursor-pointer transition-all hover:translate-y-[-4px] hover:shadow-xl overflow-hidden active:scale-[0.99]"
+                                        className="dashboard-card group relative h-48 rounded-2xl p-6 flex flex-col justify-between cursor-pointer overflow-hidden active:scale-[0.99]"
                                     >
                                         <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity pointer-events-none">
                                             <LayoutGrid className="w-24 h-24" />

@@ -546,19 +546,19 @@ export const BingoBoard: React.FC = () => {
                                             }
                                         }}
                                         className={cn(
-                                            "relative rounded-lg flex items-center justify-center p-1 cursor-pointer select-none border backdrop-blur-sm overflow-hidden",
+                                            "bingo-tile relative flex items-center justify-center p-1 cursor-pointer select-none overflow-hidden",
                                             // Dynamic text size based on grid
                                             gridSize === 3 && "text-sm sm:text-base",
                                             gridSize === 4 && "text-xs sm:text-sm",
                                             gridSize === 5 && "text-[11px] sm:text-sm",
                                             gridSize === 6 && "text-[9px] sm:text-xs",
                                             "font-medium leading-tight select-none",
-                                            item.isCompleted ? "text-white scale-110 font-semibold" : "text-slate-300",
-                                            "bg-bg-card/90 border-white/20 shadow-md hover:border-white/40 hover:bg-bg-card/95 transition-all duration-200",
-                                            item.isCompleted && !item.isFreeSpace && "bg-gradient-to-br from-accent-primary/30 to-accent-secondary/30 border-accent-primary/50 shadow-[0_0_15px_rgba(139,92,246,0.15)]",
-                                            item.isFreeSpace && "bg-gradient-to-br from-accent-gold/20 to-accent-secondary/20 border-accent-gold/50",
-                                            editMode && "border-dashed border-slate-500"
-                                            // isLocked && !editMode && "cursor-default" // Always allow cursor pointer for playability
+                                            item.isCompleted ? "completed text-white scale-[1.02] font-semibold" : "text-slate-300",
+
+                                            // Free space overrides
+                                            item.isFreeSpace && "bg-gradient-to-br from-accent-gold/20 to-accent-secondary/20 border-accent-gold/50 text-accent-gold font-bold shadow-[0_0_15px_rgba(245,158,11,0.2)]",
+
+                                            editMode && "border-dashed border-slate-500 opacity-80"
                                         )
                                         }>
                                         <div className="w-full h-full flex items-center justify-center text-center relative z-10">

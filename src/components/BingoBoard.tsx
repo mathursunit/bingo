@@ -7,7 +7,7 @@ import { useDialog } from '../contexts/DialogContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { useSounds } from '../hooks/useSounds';
 import { cn } from '../lib/utils';
-import { Edit2, Check, Award, LogOut, Camera, X, ChevronLeft, ChevronRight, Plus, BookOpen, Printer, LayoutGrid, Share2, Clock, Trash2, Settings, Rocket, Lock } from 'lucide-react';
+import { Edit2, Check, Award, LogOut, Camera, X, ChevronLeft, ChevronRight, Plus, BookOpen, Printer, LayoutGrid, Share2, Clock, Trash2, Settings, Rocket, Lock, Sun, Moon } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { BingoItem } from '../types';
@@ -418,6 +418,13 @@ export const BingoBoard: React.FC = () => {
                                 title="Share Board"
                             >
                                 <Share2 size={20} />
+                            </button>
+                            <button
+                                onClick={() => setTheme(prev => prev === 'light' ? 'dark' : 'light')}
+                                className="p-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-full transition-colors"
+                                title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+                            >
+                                {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
                             </button>
                             <button
                                 onClick={openSettings}

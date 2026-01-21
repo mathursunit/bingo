@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { BingoItem } from '../types';
 import { MemoriesAlbum } from './MemoriesAlbum';
 import { FloatingReactions } from './FloatingReactions';
+import "../styles/visualPolish.css"; // visual polish styles
 
 import { useParams, useNavigate } from 'react-router-dom';
 
@@ -28,6 +29,12 @@ export const BingoBoard: React.FC = () => {
     const { openSettings } = useSettings();
     const { playClick, playSuccess, playBingo, playWhoosh } = useSounds();
     const [editMode, setEditMode] = useState(false);
+    // Theme handling (light/dark)
+    const [theme, setTheme] = useState(localStorage.getItem('theme') ?? 'light');
+    useEffect(() => {
+        document.documentElement.dataset.theme = theme;
+        localStorage.setItem('theme', theme);
+    }, [theme]);
 
     // Draft State
     const [draftItems, setDraftItems] = useState<BingoItem[]>([]);

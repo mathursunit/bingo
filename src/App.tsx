@@ -13,20 +13,23 @@ const AppContent = () => {
 
   if (loading) return <div className="h-screen w-screen flex items-center justify-center bg-bg-dark text-slate-500">Initializing...</div>;
 
-  if (!user) return <Login />;
-
   return (
     <>
       <DynamicBackground />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/board/legacy/:yearId" element={<BingoBoard />} />
-          <Route path="/board/:boardId" element={<BingoBoard />} />
+          {/* Public Routes */}
+          <Route path="/login" element={!user ? <Login /> : <Navigate to="/dashboard" replace />} />
           <Route path="/help" element={<HelpPage />} />
-          {/* Fallback for legacy URL or direct access, though typically redirected */}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+
+          {/* Protected Routes */}
+          <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" replace />} />
+          <Route path="/board/legacy/:yearId" element={user ? <BingoBoard /> : <Navigate to="/login" replace />} />
+          <Route path="/board/:boardId" element={user ? <BingoBoard /> : <Navigate to="/login" replace />} />
+
+          {/* Root Redirect */}
+          <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} replace />} />
+          <Route path="*" element={<Navigate to={user ? "/dashboard" : "/login"} replace />} />
         </Routes>
       </BrowserRouter>
     </>

@@ -1,39 +1,34 @@
-import React from 'react';
+
 import { motion } from 'framer-motion';
 import {
-    ArrowLeft, HelpCircle, LayoutGrid, CheckSquare,
-    Share2, Camera, Settings, Sparkles, BookOpen, Crown
+    ArrowLeft, CheckSquare, Share2, Camera, BookOpen,
+    Plus, UserPlus, Trophy
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-const HelpSection = ({ title, icon: Icon, children, delay = 0 }: { title: string, icon: any, children: React.ReactNode, delay?: number }) => (
-    <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay }}
-        className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-sm hover:bg-white/10 transition-colors"
-    >
-        <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-accent-primary/20 rounded-lg text-accent-primary">
-                <Icon size={24} />
-            </div>
-            <h3 className="text-xl font-bold text-white">{title}</h3>
-        </div>
-        <div className="text-slate-300 space-y-3 leading-relaxed">
-            {children}
-        </div>
-    </motion.div>
-);
-
-const Step = ({ number, title, text }: { number: number, title: string, text: string }) => (
-    <div className="flex gap-4">
-        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-slate-800 border border-white/20 flex items-center justify-center font-bold text-sm text-white">
+const WalkthroughStep = ({ number, title, text, imagePlaceholder }: { number: number, title: string, text: string, imagePlaceholder?: string }) => (
+    <div className="relative pl-8 border-l border-white/10 pb-8 last:pb-0 last:border-l-0">
+        <div className="absolute -left-4 top-0 w-8 h-8 rounded-full bg-slate-900 border border-accent-primary text-accent-primary font-bold flex items-center justify-center text-sm shadow-[0_0_10px_rgba(139,92,246,0.2)]">
             {number}
         </div>
-        <div>
-            <h4 className="font-semibold text-white mb-1">{title}</h4>
-            <p className="text-sm text-slate-400">{text}</p>
+        <div className="mb-2">
+            <h4 className="text-lg font-bold text-white">{title}</h4>
+            <p className="text-slate-400 text-sm mt-1">{text}</p>
         </div>
+        {imagePlaceholder && (
+            <div className="mt-4 rounded-xl overflow-hidden border border-white/10 shadow-2xl bg-black/40 group relative">
+                <div className="aspect-[16/9] flex items-center justify-center text-slate-500 bg-slate-800/50">
+                    <div className="text-center p-4">
+                        <Camera size={32} className="mx-auto mb-2 opacity-50" />
+                        <span className="text-xs uppercase tracking-wider font-semibold opacity-70">{imagePlaceholder}</span>
+                    </div>
+                </div>
+                {/* Overlay for "Click to Enlarge" simulation */}
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <span className="text-white text-sm font-medium">Screenshot Placeholder</span>
+                </div>
+            </div>
+        )}
     </div>
 );
 
@@ -41,9 +36,9 @@ export const HelpPage = () => {
     const navigate = useNavigate();
 
     return (
-        <div className="min-h-screen bg-transparent text-white p-6 relative overflow-x-hidden">
+        <div className="min-h-screen bg-transparent text-white p-6 relative overflow-x-hidden pb-32">
             {/* Header */}
-            <div className="max-w-4xl mx-auto">
+            <div className="max-w-5xl mx-auto">
                 <motion.button
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -51,7 +46,7 @@ export const HelpPage = () => {
                     className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-8 group"
                 >
                     <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-                    Back to Dashboard
+                    Back to App
                 </motion.button>
 
                 <div className="text-center mb-16">
@@ -68,7 +63,7 @@ export const HelpPage = () => {
                         transition={{ delay: 0.1 }}
                         className="text-4xl sm:text-5xl font-extrabold mb-4"
                     >
-                        How to <span className="bg-gradient-to-r from-accent-primary to-accent-secondary bg-clip-text text-transparent">Bingo</span>
+                        How to Play <span className="bg-gradient-to-r from-accent-primary to-accent-secondary bg-clip-text text-transparent">Bingo</span>
                     </motion.h1>
                     <motion.p
                         initial={{ opacity: 0 }}
@@ -76,96 +71,149 @@ export const HelpPage = () => {
                         transition={{ delay: 0.2 }}
                         className="text-xl text-slate-400 max-w-2xl mx-auto"
                     >
-                        Your complete guide to mastering the art of 2026 Bingo. Turn your goals into a game!
+                        A step-by-step guide to turning your 2026 goals into a social game.
                     </motion.p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-24">
-                    <HelpSection title="Getting Started" icon={Sparkles} delay={0.3}>
-                        <p>Welcome to your digital accountability partner! The app is designed to make achieving your 2026 goals fun and social.</p>
-                        <div className="mt-4 space-y-4">
-                            <Step number={1} title="Sign Up" text="You're already here! Your account is safe with us." />
-                            <Step number={2} title="Create a Board" text="Choose a template or start from scratch." />
-                            <Step number={3} title="Invite Friends" text="Everything is better together." />
+                <div className="grid gap-12">
+                    {/* SECTION 1: CREATING A BOARD */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                    >
+                        <div className="flex items-center gap-4 mb-6">
+                            <div className="p-3 bg-blue-500/20 rounded-xl text-blue-400">
+                                <Plus size={32} />
+                            </div>
+                            <h2 className="text-3xl font-bold">1. Creating a Board</h2>
                         </div>
-                    </HelpSection>
 
-                    <HelpSection title="Creating Boards" icon={LayoutGrid} delay={0.4}>
-                        <p>Your board is your battlefield. You can customize it to fit your exact needs.</p>
-                        <div className="mt-4 bg-black/20 rounded-xl p-4 border border-white/5">
-                            <h4 className="font-semibold text-accent-gold mb-2 flex items-center gap-2">
-                                <Crown size={16} /> Pro Tips:
-                            </h4>
-                            <ul className="list-disc list-inside space-y-1 text-sm text-slate-400">
-                                <li><strong>3x3 Grid:</strong> Quick, focused mini-goals.</li>
-                                <li><strong>5x5 Grid:</strong> The classic Bingo experience.</li>
-                                <li><strong>Templates:</strong> We have pre-made ideas for inspiration!</li>
-                                <li><strong>Shuffle:</strong> Don't like the layout? Hit shuffle before locking.</li>
-                            </ul>
+                        <div className="bg-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-sm">
+                            <WalkthroughStep
+                                number={1}
+                                title="Start from Dashboard"
+                                text="Click the 'Create Board' button on your dashboard. You can choose to start fresh or use a template (like 'Self Care' or 'Travel')."
+                                imagePlaceholder="Dashboard view with 'Create Board' button highlighted"
+                            />
+                            <WalkthroughStep
+                                number={2}
+                                title="Customize Setup"
+                                text="Give your board a name (e.g., '2026 Goals') and choose a Grid Size. 3x3 is great for quick games, while 5x5 is the classic challenge."
+                                imagePlaceholder="Create Board Modal showing Title and Grid inputs"
+                            />
+                            <WalkthroughStep
+                                number={3}
+                                title="Fill Your Tiles"
+                                text="The most fun part! Fill in each tile with a specific goal. You can drag to reorder or click 'Shuffle' to mix them up."
+                                imagePlaceholder="Board Editor View with inputs for each tile"
+                            />
+                            <WalkthroughStep
+                                number={4}
+                                title="Lock & Play"
+                                text="When you're happy, click 'Go Live'. This locks the grid structure so you can start marking progress."
+                                imagePlaceholder="'Go Live' confirmation modal"
+                            />
                         </div>
-                    </HelpSection>
+                    </motion.div>
 
-                    <HelpSection title="Playing the Game" icon={CheckSquare} delay={0.5}>
-                        <p>Once your board is finalized, the fun begins. Tap a tile to interact with it.</p>
-                        <div className="space-y-3 mt-4">
-                            <div className="flex items-start gap-3">
-                                <Camera className="text-accent-secondary shrink-0 mt-1" size={18} />
+                    {/* SECTION 2: PLAYING THE GAME */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 }}
+                    >
+                        <div className="flex items-center gap-4 mb-6">
+                            <div className="p-3 bg-green-500/20 rounded-xl text-green-400">
+                                <CheckSquare size={32} />
+                            </div>
+                            <h2 className="text-3xl font-bold">2. Playing & Tracking</h2>
+                        </div>
+
+                        <div className="bg-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-sm">
+                            <WalkthroughStep
+                                number={1}
+                                title="Tap to Interact"
+                                text="Tap any tile on your board. If it's a '1-time' goal, you can complete it instantly. For multi-count goals (e.g., 'Read 5 Books'), you can add progress."
+                                imagePlaceholder="Live Board view with a finger tapping a tile"
+                            />
+                            <WalkthroughStep
+                                number={2}
+                                title="Add Photo Proof"
+                                text="Don't just say you did it—prove it! Upload photos directly to the tile. This is great for memories later."
+                                imagePlaceholder="Tile Details Modal showing 'Add Photo' button"
+                            />
+                            <WalkthroughStep
+                                number={3}
+                                title="Win with Bingo!"
+                                text="Complete a full row, column, or diagonal to get a BINGO! Watch out for the confetti celebration."
+                                imagePlaceholder="Board showing a winning diagonal line with confetti"
+                            />
+                        </div>
+                    </motion.div>
+
+                    {/* SECTION 3: SOCIAL FEATURES */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5 }}
+                    >
+                        <div className="flex items-center gap-4 mb-6">
+                            <div className="p-3 bg-purple-500/20 rounded-xl text-purple-400">
+                                <UserPlus size={32} />
+                            </div>
+                            <h2 className="text-3xl font-bold">3. Playing with Friends</h2>
+                        </div>
+
+                        <div className="bg-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-sm">
+                            <div className="grid md:grid-cols-2 gap-8">
                                 <div>
-                                    <span className="text-white font-medium">Add Proof:</span>
-                                    <p className="text-sm">Upload a photo to mark a tile as "In Progress" or "Completed".</p>
+                                    <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                                        <Share2 size={20} className="text-accent-secondary" />
+                                        Shared Boards
+                                    </h3>
+                                    <p className="text-slate-400 mb-4">
+                                        Invite friends to the <strong>same board</strong>. You all share the same grid but complete tiles individually (or together!).
+                                    </p>
+                                    <ul className="space-y-3">
+                                        <li className="flex items-start gap-3">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-accent-primary mt-2" />
+                                            <span className="text-sm text-slate-300">Great for couples (e.g., "Our 2026 Bucket List")</span>
+                                        </li>
+                                        <li className="flex items-start gap-3">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-accent-primary mt-2" />
+                                            <span className="text-sm text-slate-300">Perfect for team challenges</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                                        <Trophy size={20} className="text-accent-gold" />
+                                        Competition Mode
+                                    </h3>
+                                    <p className="text-slate-400 mb-4">
+                                        When playing on a shared board, the tile shows <strong>who completed it first</strong>.
+                                    </p>
+                                    <div className="bg-black/40 rounded-xl p-4 border border-white/5">
+                                        <div className="text-center">
+                                            <span className="text-xs text-slate-500 uppercase tracking-widest">Tile Status</span>
+                                            <div className="mt-2 font-bold text-white">"Run a Marathon"</div>
+                                            <div className="text-xs text-accent-primary mt-1">Completed by You</div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="flex items-start gap-3">
-                                <CheckSquare className="text-green-400 shrink-0 mt-1" size={18} />
-                                <div>
-                                    <span className="text-white font-medium">Mark Complete:</span>
-                                    <p className="text-sm">Tap "Mark Complete" when you're done. Watch the tile light up!</p>
-                                </div>
-                            </div>
                         </div>
-                    </HelpSection>
+                    </motion.div>
+                </div>
 
-                    <HelpSection title="Shared Boards" icon={Share2} delay={0.6}>
-                        <p>Compete or collaborate with friends on the same board.</p>
-                        <div className="mt-4 space-y-2 text-sm">
-                            <p>👥 <strong>Invite Users:</strong> Click the share icon and add friends by email.</p>
-                            <p>🏆 <strong>Competition:</strong> See who completes tiles first. The tile will show the name of the winner!</p>
-                            <p>👀 <strong>Live Updates:</strong> Watch changes happen in real-time.</p>
-                        </div>
-                    </HelpSection>
-
-                    <HelpSection title="Advanced Features" icon={Settings} delay={0.7}>
-                        <p>Customize your experience in the settings menu.</p>
-                        <ul className="mt-2 space-y-2 text-sm text-slate-400">
-                            <li className="flex items-center gap-2">
-                                <span className="w-1.5 h-1.5 rounded-full bg-accent-primary" />
-                                Toggle sound effects on/off
-                            </li>
-                            <li className="flex items-center gap-2">
-                                <span className="w-1.5 h-1.5 rounded-full bg-accent-primary" />
-                                Switch dynamic backgrounds
-                            </li>
-                            <li className="flex items-center gap-2">
-                                <span className="w-1.5 h-1.5 rounded-full bg-accent-primary" />
-                                Edit incomplete boards anytime
-                            </li>
-                        </ul>
-                    </HelpSection>
-
-                    <div className="md:col-span-2 mt-8">
-                        <div className="bg-gradient-to-r from-accent-primary/10 to-accent-secondary/10 border border-white/10 rounded-2xl p-8 text-center relative overflow-hidden">
-                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-accent-primary to-accent-secondary" />
-                            <HelpCircle className="w-12 h-12 text-white mx-auto mb-4 opacity-80" />
-                            <h3 className="text-2xl font-bold text-white mb-2">Ready to start?</h3>
-                            <p className="text-slate-400 mb-6">Create your first board and start your journey.</p>
-                            <button
-                                onClick={() => navigate('/dashboard')}
-                                className="px-8 py-3 bg-white text-bg-dark font-bold rounded-xl hover:bg-slate-200 transition-colors shadow-lg shadow-white/10"
-                            >
-                                Go to Dashboard
-                            </button>
-                        </div>
-                    </div>
+                <div className="mt-16 text-center">
+                    <button
+                        onClick={() => navigate('/dashboard')}
+                        className="px-8 py-4 bg-white text-bg-dark font-bold rounded-2xl text-lg hover:scale-105 transition-transform shadow-xl shadow-white/10"
+                    >
+                        Let's Get Started
+                    </button>
                 </div>
             </div>
         </div>

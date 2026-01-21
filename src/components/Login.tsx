@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Sparkles } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export const Login: React.FC = () => {
     const { signIn, error } = useAuth();
@@ -45,6 +46,10 @@ export const Login: React.FC = () => {
                         Sign in / Sign up with Google
                     </span>
                 </button>
+
+                <div className="mt-8 text-sm text-slate-400">
+                    New here? <Link to="/help" className="text-accent-primary hover:text-accent-secondary transition-colors font-medium">See how it works →</Link>
+                </div>
             </div>
 
             <footer className="absolute bottom-4 text-slate-500 text-xs">

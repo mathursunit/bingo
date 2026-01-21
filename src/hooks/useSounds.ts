@@ -164,26 +164,34 @@ export const useSounds = () => {
     /**
      * Soft whoosh for UI transitions
      */
+    const noiseBufferRef = useRef<AudioBuffer | null>(null);
+
+    /**
+     * Soft whoosh for UI transitions
+     */
     const playWhoosh = useCallback(() => {
         if (!isEnabled || !canPlay()) return;
 
         try {
             const ctx = getAudioContext();
 
-            // White noise burst filtered
-            const bufferSize = ctx.sampleRate * 0.15;
-            const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-            const data = buffer.getChannelData(0);
+            // Create buffer only once and cache it
+            if (!noiseBufferRef.current) {
+                const bufferSize = ctx.sampleRate * 0.15;
+                const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                const data = buffer.getChannelData(0);
 
-            for (let i = 0; i < bufferSize; i++) {
-                data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+                }
+                noiseBufferRef.current = buffer;
             }
 
             const noise = ctx.createBufferSource();
             const filter = ctx.createBiquadFilter();
             const gain = ctx.createGain();
 
-            noise.buffer = buffer;
+            noise.buffer = noiseBufferRef.current;
             filter.type = 'lowpass';
             filter.frequency.setValueAtTime(2000, ctx.currentTime);
             filter.frequency.exponentialRampToValueAtTime(500, ctx.currentTime + 0.15);

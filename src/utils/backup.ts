@@ -1,26 +1,21 @@
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../firebase';
-
-export const backupDatabase = async () => {
+export const downloadBoardBackup = (data: any) => {
     try {
-        const collections = ['years', 'users', 'boards'];
-        const data: Record<string, any> = {};
+        const backupData = {
+            version: '1.0',
+            exportedAt: new Date().toISOString(),
+            content: data
+        };
 
-        for (const colName of collections) {
-            const querySnapshot = await getDocs(collection(db, colName));
-            data[colName] = {};
-            querySnapshot.forEach((doc) => {
-                data[colName][doc.id] = doc.data();
-            });
-        }
-
-        const jsonString = JSON.stringify(data, null, 2);
+        const jsonString = JSON.stringify(backupData, null, 2);
         const blob = new Blob([jsonString], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
 
         const a = document.createElement('a');
         a.href = url;
-        a.download = `bingo_backup_${new Date().toISOString().split('T')[0]}.json`;
+        // Sanitize title for filename
+        const safeTitle = (data.title || 'board').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        a.download = `bingo_backup_${safeTitle}_${new Date().toISOString().split('T')[0]}.json`;
+
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);

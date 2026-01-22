@@ -8,6 +8,8 @@ import { useSettings } from '../contexts/SettingsContext';
 import { useSounds } from '../hooks/useSounds';
 import { cn } from '../lib/utils';
 import { Edit2, Check, Award, LogOut, Camera, X, ChevronLeft, ChevronRight, Plus, BookOpen, Printer, LayoutGrid, Share2, Clock, Trash2, Settings, Rocket, Lock, Sun, Moon } from 'lucide-react';
+import { Download } from 'lucide-react';
+import { backupDatabase } from '../utils/backup';
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { BingoItem } from '../types';
@@ -832,6 +834,13 @@ export const BingoBoard: React.FC = () => {
                                     >
                                         <Printer size={12} />
                                         Print Status
+                                    </button>
+                                    <button
+                                        onClick={backupDatabase}
+                                        className="py-2 px-3 text-xs font-medium text-slate-500 hover:text-white transition-colors flex items-center justify-center gap-2 border border-slate-700/50 rounded-lg hover:bg-white/5"
+                                        title="Download Database Backup"
+                                    >
+                                        <Download size={12} />
                                     </button>
                                 </div>
                             )}

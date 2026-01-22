@@ -4,8 +4,8 @@ import { collection, query, where, getDocs, addDoc, deleteDoc, doc, Timestamp, u
 import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { useDialog } from '../contexts/DialogContext';
-import { useSettings } from '../contexts/SettingsContext';
-import { Plus, LayoutGrid, Calendar, Trash2, LogOut, Users, Settings, HelpCircle, Pencil, Check, X } from 'lucide-react';
+
+import { Plus, LayoutGrid, Calendar, Trash2, LogOut, Users, Pencil, Check, X } from 'lucide-react';
 import { Skeleton } from '../components/ui/Skeleton';
 
 interface BoardSummary {
@@ -22,9 +22,9 @@ interface BoardSummary {
 }
 
 export const Dashboard: React.FC = () => {
-    const { user, logout } = useAuth();
+    const { user } = useAuth();
     const dialog = useDialog();
-    const { openSettings } = useSettings();
+
     const navigate = useNavigate();
     const [boards, setBoards] = useState<BoardSummary[]>([]);
     const [loading, setLoading] = useState(true);

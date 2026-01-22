@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Camera, Check, Edit2 } from 'lucide-react';
+import { Camera, Check, Edit2, Clock } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import type { BingoItem } from '../../types';
 
@@ -17,7 +17,7 @@ interface BingoTileProps {
 
 export const BingoTile: React.FC<BingoTileProps> = ({
     item,
-    index,
+    // index, // Unused
     gridSize,
     editMode,
     activeId,
@@ -88,6 +88,31 @@ export const BingoTile: React.FC<BingoTileProps> = ({
                     </div>
                 )}
             </div>
+
+            {/* Due Date Indicator */}
+            {item.dueDate && !item.isCompleted && !isLocked && (
+                <div className={cn(
+                    "flex items-center gap-1 mt-1 text-[10px] font-medium absolute bottom-1.5 left-2 px-1 rounded bg-black/40 backdrop-blur-sm",
+                    ((item.dueDate as any).toDate ? (item.dueDate as any).toDate() : new Date(item.dueDate as any)) < new Date() ? "text-red-400" : "text-slate-400"
+                )}>
+                    <Clock size={10} />
+                    <span>{((item.dueDate as any).toDate ? (item.dueDate as any).toDate() : new Date(item.dueDate as any)).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                </div>
+            )}
+
+            {/* Target Count Indicator */}
+            {!item.isFreeSpace && !editMode && (item.targetCount || 1) > 1 && (
+                <div className={cn(
+                    "absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold shadow-sm",
+                    item.isCompleted
+                        ? "bg-emerald-500/90 text-white"
+                        : (item.currentCount || 0) > 0
+                            ? "bg-amber-500/90 text-white" // Partial progress
+                            : "bg-slate-700/90 text-slate-300"
+                )}>
+                    {item.currentCount || 0}/{item.targetCount}
+                </div>
+            )}
 
             {/* Edit Icon Overlay */}
             {editMode && (

@@ -7,7 +7,7 @@ import { useDialog } from '../contexts/DialogContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { useSounds } from '../hooks/useSounds';
 import { cn } from '../lib/utils';
-import { Edit2, Check, Award, LogOut, Camera, X, ChevronLeft, ChevronRight, Plus, BookOpen, Printer, LayoutGrid, Share2, Clock, Trash2, Settings, Rocket, Lock, Sun, Moon } from 'lucide-react';
+import { Edit2, Check, Award, LogOut, Camera, Share2, Printer, LayoutGrid, Rocket, Sun, Moon, BookOpen, Settings, Trash2, X, ChevronLeft, ChevronRight, Plus, Lock } from 'lucide-react';
 import { Download } from 'lucide-react';
 import { downloadFullBackup } from '../utils/backup';
 import confetti from 'canvas-confetti';
@@ -265,10 +265,7 @@ export const BingoBoard: React.FC = () => {
         return () => clearTimeout(timer);
     }, [logoTapCount, unlockBoard]);
 
-    const handleLogoTap = () => {
-        if (!isLocked) return;
-        setLogoTapCount(prev => prev + 1);
-    };
+
 
     const handleGoLive = () => {
         // Trigger generic click sound

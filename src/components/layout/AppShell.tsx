@@ -22,6 +22,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
     const navItems = [
         { label: 'Dashboard', path: '/dashboard', icon: LayoutGrid },
+        { label: 'Profile', path: '/profile', icon: User },
         { label: 'Help & Guide', path: '/help', icon: HelpCircle },
     ];
 
@@ -76,8 +77,11 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                         <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-3">Theme</div>
                         <div className="flex justify-between gap-1">
                             {[
+                                { id: 'light', color: 'bg-slate-200 ring-1 ring-slate-400' },
                                 { id: 'dawn', color: 'bg-orange-400' },
                                 { id: 'midnight', color: 'bg-indigo-500' },
+                                { id: 'cosmic', color: 'bg-violet-500' },
+                                { id: 'lavender', color: 'bg-fuchsia-500' },
                                 { id: 'forest', color: 'bg-emerald-500' },
                                 { id: 'ocean', color: 'bg-cyan-500' },
                                 { id: 'sunset', color: 'bg-rose-500' }
@@ -125,7 +129,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
             </aside>
 
             {/* Main Content Area */}
-            <main className="flex-1 min-w-0 flex flex-col h-screen overflow-hidden bg-[var(--theme-bg-base)]">
+            <main className="flex-1 min-w-0 flex flex-col h-screen overflow-hidden bg-transparent relative">
                 {/* Mobile Header */}
                 <header className="h-16 flex items-center justify-between px-4 lg:hidden border-b border-[var(--theme-border)] bg-[var(--theme-bg-subtle)] shrink-0">
                     <button onClick={() => setIsSidebarOpen(true)} className="p-2 text-slate-400">

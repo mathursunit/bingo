@@ -86,7 +86,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const body = document.body;
 
         // Theme
-        body.classList.remove('theme-midnight', 'theme-forest', 'theme-ocean', 'theme-sunset');
+        body.classList.remove('theme-midnight', 'theme-forest', 'theme-ocean', 'theme-sunset', 'theme-cosmic', 'theme-lavender', 'theme-light');
         if (settings.theme !== 'dawn') {
             body.classList.add(`theme-${settings.theme}`);
         }

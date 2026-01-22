@@ -32,6 +32,14 @@ export const DynamicBackground: React.FC = () => {
                     bgGradient: 'radial-gradient(ellipse at 50% 0%, #0a1628 0%, #020617 50%, #000 100%)',
                     shootingStars: true,
                 };
+            case 'light':
+                return {
+                    type: 'clouds',
+                    particleCount: 20,
+                    baseColor: 'rgba(255, 255, 255, ',
+                    bgGradient: 'radial-gradient(ellipse at 50% 0%, #f0f9ff 0%, #e0f2fe 50%, #dbeafe 100%)',
+                    shootingStars: false,
+                };
             case 'cosmic':
                 return {
                     type: 'stars',
@@ -39,6 +47,14 @@ export const DynamicBackground: React.FC = () => {
                     baseColor: 'rgba(139, 92, 246, ', // Violet stars
                     bgGradient: 'radial-gradient(ellipse at 50% 0%, #1e1b4b 0%, #0f172a 40%, #020617 100%)', // Deep Indigo to Slate
                     shootingStars: true,
+                };
+            case 'lavender':
+                return {
+                    type: 'petals',
+                    particleCount: 50,
+                    baseColor: 'rgba(232, 121, 249, ', // Fuchsia
+                    bgGradient: 'radial-gradient(ellipse at 50% 0%, #3b0764 0%, #2e1065 50%, #1a0525 100%)',
+                    shootingStars: false,
                 };
             case 'forest':
                 return {
@@ -121,7 +137,7 @@ export const DynamicBackground: React.FC = () => {
                 drawParticle(ctx, particle, themeConfig);
             });
 
-            // Shooting stars for midnight theme
+            // Shooting stars for midnight/cosmic theme
             if (themeConfig.shootingStars) {
                 shootingStarTimer++;
                 if (shootingStarTimer > 300 && Math.random() < 0.01) {
@@ -172,26 +188,28 @@ export const DynamicBackground: React.FC = () => {
         <>
             {/* Gradient Background Layer */}
             <div
-                className="fixed inset-0 z-[-2] transition-all duration-1000"
+                className="fixed inset-0 z-0 transition-all duration-1000"
                 style={{ background: themeConfig.bgGradient }}
             />
 
             {/* Canvas Particle Layer */}
             <canvas
                 ref={canvasRef}
-                className="fixed inset-0 z-[-1] pointer-events-none"
+                className="fixed inset-0 z-0 pointer-events-none"
                 style={{ opacity: settings.enableAnimation === false ? 0 : 0.8 }}
             />
 
             {/* Ambient Glow Overlay */}
-            <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden">
+            <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
                 <div
                     className={`absolute w-[600px] h-[600px] rounded-full blur-[120px] animate-float-slow ${settings.theme === 'midnight' ? 'bg-blue-500/10' :
                         settings.theme === 'cosmic' ? 'bg-violet-600/20' :
                             settings.theme === 'forest' ? 'bg-green-500/10' :
                                 settings.theme === 'ocean' ? 'bg-cyan-500/10' :
                                     settings.theme === 'sunset' ? 'bg-orange-500/10' :
-                                        'bg-purple-500/10'
+                                        settings.theme === 'lavender' ? 'bg-fuchsia-500/10' :
+                                            settings.theme === 'light' ? 'bg-blue-300/20' :
+                                                'bg-purple-500/10'
                         }`}
                     style={{ top: '-15%', left: '-10%' }}
                 />
@@ -201,7 +219,9 @@ export const DynamicBackground: React.FC = () => {
                             settings.theme === 'forest' ? 'bg-emerald-500/10' :
                                 settings.theme === 'ocean' ? 'bg-teal-500/10' :
                                     settings.theme === 'sunset' ? 'bg-rose-500/10' :
-                                        'bg-pink-500/10'
+                                        settings.theme === 'lavender' ? 'bg-purple-600/20' :
+                                            settings.theme === 'light' ? 'bg-sky-300/20' :
+                                                'bg-pink-500/10'
                         }`}
                     style={{ bottom: '-10%', right: '-5%' }}
                 />
@@ -222,10 +242,18 @@ function createParticle(width: number, height: number, type: string): Particle {
         case 'stars':
             return {
                 ...base,
-                size: Math.random() * 2 + 0.5,
+                size: Math.random() * 3 + 1, // Larger stars
                 speedX: 0,
                 speedY: 0,
-                opacity: Math.random() * 0.8 + 0.2,
+                opacity: Math.random() * 0.8 + 0.4, // Brighter
+            };
+        case 'clouds':
+            return {
+                ...base,
+                size: Math.random() * 60 + 20, // Huge clouds
+                speedX: Math.random() * 0.2 + 0.05, // Slow drift
+                speedY: 0,
+                opacity: Math.random() * 0.15 + 0.05, // Very subtle
             };
         case 'leaves':
             return {
@@ -234,6 +262,15 @@ function createParticle(width: number, height: number, type: string): Particle {
                 speedX: Math.random() * 0.5 - 0.25,
                 speedY: Math.random() * 0.8 + 0.3,
                 hue: Math.random() * 40 + 80, // Green hues
+            };
+        case 'petals':
+            return {
+                ...base,
+                size: Math.random() * 6 + 3, // Larger petals
+                speedX: Math.random() * 0.5 - 0.25,
+                // Fall down slowly
+                speedY: Math.random() * 0.5 + 0.2,
+                hue: Math.random() * 40 + 280, // Pink/Purple hues (280-320)
             };
         case 'bubbles':
             return {
@@ -302,9 +339,21 @@ function drawParticle(
             }
             break;
 
+        case 'clouds':
+            ctx.fillStyle = `rgba(255, 255, 255, ${particle.opacity})`;
+            ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+            ctx.fill();
+            break;
+
         case 'leaves':
             ctx.fillStyle = `hsla(${particle.hue}, 60%, 50%, ${particle.opacity})`;
             ctx.ellipse(particle.x, particle.y, particle.size, particle.size * 0.5, particle.x * 0.01, 0, Math.PI * 2);
+            ctx.fill();
+            break;
+
+        case 'petals':
+            ctx.fillStyle = `hsla(${particle.hue}, 70%, 60%, ${particle.opacity})`;
+            ctx.ellipse(particle.x, particle.y, particle.size, particle.size * 0.6, particle.x * 0.02, 0, Math.PI * 2);
             ctx.fill();
             break;
 

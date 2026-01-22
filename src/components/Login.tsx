@@ -8,11 +8,10 @@ export const Login: React.FC = () => {
     const { signIn, error } = useAuth();
 
     return (
-        <div className="relative flex flex-col items-center justify-center min-h-screen p-4 text-center overflow-hidden bg-bg-dark text-slate-100 font-sans">
-            {/* Background */}
+        <div className="relative flex flex-col items-center justify-center min-h-screen p-4 text-center overflow-hidden bg-transparent text-slate-100 font-sans">
+            {/* Background - subtle overlay for depth, main background comes from DynamicBackground */}
             <div className="absolute inset-0 z-0 pointer-events-none">
-                {/* Only overlay gradient here, base background comes from App.tsx */}
-                <div className="absolute inset-0 bg-gradient-to-t from-bg-dark via-transparent to-transparent opacity-80" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
             </div>
 
             {/* Login Card */}

@@ -121,11 +121,16 @@ export const BingoTile: React.FC<BingoTileProps> = ({
                 </div>
             )}
 
-            {/* Completed Checkmark Background (Subtle) */}
+            {/* Completed Checkmark Background (Stamp Effect) */}
             {item.isCompleted && !item.isFreeSpace && !editMode && (
-                <div className="absolute -bottom-3 -right-3 opacity-[0.07] rotate-12 transition-opacity">
-                    <Check size={64} />
-                </div>
+                <motion.div
+                    initial={{ scale: 2, opacity: 0, rotate: -45 }}
+                    animate={{ scale: 1, opacity: 0.1, rotate: 12 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                    className="absolute -bottom-2 -right-2 transform origin-bottom-right pointer-events-none"
+                >
+                    <Check size={80} strokeWidth={3} />
+                </motion.div>
             )}
 
             {/* Active Completion Effect (Green Glow) */}

@@ -73,6 +73,21 @@
   /* Blue 400 */
 }
 
+.theme-dawn {
+  --theme-bg-base: #1a1207;
+  /* Warm dark brown */
+  --theme-bg-subtle: #2a1f10;
+  /* Warmer subtle */
+  --theme-bg-card: #1f1509;
+  /* Dark amber card */
+  --theme-border: #44360d;
+  /* Amber border */
+  --theme-accent-primary: #f59e0b;
+  /* Amber 500 */
+  --theme-accent-secondary: #fb923c;
+  /* Orange 400 */
+}
+
 .theme-sunset {
   --theme-bg-base: #450a0a;
   /* Red 950 */

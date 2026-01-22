@@ -7,7 +7,7 @@ import { useDialog } from '../contexts/DialogContext';
 
 import { useSounds } from '../hooks/useSounds';
 import { cn } from '../lib/utils';
-import { Edit2, Check, Award, Camera, Share2, Printer, Rocket, BookOpen, Trash2, X, ChevronLeft, ChevronRight, Plus, Lock } from 'lucide-react';
+import { Edit2, Check, Award, Camera, Share2, Printer, Rocket, BookOpen, Trash2, X, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';

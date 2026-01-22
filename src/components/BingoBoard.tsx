@@ -20,6 +20,7 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy } from '@dnd-kit/sortable';
 import { DraggableTile } from './ui/DraggableTile';
+import { BingoTile } from './ui/BingoTile';
 
 import { useParams, useNavigate } from 'react-router-dom';
 
@@ -438,14 +439,7 @@ export const BingoBoard: React.FC = () => {
                 <div className="max-w-4xl mx-auto">
                     {/* Navigation Bar - Matches Dashboard */}
                     <header className="flex justify-between items-center mb-8 py-2">
-                        <motion.img
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            src="/logo.png"
-                            alt="SunSar Bingo"
-                            className="h-10 sm:h-12 w-auto object-contain cursor-pointer active:scale-95 transition-transform"
-                            onClick={handleLogoTap}
-                        />
+
                         {/* Editable Board Title - Compact in header */}
                         <div className="flex-1 mx-4 min-w-0">
                             {isEditingTitle ? (
@@ -590,33 +584,16 @@ export const BingoBoard: React.FC = () => {
                                                 id={item.id}
                                                 disabled={!editMode}
                                             >
-                                                <motion.div
-                                                    title={item.isCompleted ? `Completed by ${item.completedBy || 'Someone'} on ${formatDate(item.completedAt)}` : undefined}
-                                                    layout={!editMode && !activeId} // Disable layout animation during Dnd to allow dnd-kit to control
-                                                    initial={{ opacity: 0, scale: 0.8, rotateX: -90 }}
-                                                    animate={{ opacity: 1, scale: 1, rotateX: 0 }}
-                                                    transition={{
-                                                        type: "spring",
-                                                        stiffness: 260,
-                                                        damping: 20,
-                                                        delay: index * 0.03
-                                                    }}
-                                                    whileHover={!editMode && !activeId ? { // Only hover effect when NOT editing or dragging
-                                                        scale: 1.05,
-                                                        zIndex: 10,
-                                                        boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.3), 0 8px 10px -6px rgb(0 0 0 / 0.3)"
-                                                    } : undefined}
-                                                    whileTap={!editMode ? { scale: 0.9, rotateX: 15 } : undefined}
+                                                <BingoTile
+                                                    item={item}
+                                                    index={index}
+                                                    gridSize={gridSize}
+                                                    editMode={editMode}
+                                                    activeId={activeId}
+                                                    isLocked={isLocked}
+                                                    onEdit={() => openEditModal(index)}
                                                     onClick={() => {
-                                                        if (editMode) {
-                                                            // Explicitly handle edit click here if DraggableTile doesn't block it
-                                                            openEditModal(index);
-                                                            return;
-                                                        }
-
-                                                        // if (isLocked) return; // Allow marking even when locked
                                                         if (item.isFreeSpace) return;
-
                                                         if (item.isCompleted) {
                                                             if (item.proofPhotos && item.proofPhotos.length > 0) {
                                                                 setViewingItem(item);
@@ -632,107 +609,7 @@ export const BingoBoard: React.FC = () => {
                                                             setIsCompletionModalOpen(true);
                                                         }
                                                     }}
-                                                    className={cn(
-                                                        "bingo-tile relative flex items-center justify-center p-1 cursor-pointer select-none overflow-hidden w-full h-full",
-                                                        // Dynamic text size based on grid
-                                                        gridSize === 3 && "text-sm sm:text-base",
-                                                        gridSize === 4 && "text-xs sm:text-sm",
-                                                        gridSize === 5 && "text-[11px] sm:text-sm",
-                                                        gridSize === 6 && "text-[9px] sm:text-xs",
-                                                        "font-medium leading-tight select-none",
-                                                        item.isCompleted ? "completed text-white scale-[1.02] font-semibold" : "text-slate-300",
-                                                        item.isFreeSpace && "bg-gradient-to-br from-green-500/20 to-emerald-600/20 border-green-500/50 text-green-400 font-bold shadow-[0_0_15px_rgba(34,197,94,0.2)]", // Traffic Green Style
-                                                        editMode && "border-dashed border-slate-500 opacity-80"
-                                                    )
-                                                    }>
-                                                    <div className="w-full h-full flex items-center justify-center text-center relative z-10">
-                                                        <div
-                                                            className="w-full h-full flex items-center justify-center p-1"
-                                                            onClick={(e) => {
-                                                                if (editMode) {
-                                                                    e.stopPropagation();
-                                                                    openEditModal(index);
-                                                                }
-                                                            }}
-                                                        >
-                                                            <span className={cn(
-                                                                "leading-tight break-words w-full",
-                                                                item.isFreeSpace ? "text-lg font-bold text-accent-gold" : "font-semibold line-clamp-3 sm:line-clamp-4",
-                                                                item.isCompleted && !item.isFreeSpace && "text-white"
-                                                            )}
-                                                                style={!item.isFreeSpace && !item.isCompleted ? {
-                                                                    color: item.style?.color || '#cbd5e1',
-                                                                    fontWeight: item.style?.bold ? 'bold' : '600',
-                                                                    fontStyle: item.style?.italic ? 'italic' : 'normal',
-                                                                    fontSize: item.style?.fontSize === 'sm' ? '12px' : item.style?.fontSize === 'lg' ? '18px' : item.style?.fontSize === 'xl' ? '22px' : undefined
-                                                                } : undefined}
-                                                            >
-                                                                {item.text}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Decor */}
-                                                    {item.isFreeSpace && (
-                                                        <div className="absolute top-1 left-1 z-20">
-                                                            <div className="flex gap-[2px] bg-black/60 backdrop-blur-[1px] rounded-full p-[2px] border border-white/10 scale-75 origin-top-left">
-                                                                <div className="w-1.5 h-1.5 rounded-full bg-red-900/40" />
-                                                                <div className="w-1.5 h-1.5 rounded-full bg-yellow-900/40" />
-                                                                <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_6px_#22c55e]" />
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                    {item.proofPhotos && item.proofPhotos.length > 0 && <div className="absolute top-1 right-1 z-20 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]"><Camera size={gridSize >= 5 ? 10 : 14} className="opacity-90" /></div>}
-
-                                                    {/* Due Date Indicator */}
-                                                    {item.dueDate && !item.isCompleted && !isLocked && (
-                                                        <div className={cn(
-                                                            "flex items-center gap-1 mt-1 text-[10px] font-medium absolute bottom-1 right-1 px-1 rounded bg-black/40 backdrop-blur-sm",
-                                                            ((item.dueDate as any).toDate ? (item.dueDate as any).toDate() : new Date(item.dueDate as any)) < new Date() ? "text-red-400" : "text-slate-400"
-                                                        )}>
-                                                            <Clock size={8} />
-                                                            <span>{((item.dueDate as any).toDate ? (item.dueDate as any).toDate() : new Date(item.dueDate as any)).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
-                                                        </div>
-                                                    )}
-
-
-                                                    {
-                                                        item.isCompleted && !item.isFreeSpace && !editMode && (
-                                                            <>
-                                                                <motion.div
-                                                                    initial={{ scale: 0 }}
-                                                                    animate={{ scale: 1 }}
-                                                                    className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20"
-                                                                >
-                                                                    <Check className="w-12 h-12 text-white" />
-                                                                </motion.div>
-                                                                <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-accent-primary rounded-full shadow-[0_0_5px_rgba(139,92,246,0.8)]"></div>
-                                                                {item.proofPhotos && item.proofPhotos.length > 0 && (
-                                                                    <div className="absolute bottom-0.5 left-0.5 p-0.5 bg-accent-gold/80 rounded-sm flex items-center gap-0.5">
-                                                                        <Camera className="w-2.5 h-2.5 text-black" />
-                                                                        {item.proofPhotos.length > 1 && (
-                                                                            <span className="text-[8px] font-bold text-black">{item.proofPhotos.length}</span>
-                                                                        )}
-                                                                    </div>
-                                                                )}
-                                                            </>
-                                                        )
-                                                    }
-
-                                                    {/* Progress indicator for multi-count tiles (e.g., "1/2") */}
-                                                    {!item.isFreeSpace && !editMode && (item.targetCount || 1) > 1 && (
-                                                        <div className={cn(
-                                                            "absolute bottom-0.5 right-0.5 px-1 py-0.5 rounded text-[8px] font-bold",
-                                                            item.isCompleted
-                                                                ? "bg-green-500/80 text-white"
-                                                                : (item.currentCount || 0) > 0
-                                                                    ? "bg-amber-500/80 text-white" // Partial progress
-                                                                    : "bg-slate-600/80 text-slate-300"
-                                                        )}>
-                                                            {item.currentCount || 0}/{item.targetCount}
-                                                        </div>
-                                                    )}
-                                                </motion.div>
+                                                />
                                             </DraggableTile>
                                         ))}
                                     </div>
@@ -1495,6 +1372,7 @@ export const BingoBoard: React.FC = () => {
                                                             <div className="w-16 h-16 bg-accent-primary/20 rounded-lg border border-accent-primary flex items-center justify-center">
                                                                 <Check className="w-8 h-8 text-white" />
                                                             </div>
+
                                                             <motion.div
                                                                 animate={{ scale: [1, 1.2, 1], opacity: [0, 1, 0] }}
                                                                 transition={{ repeat: Infinity, duration: 1.5 }}
@@ -1553,7 +1431,7 @@ export const BingoBoard: React.FC = () => {
             </div>
 
             {/* Print Layout */}
-            <div className="only-print hidden" >
+            <div className="only-print hidden">
                 <div className="flex justify-between items-end mb-4 border-b-2 border-black pb-2">
                     <div className="flex items-center gap-3">
                         <img src="/logo.png" className="h-12 w-auto" alt="Logo" />
@@ -1594,10 +1472,10 @@ export const BingoBoard: React.FC = () => {
                     <span>Generated on {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}</span>
                     <span>bingo.mysunsar.com</span>
                 </div>
-            </div>
+            </div >
 
             {/* Memories Album */}
-            <MemoriesAlbum
+            < MemoriesAlbum
                 items={items}
                 isOpen={isMemoriesOpen}
                 onClose={() => setIsMemoriesOpen(false)}

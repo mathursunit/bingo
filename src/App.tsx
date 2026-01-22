@@ -8,6 +8,7 @@ import { BingoBoard } from './components/BingoBoard';
 import { Dashboard } from './components/Dashboard';
 import { DynamicBackground } from './components/DynamicBackground';
 import { HelpPage } from './components/HelpPage';
+import { AppShell } from './components/layout/AppShell';
 
 const AppContent = () => {
   const { user, loading } = useAuth();
@@ -25,9 +26,9 @@ const AppContent = () => {
           <Route path="/help" element={<HelpPage />} />
 
           {/* Protected Routes */}
-          <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" replace />} />
-          <Route path="/board/legacy/:yearId" element={user ? <BingoBoard /> : <Navigate to="/login" replace />} />
-          <Route path="/board/:boardId" element={user ? <BingoBoard /> : <Navigate to="/login" replace />} />
+          <Route path="/dashboard" element={user ? <AppShell><Dashboard /></AppShell> : <Navigate to="/login" replace />} />
+          <Route path="/board/legacy/:yearId" element={user ? <AppShell><BingoBoard /></AppShell> : <Navigate to="/login" replace />} />
+          <Route path="/board/:boardId" element={user ? <AppShell><BingoBoard /></AppShell> : <Navigate to="/login" replace />} />
 
           {/* Root Redirect */}
           <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} replace />} />

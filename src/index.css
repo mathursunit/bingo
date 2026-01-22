@@ -1,327 +1,110 @@
 @import "tailwindcss";
 
 :root {
-  /* Default Theme (Dawn) */
-  --theme-bg-base: #0f111a;
-  --theme-grad-1: rgba(139, 92, 246, 0.15);
-  /* Violet */
-  --theme-grad-2: rgba(236, 72, 153, 0.12);
-  /* Pink */
-  --theme-grad-3: rgba(251, 191, 36, 0.08);
-  /* Gold */
+  /* PROFESSIONAL THEME (Linear/Zinc Style) */
+  /* Base Backgrounds */
+  --theme-bg-base: #09090b;
+  /* Zinc 950 */
+  --theme-bg-subtle: #18181b;
+  /* Zinc 900 */
+  --theme-bg-card: #09090b;
+  /* Zinc 950 */
 
-  --theme-accent-primary: #8b5cf6;
-  --theme-accent-secondary: #ec4899;
-  --theme-accent-gold: #fbbf24;
+  /* Brand Colors: Indigo/Violet */
+  --theme-accent-primary: #6366f1;
+  /* Indigo 500 */
+  --theme-accent-secondary: #a855f7;
+  /* Purple 500 */
+  --theme-accent-gold: #f59e0b;
+  /* Amber 500 */
 
-  --theme-font-body: "Outfit", sans-serif;
-  --theme-font-heading: "Playfair Display", serif;
+  /* Borders */
+  --theme-border: #27272a;
+  /* Zinc 800 */
+
+  /* Fonts */
+  --theme-font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --theme-font-heading: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* Theme: Midnight (Blue/Indigo) */
+/* Theme Overrides (Optional - kept for compatibility but flattened) */
 .theme-midnight {
   --theme-bg-base: #020617;
-  --theme-grad-1: rgba(56, 189, 248, 0.15);
-  --theme-grad-2: rgba(99, 102, 241, 0.12);
-  --theme-grad-3: rgba(148, 163, 184, 0.08);
   --theme-accent-primary: #38bdf8;
-  --theme-accent-secondary: #6366f1;
-  --theme-accent-gold: #f8fafc;
 }
 
-/* Theme: Forest (Green/Emerald) */
 .theme-forest {
   --theme-bg-base: #052e16;
-  --theme-grad-1: rgba(74, 222, 128, 0.15);
-  --theme-grad-2: rgba(20, 184, 166, 0.12);
-  --theme-grad-3: rgba(163, 230, 53, 0.08);
   --theme-accent-primary: #4ade80;
-  --theme-accent-secondary: #14b8a6;
-  --theme-accent-gold: #f0fdf4;
 }
 
-/* Theme: Ocean (Cyan/Teal) */
 .theme-ocean {
   --theme-bg-base: #083344;
-  --theme-grad-1: rgba(34, 211, 238, 0.15);
-  --theme-grad-2: rgba(45, 212, 191, 0.12);
-  --theme-grad-3: rgba(125, 211, 252, 0.08);
   --theme-accent-primary: #22d3ee;
-  --theme-accent-secondary: #2dd4bf;
-  --theme-accent-gold: #e0f2fe;
 }
 
-/* Theme: Sunset (Orange/Red) */
 .theme-sunset {
   --theme-bg-base: #2a0a0a;
-  --theme-grad-1: rgba(251, 146, 60, 0.15);
-  --theme-grad-2: rgba(244, 63, 94, 0.12);
-  --theme-grad-3: rgba(253, 224, 71, 0.08);
   --theme-accent-primary: #fb923c;
-  --theme-accent-secondary: #f43f5e;
-  --theme-accent-gold: #fffbeb;
 }
-
-/* Font Overrides */
-.font-inter {
-  --theme-font-body: "Inter", sans-serif;
-}
-
-.font-playfair {
-  --theme-font-body: "Playfair Display", serif;
-}
-
-.font-mono {
-  --theme-font-body: "Fira Code", monospace;
-}
-
-.font-comic {
-  --theme-font-body: "Comic Neue", cursive;
-}
-
-/* Fallback roughly */
 
 @theme {
   --color-bg-dark: var(--theme-bg-base);
-  --color-bg-card: rgba(20, 20, 30, 0.6);
+  /* Card is now opaque or very dark to fit SaaS look */
+  --color-bg-card: var(--theme-bg-card);
 
   --color-accent-primary: var(--theme-accent-primary);
   --color-accent-secondary: var(--theme-accent-secondary);
   --color-accent-gold: var(--theme-accent-gold);
 
-  --color-glass: rgba(255, 255, 255, 0.05);
-  --color-glass-border: rgba(255, 255, 255, 0.1);
+  --color-border-subtle: var(--theme-border);
 
   --font-heading: var(--theme-font-heading);
-  --font-hand: "Fredoka", sans-serif;
   --font-body: var(--theme-font-body);
 
-  --animate-pop-in: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-  --animate-fade-in: fadeIn 0.5s ease-out forwards;
+  /* Pro Shadows */
+  --shadow-glow: 0 0 20px -5px var(--theme-accent-primary);
+}
 
-  @keyframes popIn {
-    0% {
-      transform: scale(0);
-    }
-
-    100% {
-      transform: scale(1);
-    }
-  }
-
-  @keyframes fadeIn {
-    0% {
-      opacity: 0;
-    }
-
-    100% {
-      opacity: 1;
-    }
+/* Base Reset */
+@layer base {
+  body {
+    @apply bg-bg-dark text-slate-200 font-body min-h-screen antialiased selection:bg-accent-primary selection:text-white;
+    /* Static background for performance and pro look */
+    background-color: var(--theme-bg-base);
+    background-image: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 50%);
   }
 }
 
 /* Utilities */
 @utility glass-panel {
-  @apply bg-glass backdrop-blur-md border border-glass-border rounded-2xl;
+  @apply bg-bg-dark border border-white/10 rounded-xl shadow-sm;
 }
 
 @utility text-gradient {
-  @apply bg-clip-text text-transparent bg-linear-to-r from-white to-slate-200;
+  @apply text-white;
+  /* No more rainbow text, just clean white */
 }
 
-/* Base styles */
-@layer base {
-  body {
-    @apply bg-bg-dark text-white font-body min-h-screen overflow-x-hidden;
-    /* Background handled by DynamicBackground component */
-    background-color: transparent;
-    transition: color 0.5s ease;
-  }
+/* Card Styles */
+.pro-card {
+  background: var(--theme-bg-card);
+  border: 1px solid var(--theme-border);
+  border-radius: 0.75rem;
+  /* 12px */
+  transition: all 0.2s ease;
 }
 
-/* Dynamic Background - Dark Gradient with Floating Glow */
-.background-animation {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: -1;
-  background:
-    radial-gradient(ellipse at 20% 80%, var(--theme-grad-1) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, var(--theme-grad-2) 0%, transparent 50%),
-    radial-gradient(ellipse at 40% 40%, var(--theme-grad-3) 0%, transparent 40%),
-    linear-gradient(180deg, var(--theme-bg-base) 0%, #0a0a12 50%, #000000 100%);
-  overflow: hidden;
-  transition: background 1s ease;
+.pro-card:hover {
+  border-color: var(--theme-border);
+  /* Locked border */
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.background-animation::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background:
-    radial-gradient(circle at 30% 70%, var(--theme-grad-1) 0%, transparent 25%),
-    radial-gradient(circle at 70% 30%, var(--theme-grad-2) 0%, transparent 25%);
-  animation: floatGlow 20s ease-in-out infinite;
-  opacity: 0.7;
-  transition: background 1s ease;
-}
-
-.background-animation::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background:
-    radial-gradient(circle at 60% 60%, var(--theme-grad-3) 0%, transparent 30%),
-    radial-gradient(circle at 20% 40%, var(--theme-grad-1) 0%, transparent 30%);
-  animation: floatGlow 25s ease-in-out infinite reverse;
-  opacity: 0.5;
-  transition: background 1s ease;
-}
-
-/* Reduced Motion Class */
-.reduce-motion .background-animation::before,
-.reduce-motion .background-animation::after {
-  animation: none;
-}
-
-@keyframes floatGlow {
-
-  0%,
-  100% {
-    transform: translate(0, 0) rotate(0deg);
-  }
-
-  25% {
-    transform: translate(2%, 2%) rotate(1deg);
-  }
-
-  50% {
-    transform: translate(-1%, 3%) rotate(-1deg);
-  }
-
-  75% {
-    transform: translate(3%, -1%) rotate(0.5deg);
-  }
-}
-
-/* Floating animation for ambient glows */
-@keyframes float-slow {
-
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-
-  25% {
-    transform: translate(5%, 3%) scale(1.05);
-  }
-
-  50% {
-    transform: translate(-3%, 5%) scale(0.95);
-  }
-
-  75% {
-    transform: translate(4%, -2%) scale(1.02);
-  }
-}
-
-@keyframes float-slower {
-
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-
-  33% {
-    transform: translate(-4%, 4%) scale(1.03);
-  }
-
-  66% {
-    transform: translate(3%, -3%) scale(0.97);
-  }
-}
-
-.animate-float-slow {
-  animation: float-slow 25s ease-in-out infinite;
-}
-
-.animate-float-slower {
-  animation: float-slower 35s ease-in-out infinite;
-}
-
-/* Reduced motion support */
-.reduce-motion .animate-float-slow,
-.reduce-motion .animate-float-slower {
-  animation: none;
-}
-
+/* Hide print elements */
 @media print {
-  @page {
-    size: portrait;
-    margin: 0.5cm;
-  }
-
-  body {
-    margin: 0 !important;
-    padding: 0 !important;
-    background: white !important;
-    color: black !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-    width: 100%;
-    height: 100%;
-    overflow: hidden !important;
-  }
-
-  /* Hide everything by default */
-  body>* {
-    display: none !important;
-  }
-
-  /* Only show the app root, but manage its children */
-  #root {
-    display: block !important;
-    width: 100%;
-    height: 100%;
-  }
-
-  /* Hide the main UI container */
-  #root>div>div.min-h-screen {
-    display: none !important;
-  }
-
   .no-print {
     display: none !important;
   }
-
-  .only-print {
-    display: block !important;
-    position: relative !important;
-    top: auto !important;
-    left: auto !important;
-    width: 100% !important;
-    height: auto !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    background: white !important;
-    color: black !important;
-  }
-
-  /* Reset some resets */
-  * {
-    text-shadow: none !important;
-    box-shadow: none !important;
-  }
-}
-
-.only-print {
-  display: none;
 }

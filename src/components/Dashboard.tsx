@@ -486,46 +486,17 @@ export const Dashboard: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-transparent text-white p-6 relative">
+        <div>
             <div className="max-w-6xl mx-auto">
-                {/* Navigation Bar */}
-                <header className="flex justify-between items-center mb-12 py-2">
-                    <img
-                        src="/logo.png"
-                        alt="SunSar Bingo"
-                        className="h-10 sm:h-12 w-auto object-contain cursor-pointer active:scale-95 transition-transform"
-                    />
-                    <div className="flex gap-2 items-center">
-                        <button
-                            onClick={() => navigate('/help')}
-                            className="p-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-full transition-colors"
-                            title="Help Guide"
-                        >
-                            <HelpCircle size={20} />
-                        </button>
-                        <button
-                            onClick={openSettings}
-                            className="p-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-full transition-colors"
-                            title="Settings"
-                        >
-                            <Settings size={20} />
-                        </button>
-                        <button
-                            onClick={logout}
-                            className="bg-white/5 hover:bg-white/10 px-4 py-2 rounded-xl text-sm font-semibold transition-colors border border-white/10 hover:border-white/20"
-                        >
-                            Logout
-                        </button>
-                    </div>
-                </header>
+
 
                 {/* Hero / Greeting Section */}
                 <div className="mb-10">
-                    <h1 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight">
-                        My <span className="bg-gradient-to-r from-accent-primary to-accent-secondary bg-clip-text text-transparent italic">Boards</span>
+                    <h1 className="text-3xl font-semibold text-white tracking-tight">
+                        My Boards
                     </h1>
-                    <p className="text-slate-400 mt-2 text-base sm:text-lg">
-                        Welcome back, <span className="text-accent-primary font-medium">{user?.displayName?.split(' ')[0] || 'Bingo Player'}</span>
+                    <p className="text-slate-400 mt-1">
+                        Welcome back, <span className="text-white font-medium">{user?.displayName?.split(' ')[0] || 'Bingo Player'}</span>
                     </p>
                 </div>
 
@@ -533,12 +504,12 @@ export const Dashboard: React.FC = () => {
                     {/* Create New Card */}
                     <button
                         onClick={() => setIsCreateModalOpen(true)}
-                        className="create-card group relative flex flex-col items-center justify-center h-48 rounded-2xl transition-all cursor-pointer shadow-2xl"
+                        className="pro-card group relative flex flex-col items-center justify-center h-48 transition-all cursor-pointer hover:bg-zinc-900 border-dashed border-2 border-zinc-700 bg-transparent"
                     >
-                        <div className="relative z-10 w-14 h-14 rounded-full bg-gradient-to-br from-accent-primary to-accent-secondary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(139,92,246,0.5)]">
-                            <Plus className="w-7 h-7 text-white" />
+                        <div className="relative z-10 w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                            <Plus className="w-6 h-6 text-zinc-400 group-hover:text-white" />
                         </div>
-                        <span className="relative z-10 font-bold text-lg text-white group-hover:text-white transition-colors tracking-wide">Create New Board</span>
+                        <span className="relative z-10 font-semibold text-sm text-zinc-400 group-hover:text-white transition-colors">Create New Board</span>
                     </button>
 
                     {/* My Boards - boards I own */}
@@ -554,7 +525,7 @@ export const Dashboard: React.FC = () => {
                                     console.log('Navigating to board:', boardPath);
                                     navigate(boardPath);
                                 }}
-                                className="dashboard-card group relative h-48 rounded-2xl p-6 flex flex-col justify-between cursor-pointer overflow-hidden active:scale-[0.99]"
+                                className="pro-card group relative h-48 p-6 flex flex-col justify-between cursor-pointer overflow-hidden active:scale-[0.99] hover:bg-zinc-900"
                             >
                                 {/* Action Buttons Container */}
                                 <div className="absolute top-4 right-4 flex gap-2 z-20">
@@ -650,7 +621,7 @@ export const Dashboard: React.FC = () => {
                                             console.log('Navigating to shared board:', boardPath);
                                             navigate(boardPath);
                                         }}
-                                        className="dashboard-card group relative h-48 rounded-2xl p-6 flex flex-col justify-between cursor-pointer overflow-hidden active:scale-[0.99]"
+                                        className="pro-card group relative h-48 p-6 flex flex-col justify-between cursor-pointer overflow-hidden active:scale-[0.99] hover:bg-zinc-900"
                                     >
                                         <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity pointer-events-none">
                                             <LayoutGrid className="w-24 h-24" />

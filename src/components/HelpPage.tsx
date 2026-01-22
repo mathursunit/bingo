@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import {
     ArrowLeft, CheckSquare, Share2, BookOpen,
     Plus, UserPlus, Trophy, Palette, Zap, Camera,
-    Sparkles, LayoutGrid, Settings, Sun, Moon
+    Sparkles, LayoutGrid
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../contexts/SettingsContext';

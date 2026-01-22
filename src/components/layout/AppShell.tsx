@@ -1,7 +1,8 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutGrid, LogOut, Menu, HelpCircle, User, Settings } from 'lucide-react';
+import { LayoutGrid, LogOut, Menu, HelpCircle, User, Settings, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useSettings } from '../../contexts/SettingsContext';
 import { cn } from '../../lib/utils';
 
 interface AppShellProps {
@@ -10,6 +11,7 @@ interface AppShellProps {
 
 export const AppShell: React.FC<AppShellProps> = ({ children }) => {
     const { logout, user } = useAuth();
+    const { openSettings, settings, updateSettings } = useSettings();
     const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
     const location = useLocation();
 
@@ -20,9 +22,15 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
     const navItems = [
         { label: 'Dashboard', path: '/dashboard', icon: LayoutGrid },
-        { label: 'Settings', path: '/settings', icon: Settings },
         { label: 'Help & Guide', path: '/help', icon: HelpCircle },
     ];
+
+    const toggleTheme = () => {
+        const themes = ['dawn', 'midnight', 'forest', 'ocean', 'sunset'];
+        const currentIndex = themes.indexOf(settings.theme);
+        const nextIndex = (currentIndex + 1) % themes.length;
+        updateSettings({ theme: themes[nextIndex] });
+    };
 
     return (
         <div className="min-h-screen bg-[var(--theme-bg-base)] text-slate-200 flex">
@@ -62,6 +70,20 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                             {item.label}
                         </NavLink>
                     ))}
+                    <button
+                        onClick={openSettings}
+                        className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-slate-100 hover:bg-white/5 transition-colors"
+                    >
+                        <Settings size={18} />
+                        Settings
+                    </button>
+                    <button
+                        onClick={toggleTheme}
+                        className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-slate-100 hover:bg-white/5 transition-colors"
+                    >
+                        {settings.theme === 'dawn' ? <Sun size={18} /> : <Moon size={18} />}
+                        Theme: <span className="capitalize">{settings.theme}</span>
+                    </button>
                 </nav>
 
                 {/* User Footer */}

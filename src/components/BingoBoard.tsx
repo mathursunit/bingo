@@ -4,10 +4,10 @@ import { db } from '../firebase';
 import { useBingo } from '../hooks/useBingo';
 import { useAuth } from '../contexts/AuthContext';
 import { useDialog } from '../contexts/DialogContext';
-import { useSettings } from '../contexts/SettingsContext';
+
 import { useSounds } from '../hooks/useSounds';
 import { cn } from '../lib/utils';
-import { Edit2, Check, Award, LogOut, Camera, Share2, Printer, LayoutGrid, Rocket, Sun, Moon, BookOpen, Settings, Trash2, X, ChevronLeft, ChevronRight, Plus, Lock } from 'lucide-react';
+import { Edit2, Check, Award, Camera, Share2, Printer, Rocket, BookOpen, Trash2, X, ChevronLeft, ChevronRight, Plus, Lock } from 'lucide-react';
 import { Download } from 'lucide-react';
 import { downloadFullBackup } from '../utils/backup';
 import confetti from 'canvas-confetti';
@@ -22,18 +22,17 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStr
 import { DraggableTile } from './ui/DraggableTile';
 import { BingoTile } from './ui/BingoTile';
 
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 export const BingoBoard: React.FC = () => {
     const { boardId, yearId } = useParams();
-    const navigate = useNavigate();
+
     // For legacy boards, yearId is set and we pass undefined to useBingo (which uses 'years' collection)
     // For new boards, boardId is set and we pass it to useBingo (which uses 'boards' collection)
     const effectiveBoardId = yearId ? undefined : boardId;
     const { items, members, loading, toggleItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, addReaction, deletePhoto, decrementProgress, inviteUser, removeMember, title, gridSize, updateTitle } = useBingo(effectiveBoardId);
-    const { logout, user } = useAuth();
+    const { user } = useAuth();
     const dialog = useDialog();
-    const { openSettings, settings, updateSettings } = useSettings();
     const { playClick, playSuccess, playBingo, playWhoosh } = useSounds();
     const [editMode, setEditMode] = useState(false);
     const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -498,56 +497,11 @@ export const BingoBoard: React.FC = () => {
                                 <BookOpen size={20} />
                             </button>
                             <button
-                                onClick={() => navigate('/dashboard')}
-                                className="p-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-full transition-colors"
-                                title="Dashboard"
-                            >
-                                <LayoutGrid size={20} />
-                            </button>
-                            <button
                                 onClick={() => setIsShareModalOpen(true)}
                                 className="p-2.5 text-slate-400 hover:text-accent-primary hover:bg-white/5 rounded-full transition-colors"
                                 title="Share Board"
                             >
                                 <Share2 size={20} />
-                            </button>
-                            <button
-                                onClick={() => {
-                                    const themes = ['dawn', 'midnight', 'forest', 'ocean', 'sunset'];
-                                    const currentIndex = themes.indexOf(settings.theme);
-                                    const nextIndex = (currentIndex + 1) % themes.length;
-                                    updateSettings({ theme: themes[nextIndex] });
-                                }}
-                                className="p-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-full transition-colors"
-                                title={`Theme: ${settings.theme} (click to change)`}
-                            >
-                                {settings.theme === 'dawn' ? <Sun size={20} /> : <Moon size={20} />}
-                            </button>
-                            <button
-                                onClick={openSettings}
-                                className="p-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-full transition-colors"
-                                title="Settings"
-                            >
-                                <Settings size={20} />
-                            </button>
-                            <div className="w-px h-6 bg-white/10 mx-1 hidden sm:block" />
-                            <motion.div
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                className="relative cursor-pointer group"
-                            >
-                                <img
-                                    src={user?.photoURL || ''}
-                                    alt="User"
-                                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 border-white/10 group-hover:border-accent-primary transition-colors object-cover shrink-0"
-                                />
-                            </motion.div>
-                            <button
-                                onClick={logout}
-                                className="p-2.5 text-slate-400 hover:text-red-400 hover:bg-white/5 rounded-full transition-colors"
-                                title="Logout"
-                            >
-                                <LogOut size={20} />
                             </button>
                         </div>
                     </header>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutGrid, LogOut, Menu, HelpCircle, User, Settings, Sun, Moon } from 'lucide-react';
+import { LayoutGrid, LogOut, Menu, HelpCircle, User, Settings } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSettings } from '../../contexts/SettingsContext';
 import { cn } from '../../lib/utils';
@@ -25,12 +25,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
         { label: 'Help & Guide', path: '/help', icon: HelpCircle },
     ];
 
-    const toggleTheme = () => {
-        const themes = ['dawn', 'midnight', 'forest', 'ocean', 'sunset'];
-        const currentIndex = themes.indexOf(settings.theme);
-        const nextIndex = (currentIndex + 1) % themes.length;
-        updateSettings({ theme: themes[nextIndex] });
-    };
+
 
     return (
         <div className="min-h-screen bg-[var(--theme-bg-base)] text-slate-200 flex">
@@ -77,13 +72,31 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                         <Settings size={18} />
                         Settings
                     </button>
-                    <button
-                        onClick={toggleTheme}
-                        className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-slate-100 hover:bg-white/5 transition-colors"
-                    >
-                        {settings.theme === 'dawn' ? <Sun size={18} /> : <Moon size={18} />}
-                        Theme: <span className="capitalize">{settings.theme}</span>
-                    </button>
+                    <div className="px-3 py-3 border-t border-white/5 mt-2">
+                        <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-3">Theme</div>
+                        <div className="flex justify-between gap-1">
+                            {[
+                                { id: 'dawn', color: 'bg-orange-400' },
+                                { id: 'midnight', color: 'bg-indigo-500' },
+                                { id: 'forest', color: 'bg-emerald-500' },
+                                { id: 'ocean', color: 'bg-cyan-500' },
+                                { id: 'sunset', color: 'bg-rose-500' }
+                            ].map((t) => (
+                                <button
+                                    key={t.id}
+                                    onClick={() => updateSettings({ theme: t.id })}
+                                    className={cn(
+                                        "w-6 h-6 rounded-full transition-all duration-300 relative",
+                                        t.color,
+                                        settings.theme === t.id
+                                            ? "ring-2 ring-white ring-offset-2 ring-offset-[var(--theme-bg-subtle)] scale-110 z-10"
+                                            : "opacity-40 hover:opacity-100 hover:scale-105"
+                                    )}
+                                    title={t.id}
+                                />
+                            ))}
+                        </div>
+                    </div>
                 </nav>
 
                 {/* User Footer */}
@@ -118,7 +131,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                     <button onClick={() => setIsSidebarOpen(true)} className="p-2 text-slate-400">
                         <Menu size={24} />
                     </button>
-                    <span className="font-semibold text-white">SunSar Bingo</span>
+                    <img src="/logo.png" alt="SunSar Bingo" className="h-8 w-auto" />
                     <div className="w-8" /> {/* Spacer */}
                 </header>
 

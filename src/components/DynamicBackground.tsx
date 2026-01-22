@@ -22,16 +22,12 @@ export const DynamicBackground: React.FC = () => {
     const animationRef = useRef<number | null>(null);
     const particlesRef = useRef<Particle[]>([]);
 
+    // Only these 3 themes have animated backgrounds
+    const animatedThemes = ['cosmic', 'lavender', 'light'];
+    const isAnimatedTheme = animatedThemes.includes(settings.theme);
+
     const themeConfig = useMemo(() => {
         switch (settings.theme) {
-            case 'midnight':
-                return {
-                    type: 'stars',
-                    particleCount: 150,
-                    baseColor: 'rgba(100, 150, 255, ',
-                    bgGradient: 'radial-gradient(ellipse at 50% 0%, #0a1628 0%, #020617 50%, #000 100%)',
-                    shootingStars: true,
-                };
             case 'light':
                 return {
                     type: 'clouds',
@@ -43,50 +39,26 @@ export const DynamicBackground: React.FC = () => {
             case 'cosmic':
                 return {
                     type: 'stars',
-                    particleCount: 200, // More stars
-                    baseColor: 'rgba(139, 92, 246, ', // Violet stars
-                    bgGradient: 'radial-gradient(ellipse at 50% 0%, #1e1b4b 0%, #0f172a 40%, #020617 100%)', // Deep Indigo to Slate
+                    particleCount: 200,
+                    baseColor: 'rgba(139, 92, 246, ',
+                    bgGradient: 'radial-gradient(ellipse at 50% 0%, #1e1b4b 0%, #0f172a 40%, #020617 100%)',
                     shootingStars: true,
                 };
             case 'lavender':
                 return {
                     type: 'petals',
                     particleCount: 50,
-                    baseColor: 'rgba(232, 121, 249, ', // Fuchsia
+                    baseColor: 'rgba(232, 121, 249, ',
                     bgGradient: 'radial-gradient(ellipse at 50% 0%, #3b0764 0%, #2e1065 50%, #1a0525 100%)',
                     shootingStars: false,
                 };
-            case 'forest':
-                return {
-                    type: 'leaves',
-                    particleCount: 40,
-                    baseColor: 'rgba(100, 200, 120, ',
-                    bgGradient: 'radial-gradient(ellipse at 30% 80%, #0a3d1a 0%, #052e16 50%, #021a09 100%)',
-                    shootingStars: false,
-                };
-            case 'ocean':
-                return {
-                    type: 'bubbles',
-                    particleCount: 60,
-                    baseColor: 'rgba(100, 220, 255, ',
-                    bgGradient: 'radial-gradient(ellipse at 50% 100%, #0c4a5e 0%, #083344 50%, #041825 100%)',
-                    shootingStars: false,
-                };
-            case 'sunset':
-                return {
-                    type: 'embers',
-                    particleCount: 50,
-                    baseColor: 'rgba(255, 150, 80, ',
-                    bgGradient: 'radial-gradient(ellipse at 50% 100%, #4a1a00 0%, #2a0a0a 50%, #1a0505 100%)',
-                    shootingStars: false,
-                };
-            case 'dawn':
             default:
+                // Non-animated themes - return minimal config (won't render)
                 return {
-                    type: 'aurora',
-                    particleCount: 80,
-                    baseColor: 'rgba(180, 120, 255, ',
-                    bgGradient: 'radial-gradient(ellipse at 50% 0%, #1a1040 0%, #0f111a 50%, #0a0b10 100%)',
+                    type: 'none',
+                    particleCount: 0,
+                    baseColor: 'rgba(0, 0, 0, ',
+                    bgGradient: 'none',
                     shootingStars: false,
                 };
         }
@@ -184,6 +156,11 @@ export const DynamicBackground: React.FC = () => {
         };
     }, [settings.enableAnimation, themeConfig]);
 
+    // Don't render anything for non-animated themes (solid body background will show)
+    if (!isAnimatedTheme) {
+        return null;
+    }
+
     return (
         <>
             {/* Gradient Background Layer */}
@@ -199,29 +176,21 @@ export const DynamicBackground: React.FC = () => {
                 style={{ opacity: settings.enableAnimation === false ? 0 : 0.8 }}
             />
 
-            {/* Ambient Glow Overlay */}
+            {/* Ambient Glow Overlay - only for animated themes */}
             <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
                 <div
-                    className={`absolute w-[600px] h-[600px] rounded-full blur-[120px] animate-float-slow ${settings.theme === 'midnight' ? 'bg-blue-500/10' :
-                        settings.theme === 'cosmic' ? 'bg-violet-600/20' :
-                            settings.theme === 'forest' ? 'bg-green-500/10' :
-                                settings.theme === 'ocean' ? 'bg-cyan-500/10' :
-                                    settings.theme === 'sunset' ? 'bg-orange-500/10' :
-                                        settings.theme === 'lavender' ? 'bg-fuchsia-500/10' :
-                                            settings.theme === 'light' ? 'bg-blue-300/20' :
-                                                'bg-purple-500/10'
+                    className={`absolute w-[600px] h-[600px] rounded-full blur-[120px] animate-float-slow ${settings.theme === 'cosmic' ? 'bg-violet-600/20' :
+                            settings.theme === 'lavender' ? 'bg-fuchsia-500/10' :
+                                settings.theme === 'light' ? 'bg-blue-300/20' :
+                                    'bg-purple-500/10'
                         }`}
                     style={{ top: '-15%', left: '-10%' }}
                 />
                 <div
-                    className={`absolute w-[500px] h-[500px] rounded-full blur-[100px] animate-float-slower ${settings.theme === 'midnight' ? 'bg-indigo-500/10' :
-                        settings.theme === 'cosmic' ? 'bg-pink-600/20' :
-                            settings.theme === 'forest' ? 'bg-emerald-500/10' :
-                                settings.theme === 'ocean' ? 'bg-teal-500/10' :
-                                    settings.theme === 'sunset' ? 'bg-rose-500/10' :
-                                        settings.theme === 'lavender' ? 'bg-purple-600/20' :
-                                            settings.theme === 'light' ? 'bg-sky-300/20' :
-                                                'bg-pink-500/10'
+                    className={`absolute w-[500px] h-[500px] rounded-full blur-[100px] animate-float-slower ${settings.theme === 'cosmic' ? 'bg-pink-600/20' :
+                            settings.theme === 'lavender' ? 'bg-purple-600/20' :
+                                settings.theme === 'light' ? 'bg-sky-300/20' :
+                                    'bg-pink-500/10'
                         }`}
                     style={{ bottom: '-10%', right: '-5%' }}
                 />

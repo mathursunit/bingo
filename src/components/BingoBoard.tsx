@@ -493,6 +493,13 @@ export const BingoBoard: React.FC = () => {
                         </div>
                         <div className="flex items-center gap-1 sm:gap-2">
                             <button
+                                onClick={backupDatabase}
+                                className="p-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-full transition-colors"
+                                title="Download Database Backup"
+                            >
+                                <Download size={20} />
+                            </button>
+                            <button
                                 onClick={() => setIsMemoriesOpen(true)}
                                 className="p-2.5 text-slate-400 hover:text-accent-gold hover:bg-white/5 rounded-full transition-colors"
                                 title="View Memories"
@@ -835,13 +842,7 @@ export const BingoBoard: React.FC = () => {
                                         <Printer size={12} />
                                         Print Status
                                     </button>
-                                    <button
-                                        onClick={backupDatabase}
-                                        className="py-2 px-3 text-xs font-medium text-slate-500 hover:text-white transition-colors flex items-center justify-center gap-2 border border-slate-700/50 rounded-lg hover:bg-white/5"
-                                        title="Download Database Backup"
-                                    >
-                                        <Download size={12} />
-                                    </button>
+
                                 </div>
                             )}
                         </div>

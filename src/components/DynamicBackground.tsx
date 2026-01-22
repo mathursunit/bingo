@@ -250,10 +250,10 @@ function createParticle(width: number, height: number, type: string): Particle {
         case 'clouds':
             return {
                 ...base,
-                size: Math.random() * 60 + 20, // Huge clouds
-                speedX: Math.random() * 0.2 + 0.05, // Slow drift
-                speedY: 0,
-                opacity: Math.random() * 0.15 + 0.05, // Very subtle
+                size: Math.random() * 80 + 40, // Even larger fluffy clouds
+                speedX: Math.random() * 0.3 + 0.1, // Slightly faster drift
+                speedY: Math.random() * 0.05 - 0.025, // Slight vertical wobble
+                opacity: Math.random() * 0.4 + 0.3, // Much more visible (0.3-0.7)
             };
         case 'leaves':
             return {
@@ -340,9 +340,21 @@ function drawParticle(
             break;
 
         case 'clouds':
+            // Draw fluffy cloud with multiple overlapping circles and soft shadow
+            ctx.save();
+            ctx.shadowColor = 'rgba(100, 150, 200, 0.3)';
+            ctx.shadowBlur = 20;
             ctx.fillStyle = `rgba(255, 255, 255, ${particle.opacity})`;
-            ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+            // Main cloud body - multiple circles for fluffy look
+            ctx.arc(particle.x, particle.y, particle.size * 0.6, 0, Math.PI * 2);
             ctx.fill();
+            ctx.beginPath();
+            ctx.arc(particle.x - particle.size * 0.4, particle.y + particle.size * 0.1, particle.size * 0.45, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(particle.x + particle.size * 0.4, particle.y + particle.size * 0.1, particle.size * 0.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
             break;
 
         case 'leaves':

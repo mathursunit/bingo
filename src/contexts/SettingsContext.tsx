@@ -39,14 +39,27 @@ export const useSettings = () => {
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user } = useAuth();
-    const [settings, setSettings] = useState<Settings>(defaultSettings);
+
+    // Initialize from LocalStorage to avoid FOUC (Flash of Unstyled Content) / Reset
+    const [settings, setSettings] = useState<Settings>(() => {
+        try {
+            const local = localStorage.getItem('bingo_settings');
+            return local ? { ...defaultSettings, ...JSON.parse(local) } : defaultSettings;
+        } catch (e) {
+            console.error("Error parsing local settings", e);
+            return defaultSettings;
+        }
+    });
+
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-    // Load settings from Firestore
+    // Load settings from Firestore when user logs in
     useEffect(() => {
         const loadSettings = async () => {
             if (!user) {
-                setSettings(defaultSettings);
+                // If logged out, keep local settings or reset? 
+                // Usually keeping local settings is better UX, so we don't force reset unless explicit logout.
+                // But the previous logic enforced defaultSettings. Let's stick to local persistence dominating if user is null.
                 return;
             }
 
@@ -55,7 +68,10 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 const docSnap = await getDoc(docRef);
 
                 if (docSnap.exists() && docSnap.data().settings) {
-                    setSettings({ ...defaultSettings, ...docSnap.data().settings });
+                    const serverSettings = { ...defaultSettings, ...docSnap.data().settings };
+                    setSettings(serverSettings);
+                    // Sync server settings to local
+                    localStorage.setItem('bingo_settings', JSON.stringify(serverSettings));
                 }
             } catch (error) {
                 console.error("Error loading settings:", error);
@@ -87,18 +103,25 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         } else {
             body.classList.remove('reduce-motion');
         }
-
     }, [settings]);
 
     const updateSettings = async (newSettings: Partial<Settings>, persist = true) => {
         const updated = { ...settings, ...newSettings };
         setSettings(updated);
 
+        // Persist to LocalStorage
+        try {
+            localStorage.setItem('bingo_settings', JSON.stringify(updated));
+        } catch (e) {
+            console.error("Failed to save settings locally", e);
+        }
+
+        // Persist to Firestore
         if (user && persist) {
             try {
                 await setDoc(doc(db, 'users', user.uid), { settings: updated }, { merge: true });
             } catch (error) {
-                console.error("Error saving settings:", error);
+                console.error("Error saving settings to DB:", error);
             }
         }
     };

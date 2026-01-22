@@ -28,24 +28,61 @@
 }
 
 /* Theme Overrides (Optional - kept for compatibility but flattened) */
+/* Theme Overrides */
 .theme-midnight {
   --theme-bg-base: #020617;
+  /* Slate 950 */
+  --theme-bg-subtle: #0f172a;
+  /* Slate 900 */
+  --theme-bg-card: #020617;
+  --theme-border: #1e293b;
+  /* Slate 800 */
   --theme-accent-primary: #38bdf8;
+  /* Sky 400 */
+  --theme-accent-secondary: #818cf8;
+  /* Indigo 400 */
 }
 
 .theme-forest {
   --theme-bg-base: #052e16;
+  /* Green 950 */
+  --theme-bg-subtle: #064e3b;
+  /* Green 900 */
+  --theme-bg-card: #052e16;
+  --theme-border: #065f46;
+  /* Emerald 800 */
   --theme-accent-primary: #4ade80;
+  /* Green 400 */
+  --theme-accent-secondary: #2dd4bf;
+  /* Teal 400 */
 }
 
 .theme-ocean {
   --theme-bg-base: #083344;
+  /* Cyan 950 */
+  --theme-bg-subtle: #164e63;
+  /* Cyan 900 */
+  --theme-bg-card: #083344;
+  --theme-border: #155e75;
+  /* Cyan 800 */
   --theme-accent-primary: #22d3ee;
+  /* Cyan 400 */
+  --theme-accent-secondary: #60a5fa;
+  /* Blue 400 */
 }
 
 .theme-sunset {
-  --theme-bg-base: #2a0a0a;
+  --theme-bg-base: #450a0a;
+  /* Red 950 */
+  --theme-bg-subtle: #7f1d1d;
+  /* Red 900 */
+  --theme-bg-card: #450a0a;
+  --theme-border: #991b1b;
+  /* Red 800 */
   --theme-accent-primary: #fb923c;
+  /* Orange 400 */
+  --theme-accent-secondary: #f472b6;
+  /* Pink 400 */
 }
 
 @theme {

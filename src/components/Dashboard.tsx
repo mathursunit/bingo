@@ -491,26 +491,27 @@ export const Dashboard: React.FC = () => {
 
 
                 {/* Hero / Greeting Section */}
-                <div className="mb-10">
-                    <h1 className="text-3xl font-semibold text-white tracking-tight">
-                        My Boards
-                    </h1>
-                    <p className="text-slate-400 mt-1">
-                        Welcome back, <span className="text-white font-medium">{user?.displayName?.split(' ')[0] || 'Bingo Player'}</span>
-                    </p>
+                <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-semibold text-white tracking-tight">
+                            My Boards
+                        </h1>
+                        <p className="text-slate-400 mt-1">
+                            Welcome back, <span className="text-white font-medium">{user?.displayName?.split(' ')[0] || 'Bingo Player'}</span>
+                        </p>
+                    </div>
+
+                    <button
+                        onClick={() => setIsCreateModalOpen(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-white text-bg-dark font-bold rounded-lg hover:bg-slate-200 transition-colors shadow-lg active:scale-95"
+                    >
+                        <Plus className="w-5 h-5" />
+                        <span>New Board</span>
+                    </button>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {/* Create New Card */}
-                    <button
-                        onClick={() => setIsCreateModalOpen(true)}
-                        className="pro-card group relative flex flex-col items-center justify-center h-48 transition-all cursor-pointer hover:bg-zinc-900 border-dashed border-2 border-zinc-700 bg-transparent"
-                    >
-                        <div className="relative z-10 w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                            <Plus className="w-6 h-6 text-zinc-400 group-hover:text-white" />
-                        </div>
-                        <span className="relative z-10 font-semibold text-sm text-zinc-400 group-hover:text-white transition-colors">Create New Board</span>
-                    </button>
+                    {/* (Card Removed) */}
 
                     {/* My Boards - boards I own */}
                     {boards.filter(b => b.myRole === 'owner').map(board => {

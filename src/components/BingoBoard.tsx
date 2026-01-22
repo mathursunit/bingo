@@ -8,8 +8,7 @@ import { useDialog } from '../contexts/DialogContext';
 import { useSounds } from '../hooks/useSounds';
 import { cn } from '../lib/utils';
 import { Edit2, Check, Award, Camera, Share2, Printer, Rocket, BookOpen, Trash2, X, ChevronLeft, ChevronRight, Plus, Lock } from 'lucide-react';
-import { Download } from 'lucide-react';
-import { downloadFullBackup } from '../utils/backup';
+
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { BingoItem } from '../types';
@@ -21,6 +20,7 @@ import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy } from '@dnd-kit/sortable';
 import { DraggableTile } from './ui/DraggableTile';
 import { BingoTile } from './ui/BingoTile';
+import { Modal } from './ui/Modal';
 
 import { useParams } from 'react-router-dom';
 
@@ -482,13 +482,7 @@ export const BingoBoard: React.FC = () => {
                             </p>
                         </div>
                         <div className="flex items-center gap-1 sm:gap-2">
-                            <button
-                                onClick={() => downloadFullBackup(user?.uid, { items, title, gridSize, members, boardId: effectiveBoardId })}
-                                className="p-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-full transition-colors"
-                                title="Download Full Backup"
-                            >
-                                <Download size={20} />
-                            </button>
+
                             <button
                                 onClick={() => setIsMemoriesOpen(true)}
                                 className="p-2.5 text-slate-400 hover:text-accent-gold hover:bg-white/5 rounded-full transition-colors"
@@ -718,388 +712,331 @@ export const BingoBoard: React.FC = () => {
                 </AnimatePresence>
 
                 {/* Edit Modal */}
-                <AnimatePresence>
-                    {
-                        isEditModalOpen && (
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                <Modal
+                    isOpen={isEditModalOpen}
+                    onClose={() => setIsEditModalOpen(false)}
+                    title="Edit Tile"
+                    size="sm"
+                    footer={
+                        <>
+                            <button
                                 onClick={() => setIsEditModalOpen(false)}
+                                className="flex-1 py-2.5 rounded-xl font-semibold bg-white/5 text-slate-300 hover:bg-white/10 transition-colors"
                             >
-                                <motion.div
-                                    initial={{ scale: 0.9, y: 20 }}
-                                    animate={{ scale: 1, y: 0 }}
-                                    exit={{ scale: 0.9, y: 20 }}
-                                    className="bg-bg-dark border border-accent-gold/30 p-6 rounded-2xl w-full max-w-sm shadow-2xl relative overflow-hidden"
-                                    onClick={e => e.stopPropagation()}
-                                >
-                                    <h3 className="text-xl font-bold text-white mb-4">Edit Tile</h3>
-
-                                    {/* Preview */}
-                                    <div className="mb-4 flex justify-center">
-                                        <div className="w-32 h-32 rounded-lg bg-bg-card/80 border border-white/10 flex items-center justify-center p-2 text-center overflow-hidden">
-                                            <span className={cn("font-hand font-semibold leading-tight break-words")}
-                                                style={{
-                                                    color: editFormStyle.color || '#ffffff',
-                                                    fontWeight: editFormStyle.bold ? 'bold' : '600',
-                                                    fontStyle: editFormStyle.italic ? 'italic' : 'normal',
-                                                    fontSize: editFormStyle.fontSize === 'sm' ? '12px' : editFormStyle.fontSize === 'lg' ? '18px' : editFormStyle.fontSize === 'xl' ? '22px' : '16px'
-                                                }}
-                                            >
-                                                {editFormText || "Preview Text"}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    {/* Text Input */}
-                                    <div className="mb-4">
-                                        <div className="flex items-center gap-3 mb-3 bg-white/5 p-3 rounded-xl border border-white/5">
-                                            <label className="flex items-center gap-2 cursor-pointer flex-1">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={editFormIsFreeSpace}
-                                                    onChange={(e) => {
-                                                        const checked = e.target.checked;
-                                                        setEditFormIsFreeSpace(checked);
-                                                        if (checked) {
-                                                            setEditFormText("FREE!");
-                                                        }
-                                                    }}
-                                                    className="w-4 h-4 rounded border-gray-500 bg-black/50 text-accent-primary focus:ring-accent-primary"
-                                                />
-                                                <span className={cn("text-sm font-bold transition-colors", editFormIsFreeSpace ? "text-accent-primary" : "text-slate-300")}>
-                                                    Flag as FREE Space 🚦
-                                                </span>
-                                            </label>
-                                            {editFormIsFreeSpace && (
-                                                <div className="flex gap-1 bg-black/80 rounded-full p-1 px-1.5 border border-white/20">
-                                                    <div className="w-2 h-2 rounded-full bg-red-900/30" />
-                                                    <div className="w-2 h-2 rounded-full bg-yellow-900/30" />
-                                                    <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]" />
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <label className="text-xs text-slate-400 mb-1 block">Text Content</label>
-                                        <textarea
-                                            className={cn("w-full bg-black/20 text-white rounded-lg p-3 border border-white/10 focus:border-accent-primary outline-none min-h-[80px]", editFormIsFreeSpace && "opacity-50 cursor-not-allowed")}
-                                            disabled={editFormIsFreeSpace}
-                                            value={editFormText}
-                                            onChange={(e) => setEditFormText(e.target.value)}
-                                            placeholder="Enter bingo task..."
-                                        />
-                                    </div>
-
-                                    {/* Styling Controls */}
-                                    {/* Styling Controls & Options Wrapper */}
-                                    <div className={cn("transition-opacity duration-300", editFormIsFreeSpace && "opacity-30 pointer-events-none")}>
-                                        <div className="mb-6 space-y-3">
-                                            <div>
-                                                <label className="text-xs text-slate-400 mb-1 block">Color</label>
-                                                <div className="flex gap-2 flex-wrap">
-                                                    {['#ffffff', '#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#ec4899', '#a855f7'].map(color => (
-                                                        <button
-                                                            key={color}
-                                                            className={cn("w-6 h-6 rounded-full border border-white/10 transition-transform active:scale-90", editFormStyle.color === color && "ring-2 ring-white scale-110")}
-                                                            style={{ backgroundColor: color }}
-                                                            onClick={() => setEditFormStyle(prev => ({ ...prev, color }))}
-                                                        />
-                                                    ))}
-                                                </div>
-                                            </div>
-
-                                            <div className="flex gap-4">
-                                                <div className="flex-1">
-                                                    <label className="text-xs text-slate-400 mb-1 block">Size</label>
-                                                    <div className="flex bg-black/20 rounded-lg p-1">
-                                                        {['sm', 'base', 'lg', 'xl'].map((size) => (
-                                                            <button
-                                                                key={size}
-                                                                onClick={() => setEditFormStyle(prev => ({ ...prev, fontSize: size as any }))}
-                                                                className={cn(
-                                                                    "flex-1 py-1 text-[10px] font-bold rounded transition-colors uppercase",
-                                                                    (editFormStyle.fontSize || 'base') === size ? "bg-accent-primary text-white" : "text-slate-400 hover:text-white"
-                                                                )}
-                                                            >
-                                                                {size === 'base' ? 'M' : size}
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <label className="text-xs text-slate-400 mb-1 block">Style</label>
-                                                    <div className="flex gap-1 bg-black/20 rounded-lg p-1">
-                                                        <button
-                                                            onClick={() => setEditFormStyle(prev => ({ ...prev, bold: !prev.bold }))}
-                                                            className={cn("w-8 h-full rounded flex items-center justify-center font-bold transition-colors", editFormStyle.bold ? "bg-white text-black" : "text-slate-400 hover:text-white")}
-                                                        >
-                                                            B
-                                                        </button>
-                                                        <button
-                                                            onClick={() => setEditFormStyle(prev => ({ ...prev, italic: !prev.italic }))}
-                                                            className={cn("w-8 h-full rounded flex items-center justify-center italic transition-colors font-serif", editFormStyle.italic ? "bg-white text-black" : "text-slate-400 hover:text-white")}
-                                                        >
-                                                            I
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-4 mb-6 pt-4 border-t border-white/10">
-                                            <div className="space-y-2">
-                                                <label className="text-sm font-semibold text-slate-300">Repeat Goal</label>
-                                                <input
-                                                    type="number"
-                                                    min="1"
-                                                    max="100"
-                                                    value={editFormTargetCount}
-                                                    onChange={(e) => setEditFormTargetCount(parseInt(e.target.value) || 1)}
-                                                    className="w-full bg-slate-950/50 border border-white/10 rounded-xl p-3 text-white placeholder-slate-500 focus:outline-none focus:border-accent-primary/50 transition-colors"
-                                                />
-                                                <p className="text-xs text-slate-500">How many times should this be completed?</p>
-                                            </div>
-
-                                            <div className="space-y-2">
-                                                <label className="text-sm font-semibold text-slate-300">Due Date (Optional)</label>
-                                                <input
-                                                    type="date"
-                                                    value={editFormDueDate}
-                                                    onChange={(e) => setEditFormDueDate(e.target.value)}
-                                                    className="w-full bg-slate-950/50 border border-white/10 rounded-xl p-3 text-white placeholder-slate-500 focus:outline-none focus:border-accent-primary/50 transition-colors [color-scheme:dark]"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-
-
-
-                                    {/* Actions */}
-                                    <div className="flex gap-3">
-                                        <button
-                                            onClick={() => setIsEditModalOpen(false)}
-                                            className="flex-1 py-3 rounded-xl font-semibold bg-white/5 text-slate-300 hover:bg-white/10 transition-colors"
-                                        >
-                                            Cancel
-                                        </button>
-                                        <button
-                                            onClick={handleSaveEdit}
-                                            className="flex-1 py-3 px-4 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-xl font-bold text-white shadow-lg hover:shadow-violet-500/25 active:scale-95 transition-all"
-                                        >
-                                            Ok
-                                        </button>
-                                    </div>
-                                </motion.div>
-                            </motion.div>
-                        )
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSaveEdit}
+                                className="flex-1 py-2.5 px-4 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-xl font-bold text-white shadow-lg hover:shadow-violet-500/25 active:scale-95 transition-all"
+                            >
+                                Save Changes
+                            </button>
+                        </>
                     }
-                </AnimatePresence>
+                >
+                    {/* Preview */}
+                    <div className="mb-6 flex justify-center">
+                        <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-lg bg-bg-card/80 border border-white/10 flex items-center justify-center p-2 text-center overflow-hidden relative">
+                            <span className={cn("font-hand font-semibold leading-tight break-words")}
+                                style={{
+                                    color: editFormStyle.color || '#ffffff',
+                                    fontWeight: editFormStyle.bold ? 'bold' : '600',
+                                    fontStyle: editFormStyle.italic ? 'italic' : 'normal',
+                                    fontSize: editFormStyle.fontSize === 'sm' ? '12px' : editFormStyle.fontSize === 'lg' ? '18px' : editFormStyle.fontSize === 'xl' ? '22px' : '16px'
+                                }}
+                            >
+                                {editFormText || "Preview Text"}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Text Input */}
+                    <div className="mb-6">
+                        <div className="flex items-center gap-3 mb-3 bg-white/5 p-3 rounded-xl border border-white/5">
+                            <label className="flex items-center gap-2 cursor-pointer flex-1">
+                                <input
+                                    type="checkbox"
+                                    checked={editFormIsFreeSpace}
+                                    onChange={(e) => {
+                                        const checked = e.target.checked;
+                                        setEditFormIsFreeSpace(checked);
+                                        if (checked) {
+                                            setEditFormText("FREE!");
+                                        }
+                                    }}
+                                    className="w-4 h-4 rounded border-gray-500 bg-black/50 text-accent-primary focus:ring-accent-primary"
+                                />
+                                <span className={cn("text-sm font-bold transition-colors", editFormIsFreeSpace ? "text-accent-primary" : "text-slate-300")}>
+                                    Flag as FREE Space 🚦
+                                </span>
+                            </label>
+                            {editFormIsFreeSpace && (
+                                <div className="flex gap-1 bg-black/80 rounded-full p-1 px-1.5 border border-white/20">
+                                    <div className="w-2 h-2 rounded-full bg-red-900/30" />
+                                    <div className="w-2 h-2 rounded-full bg-yellow-900/30" />
+                                    <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]" />
+                                </div>
+                            )}
+                        </div>
+
+                        <label className="text-xs text-slate-400 mb-1 block">Text Content</label>
+                        <textarea
+                            className={cn("w-full bg-black/20 text-white rounded-lg p-3 border border-white/10 focus:border-accent-primary outline-none min-h-[80px]", editFormIsFreeSpace && "opacity-50 cursor-not-allowed")}
+                            disabled={editFormIsFreeSpace}
+                            value={editFormText}
+                            onChange={(e) => setEditFormText(e.target.value)}
+                            placeholder="Enter bingo task..."
+                        />
+                    </div>
+
+                    {/* Styling Controls */}
+                    <div className={cn("transition-opacity duration-300", editFormIsFreeSpace && "opacity-30 pointer-events-none")}>
+                        <div className="mb-6 space-y-3">
+                            <div>
+                                <label className="text-xs text-slate-400 mb-1 block">Color</label>
+                                <div className="flex gap-2 flex-wrap">
+                                    {['#ffffff', '#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#ec4899', '#a855f7'].map(color => (
+                                        <button
+                                            key={color}
+                                            className={cn("w-6 h-6 rounded-full border border-white/10 transition-transform active:scale-90", editFormStyle.color === color && "ring-2 ring-white scale-110")}
+                                            style={{ backgroundColor: color }}
+                                            onClick={() => setEditFormStyle(prev => ({ ...prev, color }))}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="flex gap-4">
+                                <div className="flex-1">
+                                    <label className="text-xs text-slate-400 mb-1 block">Size</label>
+                                    <div className="flex bg-black/20 rounded-lg p-1">
+                                        {['sm', 'base', 'lg', 'xl'].map((size) => (
+                                            <button
+                                                key={size}
+                                                onClick={() => setEditFormStyle(prev => ({ ...prev, fontSize: size as any }))}
+                                                className={cn(
+                                                    "flex-1 py-1 text-[10px] font-bold rounded transition-colors uppercase",
+                                                    (editFormStyle.fontSize || 'base') === size ? "bg-accent-primary text-white" : "text-slate-400 hover:text-white"
+                                                )}
+                                            >
+                                                {size === 'base' ? 'M' : size}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="text-xs text-slate-400 mb-1 block">Style</label>
+                                    <div className="flex gap-1 bg-black/20 rounded-lg p-1">
+                                        <button
+                                            onClick={() => setEditFormStyle(prev => ({ ...prev, bold: !prev.bold }))}
+                                            className={cn("w-8 h-full rounded flex items-center justify-center font-bold transition-colors", editFormStyle.bold ? "bg-white text-black" : "text-slate-400 hover:text-white")}
+                                        >
+                                            B
+                                        </button>
+                                        <button
+                                            onClick={() => setEditFormStyle(prev => ({ ...prev, italic: !prev.italic }))}
+                                            className={cn("w-8 h-full rounded flex items-center justify-center italic transition-colors font-serif", editFormStyle.italic ? "bg-white text-black" : "text-slate-400 hover:text-white")}
+                                        >
+                                            I
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4 pt-4 border-t border-white/10">
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold text-slate-300">Repeat Goal</label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max="100"
+                                    value={editFormTargetCount}
+                                    onChange={(e) => setEditFormTargetCount(parseInt(e.target.value) || 1)}
+                                    className="w-full bg-slate-950/50 border border-white/10 rounded-xl p-3 text-white placeholder-slate-500 focus:outline-none focus:border-accent-primary/50 transition-colors"
+                                />
+                                <p className="text-xs text-slate-500">How many times should this be completed?</p>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold text-slate-300">Due Date (Optional)</label>
+                                <input
+                                    type="date"
+                                    value={editFormDueDate}
+                                    onChange={(e) => setEditFormDueDate(e.target.value)}
+                                    className="w-full bg-slate-950/50 border border-white/10 rounded-xl p-3 text-white placeholder-slate-500 focus:outline-none focus:border-accent-primary/50 transition-colors [color-scheme:dark]"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </Modal>
 
                 {/* Details / Completion Modal */}
-                <AnimatePresence>
-                    {
-                        isCompletionModalOpen && completingItemIndex !== null && (
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-                                onClick={() => { setIsCompletionModalOpen(false); setCompletingItemIndex(null); }}
-                            >
-                                <motion.div
-                                    initial={{ scale: 0.9, y: 20 }}
-                                    animate={{ scale: 1, y: 0 }}
-                                    exit={{ scale: 0.9, y: 20 }}
-                                    className="bg-bg-dark border border-accent-primary/30 p-6 rounded-2xl w-full max-w-sm shadow-2xl max-h-[90vh] overflow-y-auto no-scrollbar"
-                                    onClick={e => e.stopPropagation()}
-                                >
-                                    {(() => {
-                                        const item = displayItems[completingItemIndex];
-                                        const targetCount = item?.targetCount || 1;
-                                        const currentCount = item?.currentCount || 0;
-                                        const isMultiCount = targetCount > 1;
-                                        const hasProgress = currentCount > 0;
+                {(() => {
+                    const item = completingItemIndex !== null ? displayItems[completingItemIndex] : null;
+                    const targetCount = item?.targetCount || 1;
+                    const currentCount = item?.currentCount || 0;
+                    const isMultiCount = targetCount > 1;
+                    const hasProgress = currentCount > 0;
 
-                                        return (
-                                            <>
-                                                <h3 className="text-xl font-bold text-white mb-2 text-center">
-                                                    {item.isCompleted ? 'Tile Details' : (hasProgress ? 'Add Progress' : 'Complete Task')}
-                                                </h3>
-                                                <p className="text-slate-300 text-sm text-center mb-4 line-clamp-3 italic">
-                                                    &ldquo;{item?.text}&rdquo;
-                                                </p>
+                    if (!item) return null;
 
-                                                {/* Progress indicator */}
-                                                {isMultiCount && (
-                                                    <div className="text-center mb-4">
-                                                        <span className={cn(
-                                                            "inline-block px-3 py-1 rounded-full text-sm font-bold",
-                                                            hasProgress ? "bg-amber-500/20 text-amber-400" : "bg-slate-600/50 text-slate-400"
-                                                        )}>
-                                                            Progress: {currentCount} / {targetCount}
-                                                        </span>
-                                                    </div>
-                                                )}
+                    return (
+                        <Modal
+                            isOpen={isCompletionModalOpen && completingItemIndex !== null}
+                            onClose={() => { setIsCompletionModalOpen(false); setCompletingItemIndex(null); }}
+                            title={item.isCompleted ? 'Tile Details' : (hasProgress ? 'Add Progress' : 'Complete Task')}
+                            size="sm"
+                        >
+                            <div className="space-y-4">
+                                <p className="text-slate-300 text-sm text-center mb-4 line-clamp-3 italic">
+                                    &ldquo;{item.text}&rdquo;
+                                </p>
 
-                                                {/* EXISTING PHOTOS */}
-                                                {item.proofPhotos && item.proofPhotos.length > 0 && (
-                                                    <div className="mb-6 bg-black/20 p-3 rounded-xl border border-white/5">
-                                                        <label className="text-xs text-slate-400 mb-2 block font-semibold uppercase tracking-wider">Attached Photos</label>
-                                                        <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-                                                            {item.proofPhotos.map((photo, i) => (
-                                                                <div
-                                                                    key={i}
-                                                                    className="relative w-20 h-20 flex-shrink-0 group rounded-lg overflow-hidden border border-white/10 touch-none select-none"
-                                                                    onContextMenu={(e) => e.preventDefault()}
-                                                                    onTouchStart={(e) => {
-                                                                        const target = e.currentTarget;
-                                                                        const timer = setTimeout(() => {
-                                                                            // Trigger vibration if supported
-                                                                            if (navigator.vibrate) navigator.vibrate(50);
-                                                                            if (window.confirm('Delete this photo?')) {
-                                                                                deletePhoto(completingItemIndex, i);
-                                                                            }
-                                                                        }, 800);
-                                                                        target.dataset.timer = String(timer);
-                                                                    }}
-                                                                    onTouchEnd={(e) => {
-                                                                        const timer = Number(e.currentTarget.dataset.timer);
-                                                                        if (timer) clearTimeout(timer);
-                                                                        e.currentTarget.dataset.timer = '';
-                                                                    }}
-                                                                    onTouchMove={(e) => {
-                                                                        const timer = Number(e.currentTarget.dataset.timer);
-                                                                        if (timer) clearTimeout(timer);
-                                                                        e.currentTarget.dataset.timer = '';
-                                                                    }}
-                                                                >
-                                                                    <img src={photo} alt="" className="w-full h-full object-cover pointer-events-none" />
-                                                                    <button
-                                                                        onClick={async (e) => {
-                                                                            e.stopPropagation();
-                                                                            if (window.confirm('Delete this photo?')) {
-                                                                                await deletePhoto(completingItemIndex, i);
-                                                                            }
-                                                                        }}
-                                                                        className="absolute top-1 right-1 bg-red-500/90 p-1.5 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-md"
-                                                                    >
-                                                                        <Trash2 size={12} />
-                                                                    </button>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                )}
+                                {/* Progress indicator */}
+                                {isMultiCount && (
+                                    <div className="text-center mb-4">
+                                        <span className={cn(
+                                            "inline-block px-3 py-1 rounded-full text-sm font-bold",
+                                            hasProgress ? "bg-amber-500/20 text-amber-400" : "bg-slate-600/50 text-slate-400"
+                                        )}>
+                                            Progress: {currentCount} / {targetCount}
+                                        </span>
+                                    </div>
+                                )}
 
-                                                <div className="space-y-3">
-                                                    {/* Photo Upload Input (Hidden) */}
-                                                    <input
-                                                        type="file"
-                                                        accept="image/*"
-                                                        ref={fileInputRef}
-                                                        className="hidden"
-                                                        onChange={async (e) => {
-                                                            const file = e.target.files?.[0];
-                                                            if (file && completingItemIndex !== null) {
-                                                                setIsUploading(true);
-                                                                try {
-                                                                    if (photoUploadMode === 'complete') {
-                                                                        await completeWithPhoto(completingItemIndex, file);
-                                                                    } else {
-                                                                        await addPhotoToTile(completingItemIndex, file);
-                                                                    }
-                                                                    setIsCompletionModalOpen(false);
-                                                                    setCompletingItemIndex(null);
-                                                                } catch (err) {
-                                                                    alert('Failed to upload photo.');
-                                                                } finally {
-                                                                    setIsUploading(false);
-                                                                    e.target.value = '';
-                                                                }
+                                {/* EXISTING PHOTOS */}
+                                {item.proofPhotos && item.proofPhotos.length > 0 && (
+                                    <div className="mb-6 bg-black/20 p-3 rounded-xl border border-white/5">
+                                        <label className="text-xs text-slate-400 mb-2 block font-semibold uppercase tracking-wider">Attached Photos</label>
+                                        <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+                                            {item.proofPhotos.map((photo, i) => (
+                                                <div
+                                                    key={i}
+                                                    className="relative w-20 h-20 flex-shrink-0 group rounded-lg overflow-hidden border border-white/10 touch-none select-none"
+                                                    onContextMenu={(e) => e.preventDefault()}
+                                                >
+                                                    <img src={photo} alt="" className="w-full h-full object-cover pointer-events-none" />
+                                                    <button
+                                                        onClick={async (e) => {
+                                                            e.stopPropagation();
+                                                            if (window.confirm('Delete this photo?')) {
+                                                                await deletePhoto(completingItemIndex!, i);
                                                             }
                                                         }}
-                                                    />
-
-                                                    {/* 1. Add Photo Only */}
-                                                    <button
-                                                        onClick={() => {
-                                                            setPhotoUploadMode('add');
-                                                            setTimeout(() => fileInputRef.current?.click(), 0);
-                                                        }}
-                                                        disabled={isUploading}
-                                                        className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2 hover:shadow-blue-500/25 active:scale-95 transition-all disabled:opacity-50"
+                                                        className="absolute top-1 right-1 bg-red-500/90 p-1.5 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-md"
                                                     >
-                                                        <Camera size={20} />
-                                                        {isUploading && photoUploadMode === 'add' ? 'Uploading...' : 'Add Photo (Keep Status)'}
-                                                    </button>
-
-                                                    {/* 2. Add Photo & Complete (if not completed) */}
-                                                    {!item.isCompleted && (
-                                                        <button
-                                                            onClick={() => {
-                                                                setPhotoUploadMode('complete');
-                                                                setTimeout(() => fileInputRef.current?.click(), 0);
-                                                            }}
-                                                            disabled={isUploading}
-                                                            className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2 hover:shadow-amber-500/25 active:scale-95 transition-all disabled:opacity-50"
-                                                        >
-                                                            <Check size={20} />
-                                                            {isUploading && photoUploadMode === 'complete' ? 'Uploading...' : (isMultiCount ? 'Add Photo & +1' : 'Add Photo & Complete')}
-                                                        </button>
-                                                    )}
-
-                                                    {/* 3. Toggle Status */}
-                                                    <button
-                                                        onClick={() => {
-                                                            toggleItem(completingItemIndex!);
-                                                            setIsCompletionModalOpen(false);
-                                                            setCompletingItemIndex(null);
-                                                        }}
-                                                        disabled={isUploading}
-                                                        className={cn(
-                                                            "w-full py-3 px-4 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50",
-                                                            item.isCompleted
-                                                                ? "bg-slate-700 hover:bg-slate-600"
-                                                                : "bg-gradient-to-r from-green-600 to-emerald-600 hover:shadow-green-500/25"
-                                                        )}
-                                                    >
-                                                        {item.isCompleted ? <X size={20} /> : <Check size={20} />}
-                                                        {item.isCompleted ? 'Mark Incomplete' : (isMultiCount ? `Mark +1 (${currentCount + 1}/${targetCount})` : 'Mark Complete')}
-                                                    </button>
-
-                                                    {/* Remove Progress (if applicable) */}
-                                                    {hasProgress && !item.isCompleted && (
-                                                        <button
-                                                            onClick={() => {
-                                                                decrementProgress(completingItemIndex!);
-                                                                setIsCompletionModalOpen(false);
-                                                                setCompletingItemIndex(null);
-                                                            }}
-                                                            disabled={isUploading}
-                                                            className="w-full py-2 rounded-xl font-semibold text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
-                                                        >
-                                                            Remove Progress ({currentCount - 1}/{targetCount})
-                                                        </button>
-                                                    )}
-
-                                                    <button
-                                                        onClick={() => { setIsCompletionModalOpen(false); setCompletingItemIndex(null); }}
-                                                        disabled={isUploading}
-                                                        className="w-full py-3 rounded-xl font-semibold bg-white/5 text-slate-400 hover:bg-white/10 transition-colors disabled:opacity-50"
-                                                    >
-                                                        Cancel
+                                                        <Trash2 size={12} />
                                                     </button>
                                                 </div>
-                                            </>
-                                        );
-                                    })()}
-                                </motion.div>
-                            </motion.div>
-                        )
-                    }
-                </AnimatePresence>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="space-y-3">
+                                    {/* Photo Upload Input (Hidden) */}
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        ref={fileInputRef}
+                                        className="hidden"
+                                        onChange={async (e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file && completingItemIndex !== null) {
+                                                setIsUploading(true);
+                                                try {
+                                                    if (photoUploadMode === 'complete') {
+                                                        await completeWithPhoto(completingItemIndex, file);
+                                                    } else {
+                                                        await addPhotoToTile(completingItemIndex, file);
+                                                    }
+                                                    setIsCompletionModalOpen(false);
+                                                    setCompletingItemIndex(null);
+                                                } catch (err) {
+                                                    alert('Failed to upload photo.');
+                                                } finally {
+                                                    setIsUploading(false);
+                                                    e.target.value = '';
+                                                }
+                                            }
+                                        }}
+                                    />
+
+                                    {/* 1. Add Photo Only */}
+                                    <button
+                                        onClick={() => {
+                                            setPhotoUploadMode('add');
+                                            setTimeout(() => fileInputRef.current?.click(), 0);
+                                        }}
+                                        disabled={isUploading}
+                                        className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2 hover:shadow-blue-500/25 active:scale-95 transition-all disabled:opacity-50"
+                                    >
+                                        <Camera size={20} />
+                                        {isUploading && photoUploadMode === 'add' ? 'Uploading...' : 'Add Photo (Keep Status)'}
+                                    </button>
+
+                                    {/* 2. Add Photo & Complete (if not completed) */}
+                                    {!item.isCompleted && (
+                                        <button
+                                            onClick={() => {
+                                                setPhotoUploadMode('complete');
+                                                setTimeout(() => fileInputRef.current?.click(), 0);
+                                            }}
+                                            disabled={isUploading}
+                                            className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2 hover:shadow-amber-500/25 active:scale-95 transition-all disabled:opacity-50"
+                                        >
+                                            <Check size={20} />
+                                            {isUploading && photoUploadMode === 'complete' ? 'Uploading...' : (isMultiCount ? 'Add Photo & +1' : 'Add Photo & Complete')}
+                                        </button>
+                                    )}
+
+                                    {/* 3. Toggle Status */}
+                                    <button
+                                        onClick={() => {
+                                            toggleItem(completingItemIndex!);
+                                            setIsCompletionModalOpen(false);
+                                            setCompletingItemIndex(null);
+                                        }}
+                                        disabled={isUploading}
+                                        className={cn(
+                                            "w-full py-3 px-4 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50",
+                                            item.isCompleted
+                                                ? "bg-slate-700 hover:bg-slate-600"
+                                                : "bg-gradient-to-r from-green-600 to-emerald-600 hover:shadow-green-500/25"
+                                        )}
+                                    >
+                                        {item.isCompleted ? <X size={20} /> : <Check size={20} />}
+                                        {item.isCompleted ? 'Mark Incomplete' : (isMultiCount ? `Mark +1 (${currentCount + 1}/${targetCount})` : 'Mark Complete')}
+                                    </button>
+
+                                    {/* Remove Progress (if applicable) */}
+                                    {hasProgress && !item.isCompleted && (
+                                        <button
+                                            onClick={() => {
+                                                decrementProgress(completingItemIndex!);
+                                                setIsCompletionModalOpen(false);
+                                                setCompletingItemIndex(null);
+                                            }}
+                                            disabled={isUploading}
+                                            className="w-full py-2 rounded-xl font-semibold text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                                        >
+                                            Remove Progress ({currentCount - 1}/{targetCount})
+                                        </button>
+                                    )}
+
+                                    <button
+                                        onClick={() => { setIsCompletionModalOpen(false); setCompletingItemIndex(null); }}
+                                        disabled={isUploading}
+                                        className="w-full py-3 rounded-xl font-semibold bg-white/5 text-slate-400 hover:bg-white/10 transition-colors disabled:opacity-50"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        </Modal>
+                    );
+                })()}
 
                 {/* Photo Gallery Viewer Modal */}
                 <AnimatePresence>
@@ -1433,118 +1370,108 @@ export const BingoBoard: React.FC = () => {
             />
 
             {/* Share Modal */}
-            {
-                isShareModalOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsShareModalOpen(false)} />
-                        <div className="relative w-full max-w-md bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-                            <div className="p-6 border-b border-white/10 flex justify-between items-center">
-                                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                                    <Share2 className="w-5 h-5 text-accent-primary" />
-                                    Shared With
-                                </h2>
-                                <button onClick={() => setIsShareModalOpen(false)} className="text-slate-400 hover:text-white">
-                                    <X className="w-5 h-5" />
-                                </button>
-                            </div>
-                            <div className="p-6">
-                                {memberDetails.length === 0 ? (
-                                    <div className="text-center text-slate-400 py-8">
-                                        <p>This board hasn't been shared yet.</p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-4 mb-6">
-                                        {memberDetails.map(member => (
-                                            <div key={member.id} className="flex items-center justify-between bg-white/5 p-3 rounded-xl border border-white/5">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-white">
-                                                        {member.name.charAt(0)}
-                                                    </div>
-                                                    <div>
-                                                        <div className="text-sm font-semibold text-white">{member.name}</div>
-                                                        <div className="text-xs text-slate-400">{member.email} • {member.role}</div>
-                                                    </div>
-                                                </div>
-                                                <button
-                                                    onClick={() => handleRemoveMember(member.id, member.name)}
-                                                    className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                                                    title="Remove User"
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-
-                                <button
-                                    onClick={handleInviteClick}
-                                    className="w-full py-3 bg-gradient-to-r from-accent-primary to-accent-secondary rounded-xl font-bold text-white shadow-lg hover:shadow-accent-primary/25 transition-all flex items-center justify-center gap-2"
-                                >
-                                    <Plus size={18} />
-                                    Invite New User
-                                </button>
-                            </div>
+            <Modal
+                isOpen={isShareModalOpen}
+                onClose={() => setIsShareModalOpen(false)}
+                title={
+                    <span className="flex items-center gap-2">
+                        <Share2 className="w-5 h-5 text-accent-primary" />
+                        Shared With
+                    </span>
+                }
+                size="md"
+            >
+                <div>
+                    {memberDetails.length === 0 ? (
+                        <div className="text-center text-slate-400 py-8">
+                            <p>This board hasn't been shared yet.</p>
                         </div>
-                    </div>
-                )
-            }
-
-            {/* Go Live Modal */}
-            {
-                isGoLiveModalOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsGoLiveModalOpen(false)} />
-                        <div className="relative w-full max-w-sm bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-                            <div className="p-6 border-b border-white/10 flex justify-between items-center bg-gradient-to-r from-accent-primary/10 to-accent-secondary/10">
-                                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                                    <Rocket className="w-5 h-5 text-accent-primary" />
-                                    Ready to Go Live?
-                                </h2>
-                                <button onClick={() => setIsGoLiveModalOpen(false)} className="text-slate-400 hover:text-white">
-                                    <X className="w-5 h-5" />
-                                </button>
-                            </div>
-                            <div className="p-6">
-                                <p className="text-slate-300 mb-6 leading-relaxed">
-                                    Going live will <strong>lock the board</strong> for play mode. You won't be able to edit items easily anymore.
-                                </p>
-
-                                <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-6 cursor-pointer hover:bg-white/10 transition-colors"
-                                    onClick={() => setShouldShuffleOnLive(!shouldShuffleOnLive)}>
-                                    <div className="flex items-start gap-3">
-                                        <div className={`mt-1 w-5 h-5 rounded border flex items-center justify-center transition-colors ${shouldShuffleOnLive ? 'bg-accent-primary border-accent-primary' : 'border-slate-500'}`}>
-                                            {shouldShuffleOnLive && <Check size={14} className="text-white" />}
+                    ) : (
+                        <div className="space-y-4 mb-6">
+                            {memberDetails.map(member => (
+                                <div key={member.id} className="flex items-center justify-between bg-white/5 p-3 rounded-xl border border-white/5">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-white">
+                                            {member.name.charAt(0)}
                                         </div>
                                         <div>
-                                            <div className="font-semibold text-white">Shuffle Items?</div>
-                                            <div className="text-xs text-slate-400 mt-1">
-                                                Randomize the grid arrangement one last time before locking.
-                                            </div>
+                                            <div className="text-sm font-semibold text-white">{member.name}</div>
+                                            <div className="text-xs text-slate-400">{member.email} • {member.role}</div>
                                         </div>
                                     </div>
+                                    <button
+                                        onClick={() => handleRemoveMember(member.id, member.name)}
+                                        className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                        title="Remove User"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
                                 </div>
+                            ))}
+                        </div>
+                    )}
 
-                                <div className="flex gap-3">
-                                    <button
-                                        onClick={() => setIsGoLiveModalOpen(false)}
-                                        className="flex-1 py-3 bg-slate-800 text-slate-300 font-bold rounded-xl hover:bg-slate-700 transition-colors"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        onClick={handleGoLive}
-                                        className="flex-1 py-3 bg-gradient-to-r from-accent-primary to-accent-secondary text-white font-bold rounded-xl hover:shadow-lg hover:shadow-accent-primary/20 transition-all flex items-center justify-center gap-2"
-                                    >
-                                        <Lock size={16} />
-                                        Lock & Play
-                                    </button>
+                    <button
+                        onClick={handleInviteClick}
+                        className="w-full py-3 bg-gradient-to-r from-accent-primary to-accent-secondary rounded-xl font-bold text-white shadow-lg hover:shadow-accent-primary/25 transition-all flex items-center justify-center gap-2"
+                    >
+                        <Plus size={18} />
+                        Invite New User
+                    </button>
+                </div>
+            </Modal>
+
+            {/* Go Live Modal */}
+            <Modal
+                isOpen={isGoLiveModalOpen}
+                onClose={() => setIsGoLiveModalOpen(false)}
+                title={
+                    <span className="flex items-center gap-2">
+                        <Rocket className="w-5 h-5 text-accent-primary" />
+                        Ready to Go Live?
+                    </span>
+                }
+                size="sm"
+                footer={
+                    <>
+                        <button
+                            onClick={() => setIsGoLiveModalOpen(false)}
+                            className="flex-1 py-3 rounded-xl font-semibold bg-white/5 text-slate-300 hover:bg-white/10 transition-colors"
+                        >
+                            Not Yet
+                        </button>
+                        <button
+                            onClick={handleGoLive}
+                            className="flex-1 py-3 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl font-bold text-white shadow-lg hover:shadow-green-500/25 transition-all"
+                        >
+                            Let's Go! 🚀
+                        </button>
+                    </>
+                }
+            >
+                <div>
+                    <p className="text-slate-300 mb-6 leading-relaxed">
+                        Going live will <strong>lock the board</strong> for play mode. You won't be able to edit items easily anymore.
+                    </p>
+
+                    <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-6 cursor-pointer hover:bg-white/10 transition-colors"
+                        onClick={() => setShouldShuffleOnLive(!shouldShuffleOnLive)}>
+                        <div className="flex items-start gap-3">
+                            <div className={`mt-1 w-5 h-5 rounded border flex items-center justify-center transition-colors ${shouldShuffleOnLive ? 'bg-accent-primary border-accent-primary' : 'border-slate-500'}`}>
+                                {shouldShuffleOnLive && <Check size={14} className="text-white" />}
+                            </div>
+                            <div>
+                                <div className="font-semibold text-white">Shuffle Items?</div>
+                                <div className="text-xs text-slate-400 mt-1">
+                                    Randomize the grid arrangement one last time before locking.
                                 </div>
                             </div>
                         </div>
                     </div>
-                )
-            }
+                </div>
+            </Modal>
+
+
         </>
     );
 };

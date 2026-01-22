@@ -9,7 +9,7 @@ import { useSounds } from '../hooks/useSounds';
 import { cn } from '../lib/utils';
 import { Edit2, Check, Award, LogOut, Camera, X, ChevronLeft, ChevronRight, Plus, BookOpen, Printer, LayoutGrid, Share2, Clock, Trash2, Settings, Rocket, Lock, Sun, Moon } from 'lucide-react';
 import { Download } from 'lucide-react';
-import { downloadBoardBackup } from '../utils/backup';
+import { downloadFullBackup } from '../utils/backup';
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { BingoItem } from '../types';
@@ -493,9 +493,9 @@ export const BingoBoard: React.FC = () => {
                         </div>
                         <div className="flex items-center gap-1 sm:gap-2">
                             <button
-                                onClick={() => downloadBoardBackup({ items, title, gridSize, members, boardId: effectiveBoardId })}
+                                onClick={() => downloadFullBackup(user?.uid, { items, title, gridSize, members, boardId: effectiveBoardId })}
                                 className="p-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-full transition-colors"
-                                title="Download Database Backup"
+                                title="Download Full Backup"
                             >
                                 <Download size={20} />
                             </button>

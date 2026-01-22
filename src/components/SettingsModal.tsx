@@ -29,14 +29,14 @@ export const SettingsModal: React.FC = () => {
     };
 
     const themes = [
-        { id: 'light', name: 'Light', color: 'bg-white from-slate-100 to-sky-50' },
-        { id: 'dawn', name: 'Dawn', color: 'bg-[#0f111a] from-violet-500/20 to-pink-500/20' },
-        { id: 'cosmic', name: 'Cosmic', color: 'bg-[#2e1065] from-violet-600/20 to-pink-600/20' },
-        { id: 'lavender', name: 'Lavender', color: 'bg-[#3b0764] from-fuchsia-500/20 to-purple-500/20' },
-        { id: 'midnight', name: 'Midnight', color: 'bg-[#020617] from-sky-500/20 to-indigo-500/20' },
-        { id: 'forest', name: 'Forest', color: 'bg-[#052e16] from-green-500/20 to-emerald-500/20' },
-        { id: 'ocean', name: 'Ocean', color: 'bg-[#083344] from-cyan-500/20 to-teal-500/20' },
-        { id: 'sunset', name: 'Sunset', color: 'bg-[#2a0a0a] from-orange-500/20 to-rose-500/20' },
+        { id: 'light', name: 'Light', color: 'bg-white from-slate-100 to-sky-50', animated: true },
+        { id: 'dawn', name: 'Dawn', color: 'bg-[#0f111a] from-violet-500/20 to-pink-500/20', animated: false },
+        { id: 'cosmic', name: 'Cosmic', color: 'bg-[#2e1065] from-violet-600/20 to-pink-600/20', animated: true },
+        { id: 'lavender', name: 'Lavender', color: 'bg-[#3b0764] from-fuchsia-500/20 to-purple-500/20', animated: true },
+        { id: 'midnight', name: 'Midnight', color: 'bg-[#020617] from-sky-500/20 to-indigo-500/20', animated: false },
+        { id: 'forest', name: 'Forest', color: 'bg-[#052e16] from-green-500/20 to-emerald-500/20', animated: false },
+        { id: 'ocean', name: 'Ocean', color: 'bg-[#083344] from-cyan-500/20 to-teal-500/20', animated: false },
+        { id: 'sunset', name: 'Sunset', color: 'bg-[#2a0a0a] from-orange-500/20 to-rose-500/20', animated: false },
     ];
 
     const fonts = [
@@ -92,7 +92,15 @@ export const SettingsModal: React.FC = () => {
                                                     : "border-white/10 hover:border-white/30"
                                             )}
                                         >
-                                            <div className={cn("h-16 w-full bg-gradient-to-br", theme.color)}></div>
+                                            <div className={cn("h-16 w-full bg-gradient-to-br relative", theme.color)}>
+                                                {/* Animated badge */}
+                                                {theme.animated && (
+                                                    <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 bg-black/40 backdrop-blur-sm rounded text-[10px] font-bold text-white/90 flex items-center gap-1">
+                                                        <Zap className="w-2.5 h-2.5" />
+                                                        <span>Animated</span>
+                                                    </div>
+                                                )}
+                                            </div>
                                             <div className="p-3 bg-slate-800/50">
                                                 <span className={cn(
                                                     "text-sm font-medium",

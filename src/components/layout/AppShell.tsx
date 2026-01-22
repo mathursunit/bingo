@@ -28,12 +28,18 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
 
 
+    // Check if using light theme for text color adjustments
+    const isLightTheme = settings.theme === 'light';
+
     return (
-        <div className="min-h-screen bg-transparent text-slate-200 flex">
+        <div className="min-h-screen bg-transparent flex" style={{ color: 'var(--theme-text-main)' }}>
             {/* Mobile Sidebar Overlay */}
             {isSidebarOpen && (
                 <div
-                    className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm"
+                    className={cn(
+                        "fixed inset-0 z-40 lg:hidden backdrop-blur-sm",
+                        isLightTheme ? "bg-black/30" : "bg-black/50"
+                    )}
                     onClick={() => setIsSidebarOpen(false)}
                 />
             )}
@@ -46,11 +52,15 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                 {/* Logo Area */}
                 <div className="h-16 flex items-center px-6 border-b border-[var(--theme-border)] shrink-0">
                     <img src="/logo.png" alt="SunSar Bingo" className="h-8 w-auto" />
+                    {isLightTheme && <span className="ml-2 text-lg font-bold text-slate-800">SunSar</span>}
                 </div>
 
                 {/* Navigation */}
                 <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-                    <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 px-3">Menu</div>
+                    <div className={cn(
+                        "text-xs font-semibold uppercase tracking-wider mb-2 px-3",
+                        isLightTheme ? "text-slate-500" : "text-slate-500"
+                    )}>Menu</div>
                     {navItems.map((item) => (
                         <NavLink
                             key={item.path}
@@ -59,7 +69,9 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                                 "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
                                 isActive
                                     ? "bg-[var(--theme-accent-primary)]/10 text-[var(--theme-accent-primary)]"
-                                    : "text-slate-400 hover:text-slate-100 hover:bg-white/5"
+                                    : isLightTheme
+                                        ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                                        : "text-slate-400 hover:text-slate-100 hover:bg-white/5"
                             )}
                         >
                             <item.icon size={18} />
@@ -68,13 +80,24 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                     ))}
                     <button
                         onClick={openSettings}
-                        className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-slate-100 hover:bg-white/5 transition-colors"
+                        className={cn(
+                            "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                            isLightTheme
+                                ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                                : "text-slate-400 hover:text-slate-100 hover:bg-white/5"
+                        )}
                     >
                         <Settings size={18} />
                         Settings
                     </button>
-                    <div className="px-3 py-3 border-t border-white/5 mt-2">
-                        <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-3">Theme</div>
+                    <div className={cn(
+                        "px-3 py-3 mt-2 border-t",
+                        isLightTheme ? "border-slate-200" : "border-white/5"
+                    )}>
+                        <div className={cn(
+                            "text-[10px] font-bold uppercase tracking-wider mb-3",
+                            isLightTheme ? "text-slate-500" : "text-slate-500"
+                        )}>Theme</div>
                         <div className="flex justify-between gap-1">
                             {[
                                 { id: 'light', color: 'bg-slate-200 ring-1 ring-slate-400' },
@@ -93,7 +116,9 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                                         "w-6 h-6 rounded-full transition-all duration-300 relative",
                                         t.color,
                                         settings.theme === t.id
-                                            ? "ring-2 ring-white ring-offset-2 ring-offset-[var(--theme-bg-subtle)] scale-110 z-10"
+                                            ? isLightTheme
+                                                ? "ring-2 ring-slate-800 ring-offset-2 ring-offset-white scale-110 z-10"
+                                                : "ring-2 ring-white ring-offset-2 ring-offset-[var(--theme-bg-subtle)] scale-110 z-10"
                                             : "opacity-40 hover:opacity-100 hover:scale-105"
                                     )}
                                     title={t.id}
@@ -104,23 +129,40 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                 </nav>
 
                 {/* User Footer */}
-                <div className="p-4 border-t border-[var(--theme-border)] bg-[var(--theme-bg-subtle)] shrink-0">
+                <div className={cn(
+                    "p-4 border-t bg-[var(--theme-bg-subtle)] shrink-0",
+                    isLightTheme ? "border-slate-200" : "border-[var(--theme-border)]"
+                )}>
                     <div className="flex items-center gap-3 mb-4 px-2">
                         {user?.photoURL ? (
                             <img src={user.photoURL} className="w-8 h-8 rounded-full bg-slate-800 object-cover" alt="User" />
                         ) : (
-                            <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center">
-                                <User size={14} className="text-slate-400" />
+                            <div className={cn(
+                                "w-8 h-8 rounded-full flex items-center justify-center",
+                                isLightTheme ? "bg-slate-200" : "bg-slate-800"
+                            )}>
+                                <User size={14} className={isLightTheme ? "text-slate-600" : "text-slate-400"} />
                             </div>
                         )}
                         <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-white truncate">{user?.displayName || 'User'}</p>
-                            <p className="text-xs text-slate-500 truncate">{user?.email}</p>
+                            <p className={cn(
+                                "text-sm font-medium truncate",
+                                isLightTheme ? "text-slate-800" : "text-white"
+                            )}>{user?.displayName || 'User'}</p>
+                            <p className={cn(
+                                "text-xs truncate",
+                                isLightTheme ? "text-slate-500" : "text-slate-500"
+                            )}>{user?.email}</p>
                         </div>
                     </div>
                     <button
                         onClick={logout}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                        className={cn(
+                            "w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors",
+                            isLightTheme
+                                ? "text-slate-600 hover:text-red-600 hover:bg-red-50"
+                                : "text-slate-400 hover:text-red-400 hover:bg-red-500/10"
+                        )}
                     >
                         <LogOut size={16} />
                         Sign Out
@@ -131,8 +173,16 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
             {/* Main Content Area */}
             <main className="flex-1 min-w-0 flex flex-col h-screen overflow-hidden bg-transparent relative">
                 {/* Mobile Header */}
-                <header className="h-16 flex items-center justify-between px-4 lg:hidden border-b border-[var(--theme-border)] bg-[var(--theme-bg-subtle)] shrink-0">
-                    <button onClick={() => setIsSidebarOpen(true)} className="p-2 text-slate-400">
+                <header className={cn(
+                    "h-16 flex items-center justify-between px-4 lg:hidden border-b shrink-0",
+                    isLightTheme
+                        ? "border-slate-200 bg-white/80 backdrop-blur-sm"
+                        : "border-[var(--theme-border)] bg-[var(--theme-bg-subtle)]"
+                )}>
+                    <button onClick={() => setIsSidebarOpen(true)} className={cn(
+                        "p-2",
+                        isLightTheme ? "text-slate-600" : "text-slate-400"
+                    )}>
                         <Menu size={24} />
                     </button>
                     <img src="/logo.png" alt="SunSar Bingo" className="h-8 w-auto" />

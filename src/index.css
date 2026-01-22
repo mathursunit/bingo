@@ -127,7 +127,11 @@
   --theme-accent-secondary: #8b5cf6;
   /* Violet 500 */
   --theme-text-main: #0f172a;
-  /* Slate 900 */
+  /* Slate 900 - primary text */
+  --theme-text-secondary: #475569;
+  /* Slate 600 - secondary text */
+  --theme-text-muted: #94a3b8;
+  /* Slate 400 - muted/placeholder text */
 }
 
 @theme {

@@ -29,7 +29,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
 
     return (
-        <div className="min-h-screen bg-[var(--theme-bg-base)] text-slate-200 flex">
+        <div className="min-h-screen bg-transparent text-slate-200 flex">
             {/* Mobile Sidebar Overlay */}
             {isSidebarOpen && (
                 <div

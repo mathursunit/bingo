@@ -106,6 +106,46 @@ export const BingoBoard: React.FC = () => {
     const [isUncompleteModalOpen, setIsUncompleteModalOpen] = useState(false);
     const [uncompleteItemIndex, setUncompleteItemIndex] = useState<number | null>(null);
 
+    // Hidden backdoor tap counter for touch devices (tap 7 times quickly)
+    const [tapCount, setTapCount] = useState(0);
+    const tapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const handleSecretTap = async () => {
+        if (!isLocked) return;
+
+        const newCount = tapCount + 1;
+        setTapCount(newCount);
+
+        // Clear existing timeout
+        if (tapTimeoutRef.current) {
+            clearTimeout(tapTimeoutRef.current);
+        }
+
+        // Reset after 2 seconds of no taps
+        tapTimeoutRef.current = setTimeout(() => {
+            setTapCount(0);
+        }, 2000);
+
+        // Trigger unlock on 7 taps
+        if (newCount >= 7) {
+            setTapCount(0);
+            if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current);
+
+            const confirmed = await dialog.confirm(
+                'This will unlock the board and re-enable editing. Proceed?',
+                {
+                    title: '🔓 Developer Unlock',
+                    confirmText: 'Unlock Board',
+                    cancelText: 'Cancel'
+                }
+            );
+            if (confirmed) {
+                await unlockBoard();
+                playSuccess();
+            }
+        }
+    };
+
     // Hidden backdoor: Ctrl+Shift+U to unlock board
     useEffect(() => {
         const handleKeyDown = async (e: KeyboardEvent) => {
@@ -506,7 +546,10 @@ export const BingoBoard: React.FC = () => {
                                     <Edit2 size={14} className="opacity-0 group-hover:opacity-70 transition-opacity flex-shrink-0" />
                                 </button>
                             )}
-                            <p className="text-slate-500 text-xs mt-0.5">
+                            <p
+                                className="text-slate-500 text-xs mt-0.5 cursor-default select-none"
+                                onClick={handleSecretTap}
+                            >
                                 {gridSize}×{gridSize} • {items.filter(i => i.isCompleted && !i.isFreeSpace).length}/{items.filter(i => !i.isFreeSpace).length}
                             </p>
                         </div>

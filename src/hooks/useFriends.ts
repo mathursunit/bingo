@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../firebase';
+import { useBadges } from './useBadges';
 import {
     collection,
     query,
@@ -40,6 +41,7 @@ export const useFriends = () => {
     const [incomingRequests, setIncomingRequests] = useState<FriendRequest[]>([]);
     const [outgoingRequests, setOutgoingRequests] = useState<FriendRequest[]>([]);
     const [loading, setLoading] = useState(true);
+    const { unlockBadge, setBadgeProgress } = useBadges();
 
     // 1. Listen for Friends
     useEffect(() => {
@@ -182,6 +184,14 @@ export const useFriends = () => {
         });
 
         await batch.commit();
+
+        // Awards: You've Got Mail
+        unlockBadge('got_mail');
+
+        // Awards: Social Butterfly (Friends count)
+        // friends state might be stale, but we can assume size + 1
+        const newCount = friends.length + 1;
+        setBadgeProgress('social_butterfly', newCount);
     };
 
     // Action: Reject Request

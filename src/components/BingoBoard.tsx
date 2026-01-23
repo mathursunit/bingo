@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useBingo } from '../hooks/useBingo';
+import { useBadges } from '../hooks/useBadges';
 import { useAuth } from '../contexts/AuthContext';
 import { useDialog } from '../contexts/DialogContext';
 import { useSettings } from '../contexts/SettingsContext';
@@ -33,6 +34,7 @@ export const BingoBoard: React.FC = () => {
     const effectiveBoardId = yearId ? undefined : boardId;
     const { items, members, loading, toggleItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, addReaction, deletePhoto, decrementProgress, inviteUser, removeMember, title, gridSize, updateTitle } = useBingo(effectiveBoardId);
     const { user } = useAuth();
+    const { unlockBadge, incrementBadge } = useBadges();
     const dialog = useDialog();
     const { settings } = useSettings();
     const isLightTheme = settings.theme === 'light';
@@ -472,6 +474,27 @@ export const BingoBoard: React.FC = () => {
             playClick(); // Un-completing
         } else {
             playSuccess(); // Completing
+
+            // Check badges on completion
+            const now = new Date();
+            const month = now.getMonth(); // 0 = Jan
+            const day = now.getDay(); // 0 = Sun, 6 = Sat
+
+            // 1. The First Step (First tile ever)
+            unlockBadge('first_step');
+
+            // 2. Early Bird (January)
+            if (month === 0) {
+                unlockBadge('early_bird');
+            }
+
+            // 3. Weekend Warrior (Sat/Sun)
+            if (day === 0 || day === 6) {
+                incrementBadge('weekend_warrior');
+            }
+
+            // 4. On Fire (7-day streak) - this is tricky to trigger here, usually done on load/login 
+            // but we can update a "lastActive" field and check streak there. skipping for now to keep simple.
         }
 
         toggleItem(index);
@@ -494,6 +517,10 @@ export const BingoBoard: React.FC = () => {
                         if (file && viewingItemIndex !== null) {
                             try {
                                 await addPhotoToTile(viewingItemIndex, file);
+
+                                // Badge Logic: Shutterbug (10 photos) & Selfie Star (50 photos)
+                                incrementBadge('shutterbug');
+                                incrementBadge('selfie_star');
                             } catch (e) {
                                 console.error(e);
                                 alert("Failed to add photo");
@@ -559,14 +586,20 @@ export const BingoBoard: React.FC = () => {
                         <div className="flex items-center gap-1 sm:gap-2">
 
                             <button
-                                onClick={() => setIsMemoriesOpen(true)}
+                                onClick={() => {
+                                    setIsMemoriesOpen(true);
+                                    incrementBadge('memory_lane');
+                                }}
                                 className="p-2.5 text-slate-400 hover:text-accent-gold hover:bg-white/5 rounded-full transition-colors"
                                 title="View Memories"
                             >
                                 <BookOpen size={20} />
                             </button>
                             <button
-                                onClick={() => setIsShareModalOpen(true)}
+                                onClick={() => {
+                                    setIsShareModalOpen(true);
+                                    unlockBadge('town_crier');
+                                }}
                                 className="p-2.5 text-slate-400 hover:text-accent-primary hover:bg-white/5 rounded-full transition-colors"
                                 title="Share Board"
                             >

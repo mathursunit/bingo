@@ -102,6 +102,10 @@ export const BingoBoard: React.FC = () => {
     const [undoState, setUndoState] = useState<{ index: number, wasCompleted: boolean } | null>(null);
     const [showUndoToast, setShowUndoToast] = useState(false);
 
+    // Uncomplete Confirmation Modal State
+    const [isUncompleteModalOpen, setIsUncompleteModalOpen] = useState(false);
+    const [uncompleteItemIndex, setUncompleteItemIndex] = useState<number | null>(null);
+
     useEffect(() => {
         const hasSeenWalkthrough = localStorage.getItem('hasSeenWalkthrough');
         if (!hasSeenWalkthrough && !loading && items.length > 0) {
@@ -540,14 +544,9 @@ export const BingoBoard: React.FC = () => {
                                                     onClick={() => {
                                                         if (item.isFreeSpace) return;
                                                         if (item.isCompleted) {
-                                                            if (item.proofPhotos && item.proofPhotos.length > 0) {
-                                                                setViewingItem(item);
-                                                                setViewingItemIndex(index);
-                                                                setCurrentPhotoIndex(0);
-                                                                setIsPhotoViewerOpen(true);
-                                                            } else {
-                                                                handleQuickComplete(index);
-                                                            }
+                                                            // Show confirmation modal for completed tiles
+                                                            setUncompleteItemIndex(index);
+                                                            setIsUncompleteModalOpen(true);
                                                         } else {
                                                             playWhoosh();
                                                             setCompletingItemIndex(index);
@@ -1469,6 +1468,74 @@ export const BingoBoard: React.FC = () => {
                         </div>
                     </div>
                 </div>
+            </Modal>
+
+            {/* Uncomplete Confirmation Modal */}
+            <Modal
+                isOpen={isUncompleteModalOpen}
+                onClose={() => {
+                    setIsUncompleteModalOpen(false);
+                    setUncompleteItemIndex(null);
+                }}
+                title="Goal Status"
+                size="sm"
+                footer={
+                    <>
+                        <button
+                            onClick={() => {
+                                setIsUncompleteModalOpen(false);
+                                setUncompleteItemIndex(null);
+                            }}
+                            className="flex-1 py-2.5 rounded-xl font-semibold bg-white/5 text-slate-300 hover:bg-white/10 transition-colors"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={() => {
+                                if (uncompleteItemIndex !== null) {
+                                    handleQuickComplete(uncompleteItemIndex);
+                                }
+                                setIsUncompleteModalOpen(false);
+                                setUncompleteItemIndex(null);
+                            }}
+                            className="flex-1 py-2.5 px-4 bg-amber-600 hover:bg-amber-500 rounded-xl font-bold text-white shadow-lg transition-all"
+                        >
+                            Mark Incomplete
+                        </button>
+                    </>
+                }
+            >
+                {uncompleteItemIndex !== null && displayItems[uncompleteItemIndex] && (
+                    <div className="text-center">
+                        {/* Show photo preview if available */}
+                        {displayItems[uncompleteItemIndex].proofPhotos && displayItems[uncompleteItemIndex].proofPhotos!.length > 0 && (
+                            <div className="mb-4 relative rounded-xl overflow-hidden">
+                                <img
+                                    src={displayItems[uncompleteItemIndex].proofPhotos![0]}
+                                    alt="Goal photo"
+                                    className="w-full h-32 object-cover"
+                                />
+                                {displayItems[uncompleteItemIndex].proofPhotos!.length > 1 && (
+                                    <div className="absolute bottom-2 right-2 bg-black/60 px-2 py-1 rounded text-xs text-white">
+                                        +{displayItems[uncompleteItemIndex].proofPhotos!.length - 1} more
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 mb-4">
+                            <div className="text-xs text-emerald-400 font-bold uppercase tracking-wider mb-1">✓ Completed</div>
+                            <div className="text-lg font-bold text-white">{displayItems[uncompleteItemIndex].text}</div>
+                        </div>
+
+                        <p className="text-slate-400 text-sm">
+                            Are you sure you want to mark this goal as <strong className="text-amber-400">incomplete</strong>?
+                            {displayItems[uncompleteItemIndex].proofPhotos && displayItems[uncompleteItemIndex].proofPhotos!.length > 0 && (
+                                <span> Your photos will be preserved.</span>
+                            )}
+                        </p>
+                    </div>
+                )}
             </Modal>
 
 

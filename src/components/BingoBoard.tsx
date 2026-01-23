@@ -4,6 +4,7 @@ import { db } from '../firebase';
 import { useBingo } from '../hooks/useBingo';
 import { useAuth } from '../contexts/AuthContext';
 import { useDialog } from '../contexts/DialogContext';
+import { useSettings } from '../contexts/SettingsContext';
 
 import { useSounds } from '../hooks/useSounds';
 import { cn } from '../lib/utils';
@@ -33,6 +34,8 @@ export const BingoBoard: React.FC = () => {
     const { items, members, loading, toggleItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, addReaction, deletePhoto, decrementProgress, inviteUser, removeMember, title, gridSize, updateTitle } = useBingo(effectiveBoardId);
     const { user } = useAuth();
     const dialog = useDialog();
+    const { settings } = useSettings();
+    const isLightTheme = settings.theme === 'light';
     const { playClick, playSuccess, playBingo, playWhoosh } = useSounds();
     const [editMode, setEditMode] = useState(false);
     const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -1503,7 +1506,12 @@ export const BingoBoard: React.FC = () => {
                     <>
                         <button
                             onClick={() => setIsGoLiveModalOpen(false)}
-                            className="flex-1 py-3 rounded-xl font-semibold bg-white/5 text-slate-300 hover:bg-white/10 transition-colors"
+                            className={cn(
+                                "flex-1 py-3 rounded-xl font-semibold transition-colors",
+                                isLightTheme
+                                    ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                                    : "bg-white/5 text-slate-300 hover:bg-white/10"
+                            )}
                         >
                             Not Yet
                         </button>
@@ -1517,19 +1525,38 @@ export const BingoBoard: React.FC = () => {
                 }
             >
                 <div>
-                    <p className="text-slate-300 mb-6 leading-relaxed">
-                        Going live will <strong>lock the board</strong> for play mode. You won't be able to edit items easily anymore.
+                    <p className={cn(
+                        "mb-6 leading-relaxed",
+                        isLightTheme ? "text-slate-600" : "text-slate-300"
+                    )}>
+                        Going live will <strong className={isLightTheme ? "text-slate-800" : "text-white"}>lock the board</strong> for play mode. You won't be able to edit items easily anymore.
                     </p>
 
-                    <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-6 cursor-pointer hover:bg-white/10 transition-colors"
+                    <div className={cn(
+                        "rounded-xl p-4 mb-6 cursor-pointer transition-colors",
+                        isLightTheme
+                            ? "bg-slate-100 border border-slate-200 hover:bg-slate-200"
+                            : "bg-white/5 border border-white/10 hover:bg-white/10"
+                    )}
                         onClick={() => setShouldShuffleOnLive(!shouldShuffleOnLive)}>
                         <div className="flex items-start gap-3">
-                            <div className={`mt-1 w-5 h-5 rounded border flex items-center justify-center transition-colors ${shouldShuffleOnLive ? 'bg-accent-primary border-accent-primary' : 'border-slate-500'}`}>
+                            <div className={cn(
+                                "mt-1 w-5 h-5 rounded border flex items-center justify-center transition-colors",
+                                shouldShuffleOnLive
+                                    ? "bg-accent-primary border-accent-primary"
+                                    : isLightTheme ? "border-slate-400" : "border-slate-500"
+                            )}>
                                 {shouldShuffleOnLive && <Check size={14} className="text-white" />}
                             </div>
                             <div>
-                                <div className="font-semibold text-white">Shuffle Items?</div>
-                                <div className="text-xs text-slate-400 mt-1">
+                                <div className={cn(
+                                    "font-semibold",
+                                    isLightTheme ? "text-slate-800" : "text-white"
+                                )}>Shuffle Items?</div>
+                                <div className={cn(
+                                    "text-xs mt-1",
+                                    isLightTheme ? "text-slate-500" : "text-slate-400"
+                                )}>
                                     Randomize the grid arrangement one last time before locking.
                                 </div>
                             </div>
@@ -1554,7 +1581,12 @@ export const BingoBoard: React.FC = () => {
                                 setIsUncompleteModalOpen(false);
                                 setUncompleteItemIndex(null);
                             }}
-                            className="flex-1 py-2.5 rounded-xl font-semibold bg-white/5 text-slate-300 hover:bg-white/10 transition-colors"
+                            className={cn(
+                                "flex-1 py-2.5 rounded-xl font-semibold transition-colors",
+                                isLightTheme
+                                    ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                                    : "bg-white/5 text-slate-300 hover:bg-white/10"
+                            )}
                         >
                             Cancel
                         </button>
@@ -1591,13 +1623,27 @@ export const BingoBoard: React.FC = () => {
                             </div>
                         )}
 
-                        <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 mb-4">
-                            <div className="text-xs text-emerald-400 font-bold uppercase tracking-wider mb-1">✓ Completed</div>
-                            <div className="text-lg font-bold text-white">{displayItems[uncompleteItemIndex].text}</div>
+                        <div className={cn(
+                            "rounded-xl p-4 mb-4",
+                            isLightTheme
+                                ? "bg-emerald-50 border border-emerald-200"
+                                : "bg-emerald-500/10 border border-emerald-500/30"
+                        )}>
+                            <div className={cn(
+                                "text-xs font-bold uppercase tracking-wider mb-1",
+                                isLightTheme ? "text-emerald-700" : "text-emerald-400"
+                            )}>✓ Completed</div>
+                            <div className={cn(
+                                "text-lg font-bold",
+                                isLightTheme ? "text-slate-900" : "text-white"
+                            )}>{displayItems[uncompleteItemIndex].text}</div>
                         </div>
 
-                        <p className="text-slate-400 text-sm">
-                            Are you sure you want to mark this goal as <strong className="text-amber-400">incomplete</strong>?
+                        <p className={cn(
+                            "text-sm",
+                            isLightTheme ? "text-slate-600" : "text-slate-400"
+                        )}>
+                            Are you sure you want to mark this goal as <strong className={isLightTheme ? "text-amber-600" : "text-amber-400"}>incomplete</strong>?
                             {displayItems[uncompleteItemIndex].proofPhotos && displayItems[uncompleteItemIndex].proofPhotos!.length > 0 && (
                                 <span> Your photos will be preserved.</span>
                             )}

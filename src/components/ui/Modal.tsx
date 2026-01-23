@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { useSettings } from '../../contexts/SettingsContext';
 
 interface ModalProps {
     isOpen: boolean;
@@ -24,6 +25,9 @@ export const Modal: React.FC<ModalProps> = ({
     className,
     showCloseButton = true
 }) => {
+    const { settings } = useSettings();
+    const isLightTheme = settings.theme === 'light';
+
     // Size classes
     const sizeClasses = {
         sm: 'max-w-sm',
@@ -42,7 +46,10 @@ export const Modal: React.FC<ModalProps> = ({
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                        className={cn(
+                            "absolute inset-0 backdrop-blur-sm",
+                            isLightTheme ? "bg-black/40" : "bg-black/60"
+                        )}
                         onClick={onClose}
                     />
 
@@ -53,7 +60,10 @@ export const Modal: React.FC<ModalProps> = ({
                         exit={{ opacity: 0, scale: 0.95, y: 10 }}
                         transition={{ duration: 0.2 }}
                         className={cn(
-                            "relative w-full bg-[var(--theme-bg-subtle)] border border-[var(--theme-border)] rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]",
+                            "relative w-full rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]",
+                            isLightTheme
+                                ? "bg-white border border-slate-200"
+                                : "bg-[var(--theme-bg-subtle)] border border-[var(--theme-border)]",
                             sizeClasses[size],
                             className
                         )}
@@ -61,14 +71,25 @@ export const Modal: React.FC<ModalProps> = ({
                     >
                         {/* Header */}
                         {(title || showCloseButton) && (
-                            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-[var(--theme-border)] shrink-0">
-                                <div className="text-lg sm:text-xl font-bold text-slate-100 truncate pr-4">
+                            <div className={cn(
+                                "flex items-center justify-between p-4 sm:p-6 border-b shrink-0",
+                                isLightTheme ? "border-slate-200" : "border-[var(--theme-border)]"
+                            )}>
+                                <div className={cn(
+                                    "text-lg sm:text-xl font-bold truncate pr-4",
+                                    isLightTheme ? "text-slate-800" : "text-slate-100"
+                                )}>
                                     {title}
                                 </div>
                                 {showCloseButton && (
                                     <button
                                         onClick={onClose}
-                                        className="text-slate-400 hover:text-slate-100 hover:bg-white/10 p-2 rounded-full transition-colors"
+                                        className={cn(
+                                            "p-2 rounded-full transition-colors",
+                                            isLightTheme
+                                                ? "text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                                                : "text-slate-400 hover:text-slate-100 hover:bg-white/10"
+                                        )}
                                     >
                                         <X size={20} />
                                     </button>
@@ -77,13 +98,21 @@ export const Modal: React.FC<ModalProps> = ({
                         )}
 
                         {/* Body */}
-                        <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar">
+                        <div className={cn(
+                            "p-4 sm:p-6 overflow-y-auto custom-scrollbar",
+                            isLightTheme ? "text-slate-700" : "text-slate-300"
+                        )}>
                             {children}
                         </div>
 
                         {/* Footer */}
                         {footer && (
-                            <div className="p-4 sm:p-6 border-t border-[var(--theme-border)] bg-[var(--theme-bg-base)]/50 shrink-0 flex justify-end gap-3 rounded-b-2xl">
+                            <div className={cn(
+                                "p-4 sm:p-6 border-t shrink-0 flex justify-end gap-3 rounded-b-2xl",
+                                isLightTheme
+                                    ? "border-slate-200 bg-slate-50"
+                                    : "border-[var(--theme-border)] bg-[var(--theme-bg-base)]/50"
+                            )}>
                                 {footer}
                             </div>
                         )}

@@ -150,13 +150,13 @@ export const ProfilePage: React.FC = () => {
                 </div>
             </div>
 
-            {/* Trophy Case */}
-            <TrophyCase />
-
             {/* Friends Section */}
             <div className="mt-12">
                 <FriendsList />
             </div>
+
+            {/* Trophy Case */}
+            <TrophyCase />
 
             {/* Stats Grid */}
             <h2 className={cn(

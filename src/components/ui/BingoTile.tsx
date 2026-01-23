@@ -127,7 +127,7 @@ export const BingoTile: React.FC<BingoTileProps> = ({
                         : (item.currentCount || 0) > 0
                             ? "bg-amber-500/90 text-white" // Partial progress
                             : isLightTheme
-                                ? "bg-slate-300/90 text-slate-700"
+                                ? "bg-slate-200 text-slate-600 border border-slate-300"
                                 : "bg-slate-700/90 text-slate-300"
                 )}>
                     {item.currentCount || 0}/{item.targetCount}

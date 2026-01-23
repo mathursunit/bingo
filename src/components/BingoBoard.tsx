@@ -92,7 +92,7 @@ export const BingoBoard: React.FC = () => {
     const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null);
     const [editFormText, setEditFormText] = useState("");
     const [editFormStyle, setEditFormStyle] = useState<{ color?: string; bold?: boolean; italic?: boolean; fontSize?: 'sm' | 'base' | 'lg' | 'xl' }>({});
-    const [editFormTargetCount, setEditFormTargetCount] = useState<number>(1);
+    const [editFormTargetCount, setEditFormTargetCount] = useState<number | ''>(1);
     const [editFormDueDate, setEditFormDueDate] = useState<string>("");
     const [editFormIsFreeSpace, setEditFormIsFreeSpace] = useState(false);
     const [photoUploadMode, setPhotoUploadMode] = useState<'complete' | 'add'>('complete');
@@ -418,7 +418,7 @@ export const BingoBoard: React.FC = () => {
             ...newDrafts[editingItemIndex],
             text: editFormText,
             style: editFormStyle,
-            targetCount: editFormTargetCount,
+            targetCount: Number(editFormTargetCount) || 1,
             dueDate: newDueDate,
             isFreeSpace: editFormIsFreeSpace,
             // If marking as free space, effectively completed for bingo logic (handled in useBingo checkWin)
@@ -922,7 +922,7 @@ export const BingoBoard: React.FC = () => {
                                     min="1"
                                     max="100"
                                     value={editFormTargetCount}
-                                    onChange={(e) => setEditFormTargetCount(parseInt(e.target.value) || 1)}
+                                    onChange={(e) => setEditFormTargetCount(e.target.value === '' ? '' : parseInt(e.target.value))}
                                     className="w-full bg-slate-950/50 border border-white/10 rounded-xl p-3 text-white placeholder-slate-500 focus:outline-none focus:border-accent-primary/50 transition-colors"
                                 />
                                 <p className="text-xs text-slate-500">How many times should this be completed?</p>

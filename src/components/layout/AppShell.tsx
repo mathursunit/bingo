@@ -52,7 +52,6 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                 {/* Logo Area */}
                 <div className="h-16 flex items-center px-6 border-b border-[var(--theme-border)] shrink-0">
                     <img src="/logo.png" alt="SunSar Bingo" className="h-8 w-auto" />
-                    {isLightTheme && <span className="ml-2 text-lg font-bold text-slate-800">SunSar</span>}
                 </div>
 
                 {/* Navigation */}

@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useSettings } from '../contexts/SettingsContext';
+import { cn } from '../lib/utils';
 import { type BingoItem, type Reaction } from '../types';
 
 interface FloatingReaction extends Reaction {
@@ -11,6 +13,8 @@ export const FloatingReactions: React.FC<{ items: BingoItem[] }> = ({ items }) =
     const [floating, setFloating] = useState<FloatingReaction[]>([]);
     const prevReactionsRef = useRef<Record<number, number>>({}); // itemId -> reactionCount
     const initializedRef = useRef(false);
+    const { settings } = useSettings();
+    const isLightTheme = settings.theme === 'light';
 
     useEffect(() => {
         // Initialize refs on first load to avoid flooding specific board load
@@ -73,7 +77,12 @@ export const FloatingReactions: React.FC<{ items: BingoItem[] }> = ({ items }) =
                         <span className="text-6xl drop-shadow-2xl filter">{r.emoji}</span>
                         {/* Only show name if it's not me? Or always show? */}
                         {r.byName && (
-                            <div className="text-sm font-bold text-white/90 text-center mt-2 bg-black/40 px-3 py-1 rounded-full backdrop-blur-md border border-white/10 shadow-lg">
+                            <div className={cn(
+                                "text-sm font-bold text-center mt-2 px-3 py-1 rounded-full backdrop-blur-md border shadow-lg",
+                                isLightTheme
+                                    ? "bg-white/80 text-slate-800 border-slate-200"
+                                    : "bg-black/40 text-white/90 border-white/10"
+                            )}>
                                 {r.byName}
                             </div>
                         )}

@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight, BookOpen, Calendar, User } from 'lucide-react';
+import { useSettings } from '../contexts/SettingsContext';
+import { cn } from '../lib/utils';
 import type { BingoItem } from '../types';
 
 interface MemoriesAlbumProps {
@@ -11,6 +13,8 @@ interface MemoriesAlbumProps {
 
 export const MemoriesAlbum: React.FC<MemoriesAlbumProps> = ({ items, isOpen, onClose }) => {
     const [expandedPhotoIndex, setExpandedPhotoIndex] = useState<{ memoryIdx: number; photoIdx: number } | null>(null);
+    const { settings } = useSettings();
+    const isLightTheme = settings.theme === 'light';
 
     // Filter and sort completed items with photos
     const memories = useMemo(() => {
@@ -50,19 +54,35 @@ export const MemoriesAlbum: React.FC<MemoriesAlbumProps> = ({ items, isOpen, onC
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[200] bg-bg-dark overflow-y-auto"
+                className={cn(
+                    "fixed inset-0 z-[200] overflow-y-auto",
+                    isLightTheme ? "bg-slate-50" : "bg-bg-dark"
+                )}
             >
                 {/* Header */}
-                <div className="sticky top-0 z-10 bg-bg-dark/95 backdrop-blur-md border-b border-white/10">
+                <div className={cn(
+                    "sticky top-0 z-10 backdrop-blur-md border-b",
+                    isLightTheme
+                        ? "bg-white/95 border-slate-200"
+                        : "bg-bg-dark/95 border-white/10"
+                )}>
                     <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <BookOpen className="w-6 h-6 text-accent-gold" />
-                            <h1 className="text-xl font-bold text-white">2026 Memories</h1>
+                            <h1 className={cn(
+                                "text-xl font-bold",
+                                isLightTheme ? "text-slate-800" : "text-white"
+                            )}>2026 Memories</h1>
                             <span className="text-sm text-slate-400">({memories.length} moments)</span>
                         </div>
                         <button
                             onClick={onClose}
-                            className="p-2 text-slate-400 hover:text-white transition-colors rounded-full hover:bg-white/10"
+                            className={cn(
+                                "p-2 transition-colors rounded-full",
+                                isLightTheme
+                                    ? "text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+                                    : "text-slate-400 hover:text-white hover:bg-white/10"
+                            )}
                         >
                             <X size={24} />
                         </button>
@@ -95,7 +115,12 @@ export const MemoriesAlbum: React.FC<MemoriesAlbumProps> = ({ items, isOpen, onC
                                             initial={{ opacity: 0, y: 20 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: memIdx * 0.1 }}
-                                            className="bg-bg-card/80 rounded-2xl border border-white/10 overflow-hidden shadow-xl"
+                                            className={cn(
+                                                "rounded-2xl border overflow-hidden shadow-xl",
+                                                isLightTheme
+                                                    ? "bg-white border-slate-200 shadow-slate-200/50"
+                                                    : "bg-bg-card/80 border-white/10"
+                                            )}
                                         >
                                             {/* Main Photo */}
                                             <div
@@ -131,7 +156,10 @@ export const MemoriesAlbum: React.FC<MemoriesAlbumProps> = ({ items, isOpen, onC
 
                                             {/* Info */}
                                             <div className="p-4">
-                                                <h3 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
+                                                <h3 className={cn(
+                                                    "text-lg font-semibold mb-2 flex items-center gap-2",
+                                                    isLightTheme ? "text-slate-800" : "text-white"
+                                                )}>
                                                     <span className="text-accent-gold">{memory.isCompleted ? '✓' : '📷'}</span>
                                                     {memory.text}
                                                 </h3>

@@ -1269,7 +1269,10 @@ export const BingoBoard: React.FC = () => {
                                 initial={{ opacity: 0, y: 50 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: 50 }}
-                                className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-slate-900 border border-white/20 text-white px-6 py-3 rounded-full shadow-2xl z-50 flex items-center gap-4"
+                                className={cn(
+                                    "fixed bottom-24 left-1/2 -translate-x-1/2 border px-6 py-3 rounded-full shadow-2xl z-50 flex items-center gap-4",
+                                    isLightTheme ? "bg-white border-slate-200 text-slate-800" : "bg-slate-900 border-white/20 text-white"
+                                )}
                             >
                                 <span>Marked as {undoState.wasCompleted ? "incomplete" : "complete"}</span>
                                 <button
@@ -1301,7 +1304,10 @@ export const BingoBoard: React.FC = () => {
                                 <motion.div
                                     initial={{ scale: 0.9, opacity: 0 }}
                                     animate={{ scale: 1, opacity: 1 }}
-                                    className="bg-slate-900 border border-white/20 rounded-3xl p-8 max-w-sm w-full shadow-2xl relative overflow-hidden"
+                                    className={cn(
+                                        "border rounded-3xl p-8 max-w-sm w-full shadow-2xl relative overflow-hidden",
+                                        isLightTheme ? "bg-white border-slate-200" : "bg-slate-900 border-white/20"
+                                    )}
                                 >
                                     {/* Decorative Elements */}
                                     <div className="absolute top-0 right-0 p-8 opacity-20 pointer-events-none">
@@ -1309,15 +1315,18 @@ export const BingoBoard: React.FC = () => {
                                     </div>
 
                                     <div className="relative z-10 text-center">
-                                        <h3 className="text-2xl font-bold text-white mb-2">Welcome! 👋</h3>
-                                        <p className="text-slate-400 mb-8 h-12">
+                                        <h3 className={cn("text-2xl font-bold mb-2", isLightTheme ? "text-slate-900" : "text-white")}>Welcome! 👋</h3>
+                                        <p className={cn("mb-8 h-12", isLightTheme ? "text-slate-600" : "text-slate-400")}>
                                             {walkthroughStep === 0 && "Tap any tile to mark it as complete."}
                                             {walkthroughStep === 1 && "Start 'Edit Mode' to add your own tasks."}
                                             {walkthroughStep === 2 && "Invite friends to play together!"}
                                         </p>
 
                                         <div className="flex justify-center mb-8">
-                                            <div className="w-32 h-32 bg-black/40 rounded-2xl border border-white/10 flex items-center justify-center relative">
+                                            <div className={cn(
+                                                "w-32 h-32 rounded-2xl border flex items-center justify-center relative",
+                                                isLightTheme ? "bg-slate-50 border-slate-200" : "bg-black/40 border-white/10"
+                                            )}>
                                                 <AnimatePresence mode="wait">
                                                     {walkthroughStep === 0 && (
                                                         <motion.div
@@ -1459,14 +1468,17 @@ export const BingoBoard: React.FC = () => {
                     ) : (
                         <div className="space-y-4 mb-6">
                             {memberDetails.map(member => (
-                                <div key={member.id} className="flex items-center justify-between bg-white/5 p-3 rounded-xl border border-white/5">
+                                <div key={member.id} className={cn(
+                                    "flex items-center justify-between p-3 rounded-xl border",
+                                    isLightTheme ? "bg-slate-50 border-slate-200" : "bg-white/5 border-white/5"
+                                )}>
                                     <div className="flex items-center gap-3">
                                         <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-white">
                                             {member.name.charAt(0)}
                                         </div>
                                         <div>
-                                            <div className="text-sm font-semibold text-white">{member.name}</div>
-                                            <div className="text-xs text-slate-400">{member.email} • {member.role}</div>
+                                            <div className={cn("text-sm font-semibold", isLightTheme ? "text-slate-900" : "text-white")}>{member.name}</div>
+                                            <div className={cn("text-xs", isLightTheme ? "text-slate-500" : "text-slate-400")}>{member.email} • {member.role}</div>
                                         </div>
                                     </div>
                                     <button

@@ -1,0 +1,58 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper to check if user is signed in
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // USERS COLLECTION
+    match /users/{userId} {
+      // Allow any auth user to read profiles (needed to search for friends by email)
+      allow read: if isAuthenticated();
+      // Allow users to update their own profile
+      allow write: if isAuthenticated() && request.auth.uid == userId;
+
+      // FRIENDS SUBCOLLECTION
+      // Allow read/write if you are the owner of the list OR the friend being involved
+      // This enables the "Accept" transaction to update both users' lists
+      match /friends/{friendId} {
+        allow read: if isAuthenticated();
+        allow write: if isAuthenticated() && (request.auth.uid == userId || request.auth.uid == friendId);
+      }
+    }
+
+    // FRIEND REQUESTS COLLECTION
+    match /friend_requests/{requestId} {
+      // Allow creating requests
+      allow create: if isAuthenticated() && request.resource.data.fromUserId == request.auth.uid;
+      
+      // Allow reading requests involved in
+      allow read: if isAuthenticated() && (
+        resource.data.fromUserId == request.auth.uid || 
+        resource.data.toUserEmail == request.auth.token.email ||
+        resource.data.toUserId == request.auth.uid
+      );
+      
+      // Allow updating/deleting (accept/reject/cancel)
+      allow update, delete: if isAuthenticated() && (
+        resource.data.fromUserId == request.auth.uid || 
+        resource.data.toUserEmail == request.auth.token.email ||
+        resource.data.toUserId == request.auth.uid
+      );
+    }
+
+    // BOARDS COLLECTION (Existing functionality)
+    match /boards/{boardId} {
+      // Allow authenticated access to boards
+      // Refine this based on your specific 'members' logic if needed
+      allow read, write: if isAuthenticated(); 
+    }
+    
+    // YEARS COLLECTION (Legacy functionality)
+    match /years/{yearId} {
+      allow read, write: if isAuthenticated();
+    }
+  }
+}

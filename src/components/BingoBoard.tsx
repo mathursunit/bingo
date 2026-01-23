@@ -106,6 +106,31 @@ export const BingoBoard: React.FC = () => {
     const [isUncompleteModalOpen, setIsUncompleteModalOpen] = useState(false);
     const [uncompleteItemIndex, setUncompleteItemIndex] = useState<number | null>(null);
 
+    // Hidden backdoor: Ctrl+Shift+U to unlock board
+    useEffect(() => {
+        const handleKeyDown = async (e: KeyboardEvent) => {
+            // Secret combination: Ctrl + Shift + U
+            if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'u' && isLocked) {
+                e.preventDefault();
+                const confirmed = await dialog.confirm(
+                    'This will unlock the board and re-enable editing. Proceed?',
+                    {
+                        title: '🔓 Developer Unlock',
+                        confirmText: 'Unlock Board',
+                        cancelText: 'Cancel'
+                    }
+                );
+                if (confirmed) {
+                    await unlockBoard();
+                    playSuccess();
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isLocked, unlockBoard, dialog, playSuccess]);
+
     useEffect(() => {
         const hasSeenWalkthrough = localStorage.getItem('hasSeenWalkthrough');
         if (!hasSeenWalkthrough && !loading && items.length > 0) {

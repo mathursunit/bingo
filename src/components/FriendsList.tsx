@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { useFriends } from '../hooks/useFriends';
 import { useSettings } from '../contexts/SettingsContext';
 import { useDialog } from '../contexts/DialogContext';
-import { User, UserPlus, Check, X, Search, Clock, Trash2, Mail } from 'lucide-react';
+import { User, Check, X, Clock, Trash2, Mail } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const FriendsList: React.FC = () => {
-    const { friends, incomingRequests, outgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, loading } = useFriends();
+    const { friends, incomingRequests, outgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend } = useFriends();
     const { settings } = useSettings();
     const isLightTheme = settings.theme === 'light';
     const dialog = useDialog();

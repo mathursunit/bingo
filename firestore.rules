@@ -2,19 +2,41 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper to check if user is signed in
+    // --- Helper Functions ---
+    
+    // Check if user is logged in
     function isAuthenticated() {
       return request.auth != null;
     }
 
-    // USERS COLLECTION
-    match /users/{userId} {
-      // Allow any auth user to read profiles (needed to search for friends by email)
-      allow read: if isAuthenticated();
-      // Allow users to update their own profile
-      allow write: if isAuthenticated() && request.auth.uid == userId;
+    // Check if user matches the ID in the document path (e.g. users/{uid})
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
 
-      // FRIENDS SUBCOLLECTION
+    // Check if the user is a member of the board (owner, editor, or viewer)
+    function isBoardMember() {
+      return isAuthenticated() && 
+             resource.data.members[request.auth.uid] != null;
+    }
+
+    // Check if the user has 'owner' or 'editor' role on the board
+    function canEditBoard() {
+      return isAuthenticated() && 
+             (resource.data.members[request.auth.uid] == 'owner' || 
+              resource.data.members[request.auth.uid] == 'editor');
+    }
+
+    // --- Collection Rules ---
+
+    // 1. USERS Collection
+    match /users/{userId} {
+      // People need to read user profiles to invite them by email.
+      allow read: if isAuthenticated();
+      // Only the user themselves can edit their profile.
+      allow write: if isOwner(userId);
+
+      // --- NEW: FRIENDS Subcollection ---
       // Allow read/write if you are the owner of the list OR the friend being involved
       // This enables the "Accept" transaction to update both users' lists
       match /friends/{friendId} {
@@ -23,12 +45,12 @@ service cloud.firestore {
       }
     }
 
-    // FRIEND REQUESTS COLLECTION
+    // --- NEW: FRIEND REQUESTS Collection ---
     match /friend_requests/{requestId} {
       // Allow creating requests
       allow create: if isAuthenticated() && request.resource.data.fromUserId == request.auth.uid;
       
-      // Allow reading requests involved in
+      // Allow reading requests involved in (either sender or receiver)
       allow read: if isAuthenticated() && (
         resource.data.fromUserId == request.auth.uid || 
         resource.data.toUserEmail == request.auth.token.email ||
@@ -38,21 +60,35 @@ service cloud.firestore {
       // Allow updating/deleting (accept/reject/cancel)
       allow update, delete: if isAuthenticated() && (
         resource.data.fromUserId == request.auth.uid || 
-        resource.data.toUserEmail == request.auth.token.email ||
+        resource.data.toUserEmail == request.auth.token.email || 
         resource.data.toUserId == request.auth.uid
       );
     }
 
-    // BOARDS COLLECTION (Existing functionality)
+    // 2. BOARDS Collection
     match /boards/{boardId} {
-      // Allow authenticated access to boards
-      // Refine this based on your specific 'members' logic if needed
-      allow read, write: if isAuthenticated(); 
+      // READING: You must be a member of the board to see it.
+      allow read: if isBoardMember();
+
+      // CREATING: Anyone logged in can create a board.
+      // Condition: You must list yourself as the 'owner' in the data.
+      allow create: if isAuthenticated() &&
+                    request.resource.data.ownerId == request.auth.uid &&
+                    request.resource.data.members[request.auth.uid] == 'owner';
+
+      // UPDATING: You must be an 'owner' or 'editor' to toggle tiles or edit text.
+      // (This prevents 'viewers' from messing up the board)
+      allow update: if canEditBoard();
+
+      // DELETING: Only the strictly defined 'ownerId' can delete the board.
+      allow delete: if isAuthenticated() && 
+                    resource.data.ownerId == request.auth.uid;
     }
-    
-    // YEARS COLLECTION (Legacy functionality)
+
+    // 3. YEARS Collection (Legacy/Global board fallback)
     match /years/{yearId} {
-      allow read, write: if isAuthenticated();
+      allow read: if isAuthenticated();
+      allow write: if false; // Lock it down so new users don't overwrite the legacy global board
     }
   }
 }

@@ -1,12 +1,10 @@
 import { db } from '../firebase';
-import { doc, getDoc, setDoc, updateDoc, increment, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { BADGES } from '../data/badges';
 import { useAuth } from '../contexts/AuthContext';
-import { useDialog } from '../contexts/DialogContext';
 
 export const useBadges = () => {
     const { user } = useAuth();
-    const dialog = useDialog();
 
     const unlockBadge = async (badgeId: string) => {
         if (!user) return;

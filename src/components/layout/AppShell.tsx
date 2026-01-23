@@ -50,8 +50,8 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                 isSidebarOpen ? "translate-x-0" : "-translate-x-full"
             )}>
                 {/* Logo Area */}
-                <div className="h-16 flex items-center px-6 border-b border-[var(--theme-border)] shrink-0">
-                    <img src="/logo.png" alt="SunSar Bingo" className="h-8 w-auto" />
+                <div className="h-16 flex items-center justify-center border-b border-[var(--theme-border)] shrink-0 p-2">
+                    <img src="/logo.png" alt="SunSar Bingo" className="h-full w-auto object-contain" />
                 </div>
 
                 {/* Navigation */}

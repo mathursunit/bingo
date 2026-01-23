@@ -7,6 +7,7 @@ import { User, Edit2, Check, Award, Grid, Camera } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useSettings } from '../contexts/SettingsContext';
 import { cn } from '../lib/utils';
+import { FriendsList } from './FriendsList';
 
 export const ProfilePage: React.FC = () => {
     const { user, updateProfileName } = useAuth();
@@ -148,9 +149,14 @@ export const ProfilePage: React.FC = () => {
                 </div>
             </div>
 
+            {/* Friends Section */}
+            <div className="mt-12">
+                <FriendsList />
+            </div>
+
             {/* Stats Grid */}
             <h2 className={cn(
-                "text-2xl font-bold mb-6 flex items-center gap-2",
+                "text-2xl font-bold mb-6 flex items-center gap-2 mt-12",
                 isLightTheme ? "text-slate-800" : "text-white"
             )}>
                 <Award className="text-accent-gold" /> Lifetime Stats

@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 import { useSettings } from '../contexts/SettingsContext';
 import { cn } from '../lib/utils';
 import { FriendsList } from './FriendsList';
+import { TrophyCase } from './TrophyCase';
 
 export const ProfilePage: React.FC = () => {
     const { user, updateProfileName } = useAuth();
@@ -148,6 +149,9 @@ export const ProfilePage: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Trophy Case */}
+            <TrophyCase />
 
             {/* Friends Section */}
             <div className="mt-12">

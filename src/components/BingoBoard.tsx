@@ -548,7 +548,7 @@ export const BingoBoard: React.FC = () => {
                     <header className="flex justify-between items-center mb-8 py-2">
 
                         {/* Editable Board Title - Compact in header */}
-                        <div className="flex-1 mx-4 min-w-0">
+                        <div className="flex-1 mx-4 min-w-0 flex flex-col justify-center">
                             {isEditingTitle ? (
                                 <input
                                     type="text"
@@ -571,7 +571,7 @@ export const BingoBoard: React.FC = () => {
                                         }
                                     }}
                                     autoFocus
-                                    className="bg-transparent border-b-2 border-accent-primary text-white text-lg sm:text-xl font-bold outline-none w-full max-w-[200px]"
+                                    className="bg-transparent border-b-2 border-accent-primary text-white text-2xl sm:text-3xl font-extrabold tracking-tight outline-none w-full max-w-[300px]"
                                 />
                             ) : (
                                 <button
@@ -579,21 +579,33 @@ export const BingoBoard: React.FC = () => {
                                         setEditingTitleValue(title || 'My Bingo');
                                         setIsEditingTitle(true);
                                     }}
-                                    className="text-white text-lg sm:text-xl font-bold truncate max-w-[200px] hover:text-accent-primary transition-colors flex items-center gap-1 group"
+                                    className="text-left text-white text-2xl sm:text-3xl font-extrabold tracking-tight truncate max-w-[300px] hover:text-accent-primary transition-colors flex items-center gap-2 group"
                                     title="Click to edit board name"
                                 >
-                                    <span className="bg-gradient-to-r from-accent-primary to-accent-secondary bg-clip-text text-transparent truncate">
+                                    <span className="bg-gradient-to-r from-accent-primary to-accent-secondary bg-clip-text text-transparent truncate pb-1">
                                         {title || 'My Bingo'}
                                     </span>
-                                    <Edit2 size={14} className="opacity-0 group-hover:opacity-70 transition-opacity flex-shrink-0" />
+                                    <Edit2 size={16} className="opacity-0 group-hover:opacity-70 transition-opacity flex-shrink-0 text-slate-400" />
                                 </button>
                             )}
-                            <p
-                                className="text-slate-500 text-xs mt-0.5 cursor-default select-none"
+
+                            {/* Badges Row for Stats */}
+                            <div
+                                className="flex items-center gap-2 mt-2 cursor-pointer select-none"
                                 onClick={handleSecretTap}
                             >
-                                {gridSize}×{gridSize} • {items.filter(i => i.isCompleted && !i.isFreeSpace).length}/{items.filter(i => !i.isFreeSpace).length}
-                            </p>
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-white/10 text-slate-300 border border-white/5 uppercase tracking-wide">
+                                    {gridSize}×{gridSize} Grid
+                                </span>
+                                <span className={cn(
+                                    "inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wide",
+                                    hasWon
+                                        ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+                                        : "bg-accent-primary/10 text-accent-primary border-accent-primary/20"
+                                )}>
+                                    {items.filter(i => i.isCompleted && !i.isFreeSpace).length} / {items.filter(i => !i.isFreeSpace).length} Done
+                                </span>
+                            </div>
                         </div>
                         <div className="flex items-center gap-1 sm:gap-2">
 
@@ -629,70 +641,74 @@ export const BingoBoard: React.FC = () => {
                         onDragStart={handleDragStart}
                         onDragEnd={handleDragEnd}
                     >
-                        {/* Grid Area with Side Control */}
-                        <div className="flex justify-center items-start gap-4 mb-6 relative">
-                            <div className="w-full max-w-[520px] aspect-square relative transition-all duration-300">
-                                <SortableContext items={displayItems.map(i => i.id)} strategy={rectSortingStrategy}>
-                                    <div
-                                        className={cn(
-                                            "grid gap-1.5 sm:gap-2 w-full h-full transition-[font-size,gap] duration-200",
-                                            gridSize === 3 && "grid-cols-3 grid-rows-3",
-                                            gridSize === 4 && "grid-cols-4 grid-rows-4",
-                                            gridSize === 5 && "grid-cols-5 grid-rows-5",
-                                            gridSize === 6 && "grid-cols-6 grid-rows-6",
-                                        )}
-                                        style={{ perspective: '1000px' }}
-                                    >
-                                        {displayItems.map((item, index) => (
-                                            <DraggableTile
-                                                key={item.id}
-                                                id={item.id}
-                                                disabled={!editMode}
-                                            >
-                                                <BingoTile
-                                                    item={item}
-                                                    index={index}
-                                                    gridSize={gridSize}
-                                                    editMode={editMode}
-                                                    activeId={activeId}
-                                                    isLocked={isLocked}
-                                                    fontScale={fontScale}
-                                                    onEdit={() => openEditModal(index)}
-                                                    onClick={() => {
-                                                        if (item.isFreeSpace) return;
-                                                        if (item.isCompleted) {
-                                                            // Show confirmation modal for completed tiles
-                                                            setUncompleteItemIndex(index);
-                                                            setIsUncompleteModalOpen(true);
-                                                        } else {
-                                                            playWhoosh();
-                                                            setCompletingItemIndex(index);
-                                                            setIsCompletionModalOpen(true);
-                                                        }
-                                                    }}
-                                                />
-                                            </DraggableTile>
-                                        ))}
+                        {/* Grid Area */}
+                        <div className="flex justify-center mb-6 relative">
+                            <div className="w-full max-w-[520px] relative">
+                                <div className="aspect-square relative transition-all duration-300">
+                                    <SortableContext items={displayItems.map(i => i.id)} strategy={rectSortingStrategy}>
+                                        <div
+                                            className={cn(
+                                                "grid gap-1.5 sm:gap-2 w-full h-full transition-[font-size,gap] duration-200",
+                                                gridSize === 3 && "grid-cols-3 grid-rows-3",
+                                                gridSize === 4 && "grid-cols-4 grid-rows-4",
+                                                gridSize === 5 && "grid-cols-5 grid-rows-5",
+                                                gridSize === 6 && "grid-cols-6 grid-rows-6",
+                                            )}
+                                            style={{ perspective: '1000px' }}
+                                        >
+                                            {displayItems.map((item, index) => (
+                                                <DraggableTile
+                                                    key={item.id}
+                                                    id={item.id}
+                                                    disabled={!editMode}
+                                                >
+                                                    <BingoTile
+                                                        item={item}
+                                                        index={index}
+                                                        gridSize={gridSize}
+                                                        editMode={editMode}
+                                                        activeId={activeId}
+                                                        isLocked={isLocked}
+                                                        fontScale={fontScale}
+                                                        onEdit={() => openEditModal(index)}
+                                                        onClick={() => {
+                                                            if (item.isFreeSpace) return;
+                                                            if (item.isCompleted) {
+                                                                // Show confirmation modal for completed tiles
+                                                                setUncompleteItemIndex(index);
+                                                                setIsUncompleteModalOpen(true);
+                                                            } else {
+                                                                playWhoosh();
+                                                                setCompletingItemIndex(index);
+                                                                setIsCompletionModalOpen(true);
+                                                            }
+                                                        }}
+                                                    />
+                                                </DraggableTile>
+                                            ))}
+                                        </div>
+                                    </SortableContext>
+                                </div>
+
+                                {/* Floating Control on the right (Desktop) - Absolute to avoid layout shift */}
+                                <div className="hidden md:block absolute -right-16 top-0 h-full pointer-events-none">
+                                    <div className="sticky top-24 pointer-events-auto">
+                                        <FontControl
+                                            scale={fontScale}
+                                            onScaleChange={handleFontScaleChange}
+                                            isLightTheme={isLightTheme}
+                                        />
                                     </div>
-                                </SortableContext>
-                            </div>
+                                </div>
 
-                            {/* Floating Control on the right (Desktop) or bottom-right via absolute */}
-                            <div className="hidden md:block sticky top-24">
-                                <FontControl
-                                    scale={fontScale}
-                                    onScaleChange={handleFontScaleChange}
-                                    isLightTheme={isLightTheme}
-                                />
-                            </div>
-
-                            {/* Mobile Control (Absolute positioned in corner) */}
-                            <div className="md:hidden absolute -right-2 -bottom-14">
-                                <FontControl
-                                    scale={fontScale}
-                                    onScaleChange={handleFontScaleChange}
-                                    isLightTheme={isLightTheme}
-                                />
+                                {/* Mobile Control */}
+                                <div className="md:hidden absolute -right-2 -bottom-14 z-20">
+                                    <FontControl
+                                        scale={fontScale}
+                                        onScaleChange={handleFontScaleChange}
+                                        isLightTheme={isLightTheme}
+                                    />
+                                </div>
                             </div>
                         </div>
 

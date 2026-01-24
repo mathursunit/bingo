@@ -80,104 +80,92 @@ export const BingoTile: React.FC<BingoTileProps> = ({
                         <span className="font-bold text-amber-500 text-sm sm:text-base">FREE</span>
                     </div>
                 ) : (
-                ): (
-                        <span
-                        className = "font-medium leading-snug block line-clamp-4 break-words transition-[font-size] duration-100"
-                        style = {{
+                    <span
+                        className="font-medium leading-snug block line-clamp-4 break-words transition-[font-size] duration-100"
+                        style={{
                             color: item.isCompleted && !editMode ? undefined : item.style?.color, // Override color only if not completed/default
-                fontWeight: item.style?.bold ? 'bold' : undefined,
-                fontStyle: item.style?.italic ? 'italic' : undefined,
-                fontSize: `${fontScale}em`
+                            fontWeight: item.style?.bold ? 'bold' : undefined,
+                            fontStyle: item.style?.italic ? 'italic' : undefined,
+                            fontSize: `${fontScale}em`
                         }}
                     >
-                {item.text}
-            </span>
+                        {item.text}
+                    </span>
                 )}
+            </div>
+
+            {/* Indicators */}
+            <div className="absolute top-1.5 right-1.5 flex flex-col gap-1 items-end z-20">
+                {item.proofPhotos && item.proofPhotos.length > 0 && (
+                    <div className={cn(
+                        "p-1 rounded-md backdrop-blur-sm",
+                        isLightTheme ? "bg-slate-600/80" : "bg-black/40"
+                    )}>
+                        <Camera size={10} className="text-white/90" />
+                    </div>
                 )}
-        </div>
-
-            {/* Indicators */ }
-    <div className="absolute top-1.5 right-1.5 flex flex-col gap-1 items-end z-20">
-        {item.proofPhotos && item.proofPhotos.length > 0 && (
-            <div className={cn(
-                "p-1 rounded-md backdrop-blur-sm",
-                isLightTheme ? "bg-slate-600/80" : "bg-black/40"
-            )}>
-                <Camera size={10} className="text-white/90" />
             </div>
-        )}
-    </div>
 
-    {/* Due Date Indicator */ }
-    {
-        item.dueDate && !item.isCompleted && !isLocked && (
-            <div className={cn(
-                "flex items-center gap-1 mt-1 text-[10px] font-medium absolute bottom-1.5 left-2 px-1 rounded backdrop-blur-sm",
-                isLightTheme ? "bg-slate-200/90" : "bg-black/40",
-                ((item.dueDate as any).toDate ? (item.dueDate as any).toDate() : new Date(item.dueDate as any)) < new Date()
-                    ? "text-red-500"
-                    : isLightTheme ? "text-slate-600" : "text-slate-400"
-            )}>
-                <Clock size={10} />
-                <span>{((item.dueDate as any).toDate ? (item.dueDate as any).toDate() : new Date(item.dueDate as any)).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
-            </div>
-        )
-    }
+            {/* Due Date Indicator */}
+            {item.dueDate && !item.isCompleted && !isLocked && (
+                <div className={cn(
+                    "flex items-center gap-1 mt-1 text-[10px] font-medium absolute bottom-1.5 left-2 px-1 rounded backdrop-blur-sm",
+                    isLightTheme ? "bg-slate-200/90" : "bg-black/40",
+                    ((item.dueDate as any).toDate ? (item.dueDate as any).toDate() : new Date(item.dueDate as any)) < new Date()
+                        ? "text-red-500"
+                        : isLightTheme ? "text-slate-600" : "text-slate-400"
+                )}>
+                    <Clock size={10} />
+                    <span>{((item.dueDate as any).toDate ? (item.dueDate as any).toDate() : new Date(item.dueDate as any)).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                </div>
+            )}
 
-    {/* Target Count Indicator */ }
-    {
-        !item.isFreeSpace && !editMode && (item.targetCount || 1) > 1 && (
-            <div className={cn(
-                "absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold shadow-sm",
-                item.isCompleted
-                    ? "bg-emerald-500/90 text-white"
-                    : (item.currentCount || 0) > 0
-                        ? "bg-amber-500/90 text-white" // Partial progress
-                        : isLightTheme
-                            ? "bg-slate-200 text-slate-600 border border-slate-300"
-                            : "bg-slate-700/90 text-slate-300"
-            )}>
-                {item.currentCount || 0}/{item.targetCount}
-            </div>
-        )
-    }
+            {/* Target Count Indicator */}
+            {!item.isFreeSpace && !editMode && (item.targetCount || 1) > 1 && (
+                <div className={cn(
+                    "absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold shadow-sm",
+                    item.isCompleted
+                        ? "bg-emerald-500/90 text-white"
+                        : (item.currentCount || 0) > 0
+                            ? "bg-amber-500/90 text-white" // Partial progress
+                            : isLightTheme
+                                ? "bg-slate-200 text-slate-600 border border-slate-300"
+                                : "bg-slate-700/90 text-slate-300"
+                )}>
+                    {item.currentCount || 0}/{item.targetCount}
+                </div>
+            )}
 
-    {/* Edit Icon Overlay */ }
-    {
-        editMode && (
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 bg-black/40 transition-opacity z-30">
-                <Edit2 size={20} className="text-white drop-shadow-md" />
-            </div>
-        )
-    }
+            {/* Edit Icon Overlay */}
+            {editMode && (
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 bg-black/40 transition-opacity z-30">
+                    <Edit2 size={20} className="text-white drop-shadow-md" />
+                </div>
+            )}
 
-    {/* Completed Checkmark Background (Stamp Effect) */ }
-    {
-        item.isCompleted && !item.isFreeSpace && !editMode && (
-            <motion.div
-                initial={{ scale: 2, opacity: 0, rotate: -45 }}
-                animate={{ scale: 1, opacity: isLightTheme ? 0.15 : 0.1, rotate: 12 }}
-                transition={{ type: "spring", stiffness: 300, damping: 15 }}
-                className={cn(
-                    "absolute -bottom-2 -right-2 transform origin-bottom-right pointer-events-none",
-                    isLightTheme ? "text-emerald-600" : "text-emerald-400"
-                )}
-            >
-                <Check size={80} strokeWidth={3} />
-            </motion.div>
-        )
-    }
+            {/* Completed Checkmark Background (Stamp Effect) */}
+            {item.isCompleted && !item.isFreeSpace && !editMode && (
+                <motion.div
+                    initial={{ scale: 2, opacity: 0, rotate: -45 }}
+                    animate={{ scale: 1, opacity: isLightTheme ? 0.15 : 0.1, rotate: 12 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                    className={cn(
+                        "absolute -bottom-2 -right-2 transform origin-bottom-right pointer-events-none",
+                        isLightTheme ? "text-emerald-600" : "text-emerald-400"
+                    )}
+                >
+                    <Check size={80} strokeWidth={3} />
+                </motion.div>
+            )}
 
-    {/* Active Completion Effect (Green Glow) */ }
-    {
-        item.isCompleted && (
-            <div className={cn(
-                "absolute inset-0 rounded-xl ring-1 ring-inset pointer-events-none",
-                isLightTheme ? "ring-emerald-200" : "ring-white/10"
-            )} />
-        )
-    }
+            {/* Active Completion Effect (Green Glow) */}
+            {item.isCompleted && (
+                <div className={cn(
+                    "absolute inset-0 rounded-xl ring-1 ring-inset pointer-events-none",
+                    isLightTheme ? "ring-emerald-200" : "ring-white/10"
+                )} />
+            )}
 
-        </motion.div >
+        </motion.div>
     );
 };

@@ -23,6 +23,7 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStr
 import { DraggableTile } from './ui/DraggableTile';
 import { BingoTile } from './ui/BingoTile';
 import { Modal } from './ui/Modal';
+import { FontControl } from './ui/FontControl';
 
 import { useParams } from 'react-router-dom';
 
@@ -42,6 +43,17 @@ export const BingoBoard: React.FC = () => {
     const [editMode, setEditMode] = useState(false);
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [editingTitleValue, setEditingTitleValue] = useState('');
+
+    // Font Scaling Persistence
+    const [fontScale, setFontScale] = useState(() => {
+        const saved = localStorage.getItem('sunsar_font_scale');
+        return saved ? parseFloat(saved) : 1;
+    });
+
+    const handleFontScaleChange = (scale: number) => {
+        setFontScale(scale);
+        localStorage.setItem('sunsar_font_scale', scale.toString());
+    };
 
 
 
@@ -617,13 +629,13 @@ export const BingoBoard: React.FC = () => {
                         onDragStart={handleDragStart}
                         onDragEnd={handleDragEnd}
                     >
-                        {/* Centered Grid Container */}
-                        <div className="flex justify-center mb-6">
-                            <div className="w-full max-w-[520px] aspect-square relative">
+                        {/* Grid Area with Side Control */}
+                        <div className="flex justify-center items-start gap-4 mb-6 relative">
+                            <div className="w-full max-w-[520px] aspect-square relative transition-all duration-300">
                                 <SortableContext items={displayItems.map(i => i.id)} strategy={rectSortingStrategy}>
                                     <div
                                         className={cn(
-                                            "grid gap-1.5 sm:gap-2 w-full h-full",
+                                            "grid gap-1.5 sm:gap-2 w-full h-full transition-[font-size,gap] duration-200",
                                             gridSize === 3 && "grid-cols-3 grid-rows-3",
                                             gridSize === 4 && "grid-cols-4 grid-rows-4",
                                             gridSize === 5 && "grid-cols-5 grid-rows-5",
@@ -644,6 +656,7 @@ export const BingoBoard: React.FC = () => {
                                                     editMode={editMode}
                                                     activeId={activeId}
                                                     isLocked={isLocked}
+                                                    fontScale={fontScale}
                                                     onEdit={() => openEditModal(index)}
                                                     onClick={() => {
                                                         if (item.isFreeSpace) return;
@@ -662,6 +675,24 @@ export const BingoBoard: React.FC = () => {
                                         ))}
                                     </div>
                                 </SortableContext>
+                            </div>
+
+                            {/* Floating Control on the right (Desktop) or bottom-right via absolute */}
+                            <div className="hidden md:block sticky top-24">
+                                <FontControl
+                                    scale={fontScale}
+                                    onScaleChange={handleFontScaleChange}
+                                    isLightTheme={isLightTheme}
+                                />
+                            </div>
+
+                            {/* Mobile Control (Absolute positioned in corner) */}
+                            <div className="md:hidden absolute -right-2 -bottom-14">
+                                <FontControl
+                                    scale={fontScale}
+                                    onScaleChange={handleFontScaleChange}
+                                    isLightTheme={isLightTheme}
+                                />
                             </div>
                         </div>
 

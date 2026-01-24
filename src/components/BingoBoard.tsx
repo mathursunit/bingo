@@ -547,7 +547,7 @@ export const BingoBoard: React.FC = () => {
                     {/* Navigation Bar - Matches Dashboard */}
                     <header className="flex justify-between items-center mb-8 py-2">
 
-                        {/* Editable Board Title - Compact in header */}
+                        {/* Editable Board Title - Hero Style */}
                         <div className="flex-1 mx-4 min-w-0 flex flex-col justify-center">
                             {isEditingTitle ? (
                                 <input
@@ -571,37 +571,49 @@ export const BingoBoard: React.FC = () => {
                                         }
                                     }}
                                     autoFocus
-                                    className="bg-transparent border-b-2 border-accent-primary text-white text-2xl sm:text-3xl font-extrabold tracking-tight outline-none w-full max-w-[300px]"
+                                    className="bg-transparent border-b-2 border-white/20 text-white text-4xl sm:text-5xl font-black tracking-tighter outline-none w-full shadow-xl"
                                 />
                             ) : (
-                                <button
-                                    onClick={() => {
-                                        setEditingTitleValue(title || 'My Bingo');
-                                        setIsEditingTitle(true);
-                                    }}
-                                    className="text-left text-white text-2xl sm:text-3xl font-extrabold tracking-tight truncate max-w-[300px] hover:text-accent-primary transition-colors flex items-center gap-2 group"
-                                    title="Click to edit board name"
-                                >
-                                    <span className="bg-gradient-to-r from-accent-primary to-accent-secondary bg-clip-text text-transparent truncate pb-1">
-                                        {title || 'My Bingo'}
-                                    </span>
-                                    <Edit2 size={16} className="opacity-0 group-hover:opacity-70 transition-opacity flex-shrink-0 text-slate-400" />
-                                </button>
+                                <div className="flex items-center gap-3 group">
+                                    <h1
+                                        onClick={() => {
+                                            setEditingTitleValue(title || 'My Bingo');
+                                            setIsEditingTitle(true);
+                                        }}
+                                        className="text-left text-4xl sm:text-5xl font-black tracking-tighter truncate cursor-pointer select-none drop-shadow-2xl"
+                                        title="Click to edit"
+                                    >
+                                        <span className="bg-gradient-to-r from-violet-300 via-fuchsia-300 to-white bg-clip-text text-transparent hover:brightness-110 transition-all">
+                                            {title || 'My Bingo'}
+                                        </span>
+                                    </h1>
+
+                                    <button
+                                        onClick={() => {
+                                            setEditingTitleValue(title || 'My Bingo');
+                                            setIsEditingTitle(true);
+                                        }}
+                                        className="p-2 rounded-full bg-white/5 text-slate-400 opacity-0 group-hover:opacity-100 transition-all hover:bg-white/10 hover:text-white transform scale-75 group-hover:scale-100"
+                                        title="Edit Title"
+                                    >
+                                        <Edit2 size={16} />
+                                    </button>
+                                </div>
                             )}
 
                             {/* Badges Row for Stats */}
                             <div
-                                className="flex items-center gap-2 mt-2 cursor-pointer select-none"
+                                className="flex items-center gap-2 mt-3 cursor-pointer select-none"
                                 onClick={handleSecretTap}
                             >
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-white/10 text-slate-300 border border-white/5 uppercase tracking-wide">
-                                    {gridSize}×{gridSize} Grid
+                                <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold bg-white/5 text-slate-400 border border-white/5 uppercase tracking-wider backdrop-blur-md">
+                                    {gridSize}×{gridSize}
                                 </span>
                                 <span className={cn(
-                                    "inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wide",
+                                    "inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold border uppercase tracking-wider backdrop-blur-md transition-colors",
                                     hasWon
-                                        ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
-                                        : "bg-accent-primary/10 text-accent-primary border-accent-primary/20"
+                                        ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+                                        : "bg-indigo-500/20 text-indigo-300 border-indigo-500/30"
                                 )}>
                                     {items.filter(i => i.isCompleted && !i.isFreeSpace).length} / {items.filter(i => !i.isFreeSpace).length} Done
                                 </span>

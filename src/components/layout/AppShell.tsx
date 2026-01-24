@@ -51,7 +51,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
             )}>
                 {/* Logo Area */}
                 <div className="h-16 flex items-center justify-center border-b border-[var(--theme-border)] shrink-0 p-2">
-                    <img src="/logo.png" alt="SunSar Bingo" className="h-full w-auto object-contain" />
+                    <img src="/logo.png?v=restore" alt="SunSar Bingo" className="h-full w-auto object-contain" />
                 </div>
 
                 {/* Navigation */}

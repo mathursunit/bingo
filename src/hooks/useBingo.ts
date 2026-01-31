@@ -437,7 +437,12 @@ export const useBingo = (boardId?: string) => {
             updateData.itemsBackup = currentItems;
         }
 
-        await setDoc(docRef, updateData, { merge: true });
+        try {
+            await setDoc(docRef, updateData, { merge: true });
+        } catch (error) {
+            console.error("Error locking board:", error);
+            throw error;
+        }
     };
 
     const unlockBoard = async () => {

@@ -366,23 +366,27 @@ export const BingoBoard: React.FC = () => {
 
 
 
-    const handleGoLive = () => {
+    const handleGoLive = async () => {
         // Trigger generic click sound
         playClick();
 
-        jumbleAndLock(shouldShuffleOnLive);
+        try {
+            await jumbleAndLock(shouldShuffleOnLive);
 
-        // Success effect
-        confetti({
-            particleCount: 150,
-            spread: 60,
-            origin: { y: 0.7 },
-            colors: ['#22c55e', '#ffffff']
-        });
-        playSuccess();
+            // Success effect
+            confetti({
+                particleCount: 150,
+                spread: 60,
+                origin: { y: 0.7 },
+                colors: ['#22c55e', '#ffffff']
+            });
+            playSuccess();
 
-        setIsGoLiveModalOpen(false);
-        setEditMode(false);
+            setIsGoLiveModalOpen(false);
+            setEditMode(false);
+        } catch (error) {
+            dialog.alert("Failed to go live. You might not have permission to lock this board.", { type: 'error' });
+        }
     };
 
     const handleDismiss = () => {
@@ -436,7 +440,7 @@ export const BingoBoard: React.FC = () => {
     const handleSaveEdit = async () => {
         if (editingItemIndex === null) return;
 
-        let newDueDate: any = undefined;
+        let newDueDate: any = null;
         if (editFormDueDate) {
             newDueDate = new Date(editFormDueDate + "T12:00:00");
         }

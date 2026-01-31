@@ -35,6 +35,13 @@ export const BingoBoard: React.FC = () => {
     const effectiveBoardId = yearId ? undefined : boardId;
     const { items, members, loading, toggleItem, hasWon, bingoCount, isLocked, unlockBoard, jumbleAndLock, saveBoard, completeWithPhoto, addPhotoToTile, addReaction, deletePhoto, decrementProgress, inviteUser, removeMember, title, gridSize, updateTitle } = useBingo(effectiveBoardId);
     const { user } = useAuth();
+
+    // Permissions
+    const canEdit = React.useMemo(() => {
+        if (!user) return false;
+        const role = members ? members[user.uid] : undefined;
+        return role === 'owner' || role === 'editor';
+    }, [user, members]);
     const { unlockBadge, incrementBadge } = useBadges();
     const dialog = useDialog();
     const { settings } = useSettings();
@@ -82,18 +89,25 @@ export const BingoBoard: React.FC = () => {
         setActiveId(event.active.id);
     };
 
-    const handleDragEnd = (event: DragEndEvent) => {
+    const handleDragEnd = async (event: DragEndEvent) => {
         const { active, over } = event;
         setActiveId(null);
 
         if (over && active.id !== over.id && editMode) {
-            setLocalItems((currentItems) => {
-                const oldIndex = currentItems.findIndex((item) => item.id === active.id);
-                const newIndex = currentItems.findIndex((item) => item.id === over!.id);
-                const newItems = arrayMove(currentItems, oldIndex, newIndex);
-                saveBoard(newItems);
-                return newItems;
-            });
+            const oldIndex = localItems.findIndex((item) => item.id === active.id);
+            const newIndex = localItems.findIndex((item) => item.id === over!.id);
+
+            if (oldIndex !== -1 && newIndex !== -1) {
+                const newItems = arrayMove(localItems, oldIndex, newIndex);
+                setLocalItems(newItems);
+
+                try {
+                    await saveBoard(newItems);
+                } catch (e) {
+                    dialog.alert("Failed to save order. You might not have permission.", { type: 'error' });
+                    setLocalItems(localItems); // Revert
+                }
+            }
         }
     };
 
@@ -419,7 +433,7 @@ export const BingoBoard: React.FC = () => {
     };
 
     // Modal OK Action (Update Draft Only)
-    const handleSaveEdit = () => {
+    const handleSaveEdit = async () => {
         if (editingItemIndex === null) return;
 
         let newDueDate: any = undefined;
@@ -439,7 +453,13 @@ export const BingoBoard: React.FC = () => {
             isCompleted: (newDrafts[editingItemIndex].isCompleted) || editFormIsFreeSpace // Keep completed if free
         };
         setLocalItems(newDrafts);
-        saveBoard(newDrafts); // Save immediately on modal close
+
+        try {
+            await saveBoard(newDrafts); // Save immediately on modal close
+        } catch (error) {
+            dialog.alert("Failed to save changes. You might not have permission to edit this board.", { title: 'Save Failed', type: 'error' });
+            // Revert local changes if needed, but for now keeping them in local state is okay (user can try again)
+        }
 
         setIsEditModalOpen(false);
         setEditingItemIndex(null);
@@ -476,7 +496,7 @@ export const BingoBoard: React.FC = () => {
 
 
 
-    const handleQuickComplete = (index: number) => {
+    const handleQuickComplete = async (index: number) => {
         // Capture state before toggle for Undo
         const item = displayItems[index];
         setUndoState({ index, wasCompleted: item.isCompleted });
@@ -509,11 +529,15 @@ export const BingoBoard: React.FC = () => {
             // but we can update a "lastActive" field and check streak there. skipping for now to keep simple.
         }
 
-        toggleItem(index);
+        try {
+            await toggleItem(index);
 
-        // Show Undo Toast
-        setShowUndoToast(true);
-        setTimeout(() => setShowUndoToast(false), 3000);
+            // Show Undo Toast
+            setShowUndoToast(true);
+            setTimeout(() => setShowUndoToast(false), 3000);
+        } catch (e) {
+            dialog.alert("Failed to update tile. You might not have permission.", { type: 'error' });
+        }
     };
 
     return (
@@ -795,7 +819,7 @@ export const BingoBoard: React.FC = () => {
                                 </>
                             ) : (
                                 <div className="flex gap-2 justify-center w-full flex-wrap">
-                                    {!isLocked && (
+                                    {!isLocked && canEdit && (
                                         <>
                                             <button
                                                 onClick={() => {
@@ -1155,10 +1179,14 @@ export const BingoBoard: React.FC = () => {
 
                                     {/* 3. Toggle Status */}
                                     <button
-                                        onClick={() => {
-                                            toggleItem(completingItemIndex!);
-                                            setIsCompletionModalOpen(false);
-                                            setCompletingItemIndex(null);
+                                        onClick={async () => {
+                                            try {
+                                                await toggleItem(completingItemIndex!);
+                                                setIsCompletionModalOpen(false);
+                                                setCompletingItemIndex(null);
+                                            } catch (e) {
+                                                dialog.alert("Failed to update tile.", { type: 'error' });
+                                            }
                                         }}
                                         disabled={isUploading}
                                         className={cn(
@@ -1175,10 +1203,14 @@ export const BingoBoard: React.FC = () => {
                                     {/* Remove Progress (if applicable) */}
                                     {hasProgress && !item.isCompleted && (
                                         <button
-                                            onClick={() => {
-                                                decrementProgress(completingItemIndex!);
-                                                setIsCompletionModalOpen(false);
-                                                setCompletingItemIndex(null);
+                                            onClick={async () => {
+                                                try {
+                                                    await decrementProgress(completingItemIndex!);
+                                                    setIsCompletionModalOpen(false);
+                                                    setCompletingItemIndex(null);
+                                                } catch (e) {
+                                                    dialog.alert("Failed to update progress.", { type: 'error' });
+                                                }
                                             }}
                                             disabled={isUploading}
                                             className="w-full py-2 rounded-xl font-semibold text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"

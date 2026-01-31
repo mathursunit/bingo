@@ -186,6 +186,7 @@ export const useBingo = (boardId?: string) => {
             });
         } catch (error) {
             console.error("Error updating bingo board:", error);
+            throw error;
         }
     };
 
@@ -223,6 +224,7 @@ export const useBingo = (boardId?: string) => {
             });
         } catch (error) {
             console.error("Error decrementing progress:", error);
+            throw error;
         }
     };
 
@@ -480,6 +482,7 @@ export const useBingo = (boardId?: string) => {
             });
         } catch (error) {
             console.error("Error saving board:", error);
+            throw error; // Re-throw to handle in UI
         }
     };
 

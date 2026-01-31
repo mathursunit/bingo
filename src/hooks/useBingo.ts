@@ -17,6 +17,29 @@ const INITIAL_ITEMS: string[] = [
     "Call parents weekly", "Take a spontaneous trip", "Learn a new recipe", "Do a puzzle", "Visit a national park"
 ];
 
+// Helper to remove undefined values recursively
+const sanitizeForFirestore = (obj: any): any => {
+    if (obj === undefined) return null; // Convert undefined to null
+    if (obj === null || typeof obj !== 'object') return obj;
+    if (obj instanceof Date) return obj; // Dates are fine (converted to Timestamp usually)
+    if (obj.toDate && typeof obj.toDate === 'function') return obj; // Firestore Timestamps
+
+    if (Array.isArray(obj)) {
+        return obj.map(sanitizeForFirestore);
+    }
+
+    const newObj: any = {};
+    for (const key in obj) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+            const val = sanitizeForFirestore(obj[key]);
+            if (val !== undefined) {
+                newObj[key] = val;
+            }
+        }
+    }
+    return newObj;
+};
+
 export const useBingo = (boardId?: string) => {
     const { user } = useAuth();
     const [items, setItems] = useState<BingoItem[]>([]);
@@ -181,7 +204,7 @@ export const useBingo = (boardId?: string) => {
 
         try {
             await updateDoc(docRef, {
-                items: newItems,
+                items: sanitizeForFirestore(newItems),
                 lastUpdated: Timestamp.now()
             });
         } catch (error) {
@@ -219,7 +242,7 @@ export const useBingo = (boardId?: string) => {
 
         try {
             await updateDoc(docRef, {
-                items: newItems,
+                items: sanitizeForFirestore(newItems),
                 lastUpdated: Timestamp.now()
             });
         } catch (error) {
@@ -259,7 +282,7 @@ export const useBingo = (boardId?: string) => {
             triggerConfetti(1); // Bigger confetti for photo proof!
 
             await updateDoc(docRef, {
-                items: newItems,
+                items: sanitizeForFirestore(newItems),
                 lastUpdated: Timestamp.now()
             });
         } catch (error) {
@@ -296,7 +319,7 @@ export const useBingo = (boardId?: string) => {
             triggerConfetti(0.3); // Small confetti for additional photo
 
             await updateDoc(docRef, {
-                items: newItems,
+                items: sanitizeForFirestore(newItems),
                 lastUpdated: Timestamp.now()
             });
 
@@ -323,7 +346,7 @@ export const useBingo = (boardId?: string) => {
 
         try {
             await updateDoc(docRef, {
-                items: newItems,
+                items: sanitizeForFirestore(newItems),
                 lastUpdated: Timestamp.now()
             });
         } catch (error) {
@@ -352,7 +375,7 @@ export const useBingo = (boardId?: string) => {
             setItems(newItems);
 
             await updateDoc(docRef, {
-                items: newItems,
+                items: sanitizeForFirestore(newItems),
                 lastUpdated: Timestamp.now()
             });
 
@@ -381,7 +404,7 @@ export const useBingo = (boardId?: string) => {
 
         try {
             await updateDoc(docRef, {
-                items: newItems,
+                items: sanitizeForFirestore(newItems),
                 lastUpdated: Timestamp.now()
             });
         } catch (error) {
@@ -433,8 +456,8 @@ export const useBingo = (boardId?: string) => {
         };
 
         if (shuffle) {
-            updateData.items = newItems;
-            updateData.itemsBackup = currentItems;
+            updateData.items = sanitizeForFirestore(newItems);
+            updateData.itemsBackup = sanitizeForFirestore(currentItems);
         }
 
         try {
@@ -482,7 +505,7 @@ export const useBingo = (boardId?: string) => {
         setItems(newItems);
         try {
             await updateDoc(docRef, {
-                items: newItems,
+                items: sanitizeForFirestore(newItems),
                 lastUpdated: Timestamp.now()
             });
         } catch (error) {
